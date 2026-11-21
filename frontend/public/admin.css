@@ -1,0 +1,243 @@
+/* Guest list & RSVP manager: the card's paper, cinnabar and gold, laid out for work.
+   Uses the custom properties index.html defines (--paper, --ink, --cinnabar, --grain-paper…). */
+
+.adm{
+  --line:rgba(168,130,60,.42);
+  --line-soft:rgba(168,130,60,.2);
+  --yes:#3d6a4c; --yes-bg:#e2ece1;
+  --no:#8a1a1f;  --no-bg:#f5e3e0;
+  --wait:#75685c; --wait-bg:#eee7dc;
+  position:fixed;inset:0;z-index:100;overflow-y:auto;overscroll-behavior:contain;
+  background:rgba(46,60,50,.34);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  -webkit-user-select:text;user-select:text;-webkit-touch-callout:default;
+  font-family:"Spectral","Bodoni Moda",Georgia,serif;font-size:16px;line-height:1.4;color:var(--ink);
+  opacity:0;transition:opacity .35s ease;
+}
+.adm.is-open{opacity:1}
+.adm:focus{outline:none}
+.adm *,.adm *::before,.adm *::after{box-sizing:border-box}
+.adm button:focus-visible,.adm a:focus-visible,.adm select:focus-visible{outline:2px solid rgba(138,26,31,.5);outline-offset:2px}
+
+.adm-sheet{
+  position:relative;width:min(1080px, 100%);margin:clamp(0px, 5vh, 56px) auto;
+  padding:clamp(22px, 4vw, 48px) clamp(18px, 4vw, 52px) clamp(28px, 4vw, 52px);
+  background-color:var(--paper);
+  background-image:var(--grain-paper), linear-gradient(172deg, #fefbf5 0%, #f9f4ea 60%, #f5efe3 100%);
+  background-size:220px, 100% 100%;
+  box-shadow:0 2px 6px rgba(30,40,32,.12), 0 40px 90px -40px rgba(30,40,32,.6);
+  transform:translateY(16px);transition:transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.adm.is-open .adm-sheet{transform:none}
+.adm-sheet::before{content:"";position:absolute;inset:10px;border:1px solid var(--line);pointer-events:none}
+
+/* ---- header ---- */
+.adm-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.adm-title{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.adm-xi{font-family:var(--cjk);font-weight:600;font-size:26px;line-height:1;color:var(--cinnabar)}
+.adm-title h1{margin:0;font-family:"Bodoni Moda",serif;font-style:italic;font-weight:400;font-size:clamp(26px, 4vw, 34px);line-height:1.1;color:var(--cinnabar)}
+.adm-role{font-family:"Playfair Display SC",serif;font-size:13px;letter-spacing:.14em;color:var(--gold-deep);border:1px solid var(--line);border-radius:999px;padding:1px 9px 2px}
+.adm-head-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.adm-close{width:40px;height:40px;border:0;border-radius:50%;background:none;font-size:28px;line-height:1;color:var(--ink-soft);cursor:pointer}
+.adm-close:hover{background:rgba(138,26,31,.07);color:var(--cinnabar)}
+
+/* ---- totals ---- */
+.adm-stats{display:flex;flex-wrap:wrap;gap:1px;margin-bottom:24px;background:var(--line-soft);border:1px solid var(--line-soft)}
+.adm-stat{flex:1 1 122px;display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--paper)}
+.adm-stat strong{font-family:"Bodoni Moda",serif;font-weight:500;font-size:26px;line-height:1.05;font-variant-numeric:lining-nums tabular-nums}
+.adm-stat span{font-size:13px;line-height:1.3;color:var(--ink-soft)}
+.adm-stat.is-attending strong{color:var(--yes)}
+.adm-stat.is-not_attending strong{color:var(--no)}
+.adm-stat.is-no_response strong{color:var(--wait)}
+.adm-lede{margin:0 0 20px;font-style:italic;color:var(--ink-soft)}
+
+/* ---- toolbar ---- */
+.adm-tools{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 18px}
+.adm-search{flex:1 1 220px}
+.adm-filter{flex:0 1 240px}
+.adm-manage{margin-top:18px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.adm-new{display:flex;align-items:flex-end;gap:8px;flex:1 1 300px;max-width:520px}
+.adm-new .adm-input{flex:1}
+.adm-file{display:flex;align-items:center;gap:6px;margin-left:auto}
+.adm-hint{margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--ink-soft)}
+.adm-hint b{font-weight:400;font-style:italic;color:var(--ink)}
+
+.adm-input,.adm-search,.adm-filter,.adm-move{
+  min-width:0;font:inherit;font-size:16px;color:var(--ink);background-color:transparent;
+  border:0;border-bottom:1px solid var(--line);border-radius:0;padding:7px 2px;outline:none;
+}
+.adm-input:focus,.adm-search:focus,.adm-filter:focus,.adm-move:focus{border-bottom-color:var(--cinnabar)}
+.adm-input::placeholder,.adm-search::placeholder{font-style:italic;color:rgba(75,92,81,.62)}
+.adm-filter,.adm-move{
+  -webkit-appearance:none;appearance:none;cursor:pointer;padding-right:20px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386652a' stroke-width='1.3'/%3E%3C/svg%3E") right 3px center/10px no-repeat;
+}
+
+.adm-btn{
+  font-family:"Bodoni Moda",serif;font-size:15px;letter-spacing:.03em;white-space:nowrap;cursor:pointer;
+  color:#fbf7ef;background:var(--cinnabar);border:1px solid var(--cinnabar);border-radius:2px;padding:8px 18px;
+  transition:background .25s ease, color .25s ease;
+}
+.adm-btn:hover{background:#6e1418}
+.adm-btn-quiet{color:var(--cinnabar);background:transparent}
+.adm-btn-quiet:hover{background:rgba(138,26,31,.07)}
+.adm-text-btn{border:0;background:none;padding:6px 8px;font:inherit;font-style:italic;font-size:15px;color:var(--gold-deep);cursor:pointer}
+.adm-text-btn:hover{color:var(--cinnabar)}
+.adm-text-btn.adm-danger{color:#9b3b36}
+
+.adm-flash{min-height:1.45em;margin:14px 0 8px;font-style:italic;font-size:15px;color:var(--yes)}
+.adm-flash.is-error{color:var(--no)}
+
+/* ---- groups ---- */
+.adm-list{border-top:1px solid var(--line)}
+.adm-empty{padding:30px 4px;text-align:center;font-style:italic;color:var(--ink-soft)}
+.adm-group{border-bottom:1px solid var(--line-soft);transition:background .3s ease}
+.adm-group.is-open{background:rgba(255,253,248,.7)}
+.adm-group-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 4px}
+.adm-toggle{
+  flex:1 1 260px;display:flex;align-items:flex-start;gap:10px;min-width:0;
+  border:0;background:none;padding:2px 0;text-align:left;font:inherit;color:inherit;cursor:pointer;
+}
+.adm-toggle.is-static{cursor:default}
+.adm-caret{flex:none;width:8px;height:8px;margin:9px 2px 0 1px;border-right:1.5px solid var(--gold-deep);border-bottom:1.5px solid var(--gold-deep);transform:rotate(-45deg);transition:transform .25s ease}
+.adm-group.is-open .adm-caret{transform:rotate(45deg)}
+.adm-summary{display:flex;flex-direction:column;gap:1px;min-width:0}
+.adm-group-name{font-family:"Bodoni Moda",serif;font-size:19px;line-height:1.25;color:var(--cinnabar)}
+button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.adm-group-who{font-size:14.5px;color:var(--ink-soft)}
+.adm-group-rsvp{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:2px;font-size:13px}
+.adm-dot{display:inline-flex;align-items:center;gap:5px}
+.adm-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.adm-dot.is-attending{color:var(--yes)}
+.adm-dot.is-not_attending{color:var(--no)}
+.adm-dot.is-no_response{color:var(--wait)}
+
+.adm-chips{display:flex;flex-wrap:wrap;gap:6px}
+.adm-chip,.adm-mini{
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;font:inherit;
+  border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink-soft);
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+.adm-chip{font-size:13.5px;padding:5px 11px 5px 8px}
+.adm-mini{font-size:12.5px;padding:3px 9px 3px 6px;border-color:var(--line-soft)}
+.adm-chip:hover:not(:disabled),.adm-mini:hover{border-color:var(--gold-deep);color:var(--ink)}
+.adm-chip:disabled{opacity:.45;cursor:default}
+.adm-tick{position:relative;flex:none;width:13px;height:13px;border:1px solid currentColor;border-radius:50%}
+.adm-mini .adm-tick{width:11px;height:11px}
+.adm-chip.is-all,.adm-mini.is-on{background:var(--yes-bg);border-color:rgba(61,106,76,.45);color:var(--yes)}
+.adm-chip.is-all:hover,.adm-mini.is-on:hover{color:var(--yes);border-color:var(--yes)}
+.adm-chip.is-all .adm-tick,.adm-mini.is-on .adm-tick{background:currentColor}
+.adm-chip.is-all .adm-tick::after,.adm-mini.is-on .adm-tick::after{
+  content:"";position:absolute;left:3.6px;top:1.4px;width:3.4px;height:6.4px;
+  border:solid var(--paper);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);
+}
+.adm-mini.is-on .adm-tick::after{left:2.8px;top:.9px;width:3px;height:5.6px}
+.adm-chip.is-some{color:var(--gold-deep);border-color:rgba(134,101,42,.55)}
+.adm-chip.is-some .adm-tick{background:linear-gradient(90deg, currentColor 50%, transparent 50%)}
+.adm-frac{font-variant-numeric:tabular-nums}
+
+.adm-copy{
+  min-width:100px;font-family:"Bodoni Moda",serif;font-size:14.5px;letter-spacing:.03em;white-space:nowrap;cursor:pointer;
+  color:var(--cinnabar);background:transparent;border:1px solid var(--cinnabar);border-radius:2px;padding:7px 14px;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+}
+.adm-copy:hover{background:var(--cinnabar);color:#fbf7ef}
+.adm-copy.is-done{background:var(--yes);border-color:var(--yes);color:#fbf7ef}
+
+/* ---- one group, opened ---- */
+.adm-group-body{padding:0 4px 20px 25px}
+.adm-warn{margin:0 0 8px;font-size:14px;font-style:italic;color:var(--gold-deep)}
+.adm-guests{list-style:none;margin:0;padding:0}
+.adm-guest{
+  display:grid;grid-template-columns:auto minmax(120px, 1fr) auto auto minmax(0, 150px) auto;
+  align-items:center;gap:8px 12px;padding:7px 0;border-bottom:1px dashed var(--line-soft);
+}
+.adm-order{display:flex;align-items:center;gap:1px}
+.adm-rank{width:20px;margin-right:3px;text-align:right;font-family:"Bodoni Moda",serif;font-size:14px;color:var(--gold-deep);font-variant-numeric:lining-nums}
+.adm-icon{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:50%;background:none;font-size:15px;line-height:1;color:var(--ink-soft);cursor:pointer}
+.adm-icon:hover:not(:disabled){background:rgba(138,26,31,.07);color:var(--cinnabar)}
+.adm-icon:disabled{opacity:.22;cursor:default}
+.adm-icon.adm-danger{font-size:21px}
+.adm-name{width:100%}
+
+.adm-rsvp{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.adm-seg{font:inherit;font-size:13.5px;white-space:nowrap;padding:5px 10px;border:0;border-left:1px solid var(--line-soft);background:transparent;color:var(--ink-soft);cursor:pointer;transition:background .2s ease, color .2s ease}
+.adm-seg:first-child{border-left:0}
+.adm-seg:hover{background:rgba(168,130,60,.1)}
+.adm-seg.is-attending[aria-pressed="true"]{background:var(--yes);color:#fbf7ef}
+.adm-seg.is-not_attending[aria-pressed="true"]{background:var(--no);color:#fbf7ef}
+.adm-seg.is-no_response[aria-pressed="true"]{background:var(--wait-bg);color:var(--ink)}
+
+.adm-sent{display:flex;gap:5px}
+.adm-move{width:100%;font-size:14px;color:var(--ink-soft)}
+
+.adm-add{display:flex;align-items:flex-end;gap:10px;max-width:480px;margin-top:12px}
+.adm-add .adm-input{flex:1}
+.adm-add .adm-btn{padding:6px 16px}
+
+.adm-group-foot{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 28px;margin-top:20px;padding-top:12px;border-top:1px solid var(--line-soft)}
+.adm-field{display:flex;flex-direction:column;gap:1px;font-size:12.5px;letter-spacing:.02em;color:var(--ink-soft)}
+.adm-field .adm-input{width:min(280px, 70vw)}
+.adm-url{padding:7px 0 6px;font-size:14.5px;letter-spacing:0;color:var(--gold-deep);text-decoration:none;border-bottom:1px solid var(--line-soft);word-break:break-all}
+.adm-url:hover{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
+.adm-group-foot .adm-danger{margin-left:auto}
+
+/* ---- view toggle ---- */
+.adm-views{display:inline-flex;flex:none;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.adm-view{font-family:"Bodoni Moda",serif;font-size:14.5px;letter-spacing:.03em;padding:7px 16px;border:0;border-left:1px solid var(--line-soft);background:transparent;color:var(--ink-soft);cursor:pointer;transition:background .2s ease, color .2s ease}
+.adm-view:first-child{border-left:0}
+.adm-view:hover{background:rgba(168,130,60,.1)}
+.adm-view[aria-pressed="true"]{background:var(--cinnabar);color:#fbf7ef}
+
+/* ---- one row per guest ---- */
+.adm-row{
+  display:grid;grid-template-columns:minmax(180px, 1fr) auto auto auto;
+  align-items:center;gap:8px 18px;padding:9px 4px;border-bottom:1px solid var(--line-soft);
+}
+.adm-row-name{min-width:0;overflow-wrap:anywhere;font-family:"Bodoni Moda",serif;font-size:17px;line-height:1.25}
+.adm-row-open{
+  font:inherit;font-size:13.5px;white-space:nowrap;cursor:pointer;padding:5px 12px;
+  color:var(--gold-deep);background:transparent;border:1px solid var(--line);border-radius:3px;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+}
+.adm-row-open:hover{color:var(--cinnabar);border-color:var(--cinnabar);background:rgba(138,26,31,.05)}
+
+.adm-offscreen{position:fixed;left:-9999px;top:0;opacity:0}
+
+/* ---- narrower screens: each guest wraps onto two or three lines ---- */
+@media (max-width:1000px){
+  .adm-guest{
+    grid-template-columns:auto minmax(0, 1fr) auto minmax(0, 150px) auto;
+    grid-template-areas:"order name sent move del" ". rsvp rsvp rsvp rsvp";
+  }
+  .adm-order{grid-area:order}
+  .adm-name{grid-area:name}
+  .adm-rsvp{grid-area:rsvp;justify-self:start}
+  .adm-sent{grid-area:sent}
+  .adm-move{grid-area:move}
+  .adm-guest > .adm-danger{grid-area:del}
+  .adm-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .adm-row-name{flex:1 1 220px}
+}
+@media (max-width:640px){
+  .adm-sheet{margin:0;min-height:100%;box-shadow:none}
+  .adm-sheet::before{inset:6px}
+  .adm-group-body{padding-left:4px}
+  /* rank, name and × on the first line; RSVP, then sent and "Move to" wrap below */
+  .adm-guest{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 0}
+  .adm-guest > *{order:2}
+  .adm-guest > .adm-order,.adm-guest > .adm-name{order:0}
+  .adm-guest > .adm-danger{order:1}
+  .adm-name{flex:1 1 140px;width:auto}
+  .adm-move{flex:1 1 120px;width:auto}
+  .adm-seg{padding:5px 8px;font-size:13px}
+  .adm-stat{flex-basis:96px;padding:9px 11px}
+  .adm-stat strong{font-size:22px}
+  .adm-group-foot .adm-danger{margin-left:0}
+  .adm-row{gap:8px 10px;padding:11px 0}
+  .adm-row-name{flex-basis:100%}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .adm,.adm-sheet,.adm-caret{transition:none}
+}

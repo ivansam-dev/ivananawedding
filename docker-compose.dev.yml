@@ -1,0 +1,15 @@
+# `make dev`: the same stack, but code changes show up without rebuilding.
+services:
+  api:
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000",
+              "--reload", "--reload-dir", "/srv/app"]
+    environment:
+      COOKIE_SECURE: "false"         # plain http://localhost
+      ENABLE_DOCS: "true"            # http://localhost:8080/api/docs
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend/app:/srv/app:ro
+
+  web:
+    volumes:
+      - ./frontend/public:/usr/share/nginx/html:ro

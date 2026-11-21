@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c8d3c9">
+<meta name="robots" content="noindex, nofollow">
+<title>Save the date — Ivan &amp; Ana — 5 March 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600&text=%E5%9B%8D&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;1,300;1,400&family=Playfair+Display+SC:wght@400&family=Beau+Rivage&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..600;1,400..600&family=Noto+Serif+TC:wght@400;600&display=swap">
+<style>
+/* ------------------------------------------------------------------
+   Palette — cinnabar lacquer, gold leaf, Ru-ware celadon, ivory stock
+   ------------------------------------------------------------------ */
+:root{
+  --we:480px; --he:343px;          /* envelope (set by script)        */
+  --wf:520px; --hh:364px;          /* card width / folded height      */
+  --u:calc(var(--wf) / 100);       /* one card unit                   */
+  --persp:calc(var(--we) * 3);
+
+  --glaze-hi:#dfe6dd; --glaze:#c9d4ca; --glaze-lo:#a5b4a8;
+  --lacquer:#6c1216; --lacquer-deep:#4a080c; --cinnabar:#8a1a1f;
+  --gold:#b08a45; --gold-deep:#86652a; --gold-line:rgba(168,130,60,.72);
+  --paper:#fbf7ef; --ink:#2e2420; --ink-soft:#67584f;
+
+  --serif:"Bodoni Moda","Didot","Bodoni 72","Times New Roman",serif;
+  --cjk:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  overflow:hidden;
+  font-family:var(--serif);
+  font-optical-sizing:auto;
+  color:var(--ink);
+  background:radial-gradient(120% 90% at 50% 42%, var(--glaze-hi) 0%, var(--glaze) 50%, var(--glaze-lo) 100%);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{               /* faint glaze texture */
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:var(--grain-linen);background-size:240px;
+  opacity:.55;mix-blend-mode:multiply;
+}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* per-language type: Vietnamese needs a face with its diacritics; Chinese is set upright */
+html[lang="vi"]{--serif:"Playfair Display","Bodoni Moda","Times New Roman",serif}
+html[lang="zh-Hant"]{--serif:"Bodoni Moda","Noto Serif TC","Songti TC","PMingLiU",serif}
+html[lang="zh-Hant"] [data-i18n]{font-style:normal;letter-spacing:.08em}
+html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
+
+/* language choice, shown before the envelope */
+.hearts{position:fixed;inset:0;z-index:25;pointer-events:none;overflow:hidden}
+.heart{position:absolute;left:0;top:0;will-change:transform,opacity}
+.heart svg{display:block;width:100%;height:100%;overflow:visible}
+.spark{position:absolute;left:0;top:0;border-radius:50%;will-change:transform,opacity}
+
+.lang{
+  position:fixed;inset:0;z-index:20;display:grid;place-items:center;
+  opacity:0;pointer-events:none;transition:opacity .9s ease;
+}
+.lang.is-shown{opacity:1;pointer-events:auto}
+.lang-inner{display:flex;flex-direction:column;align-items:center;gap:30px}
+.lang-xi{font-family:var(--cjk);font-weight:600;font-size:30px;line-height:1;color:var(--cinnabar);opacity:.85}
+.lang-options{display:flex;align-items:center;gap:28px}
+.lang-rule{width:1px;height:26px;background:var(--gold-line)}
+.lang-options button{
+  position:relative;border:0;background:none;cursor:pointer;padding:8px 2px;
+  font-size:23px;line-height:1.2;color:var(--cinnabar);
+  transition:color .4s ease;
+}
+.lang-options button::after{
+  content:"";position:absolute;left:50%;right:50%;bottom:0;height:1px;background:var(--gold);
+  transition:left .5s cubic-bezier(.2,.8,.2,1), right .5s cubic-bezier(.2,.8,.2,1);
+}
+.lang-options button:hover::after,.lang-options button:focus-visible::after{left:0;right:0}
+.lang-options button:focus-visible{outline:none}
+.lang-options button[data-lang="zh-Hant"]{font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;letter-spacing:.12em}
+.lang-options button[data-lang="vi"]{font-family:"Playfair Display",serif;font-style:italic}
+.lang-options button[data-lang="en"]{font-family:"Bodoni Moda",serif;font-style:italic}
+/* hidden admin sign-in (tap 囍 five times); the guest list itself is admin.js / admin.css */
+.lang{overflow-y:auto}
+.lang-inner,.lang-options,.lang-options button,.lang-rule{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.lang-options button::selection,.lang-options button *::selection{background:transparent}
+.maker input{-webkit-user-select:text;user-select:text}
+.lang-xi{cursor:default;-webkit-user-select:none;user-select:none}
+.maker{
+  display:flex;flex-direction:column;align-items:center;gap:14px;width:min(300px, 80vw);margin-top:8px;
+  opacity:0;transform:translateY(8px);transition:opacity .5s ease, transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.maker[hidden]{display:none}
+.maker.is-open{opacity:1;transform:none}
+.maker input{
+  font-family:"Bodoni Moda",serif;font-size:16px;color:var(--ink);background:transparent;text-align:center;
+  border:0;border-bottom:1px solid var(--gold-line);border-radius:0;padding:6px 2px;outline:none;width:100%;min-width:0;
+}
+.maker input::placeholder{font-style:italic;color:rgba(75,92,81,.6)}
+.maker input:focus{border-bottom-color:var(--cinnabar)}
+.maker-copy{
+  margin-top:4px;font-family:"Bodoni Moda",serif;font-size:16px;letter-spacing:.04em;color:#fbf7ef;
+  background:var(--cinnabar);border:0;border-radius:2px;padding:10px 28px;cursor:pointer;transition:background .3s ease, opacity .3s ease;
+}
+.maker-copy:hover{background:#6e1418}
+.maker-copy:disabled{opacity:.4;cursor:default}
+.maker-msg{min-height:1.3em;font-style:italic;font-size:15px;color:var(--cinnabar)}
+.maker.is-wrong input{animation:shake .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* personalised cover and the pause before the letter opens */
+.cover-dear{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:max(calc(var(--u) * 2.2), 9.5px);line-height:1.35;color:var(--ink-soft);margin-bottom:calc(var(--u) * 1.3);letter-spacing:.14em;padding-left:.14em}
+.cover-dear[hidden]{display:none}
+html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
+.cover-date{display:none}
+.cover-art.is-blank .cover-names{display:none}
+.cover-art.is-blank .emblem{margin-bottom:0}
+.cover-names.is-guests{max-width:84%;font-family:"Playfair Display SC","Noto Serif TC",serif;font-style:normal;font-weight:400;line-height:1.15;color:var(--cinnabar);letter-spacing:.06em}
+.cover-names.is-guests .amp{font-family:"Playfair Display",serif;font-style:italic;color:var(--gold);letter-spacing:0;padding:0 .2em}
+.card-hint{
+  position:fixed;left:50%;top:calc(50% + var(--hh) / 2 + clamp(18px, 3.6vh, 34px));z-index:11;transform:translateX(-50%);
+  white-space:nowrap;font-style:italic;font-size:15px;letter-spacing:.04em;color:#4b5c51;
+  opacity:0;pointer-events:none;transition:opacity .8s ease;
+}
+.is-awaiting.card-hint-on .card-hint{opacity:.75;animation:breathe 3.2s ease-in-out .8s infinite}
+.is-awaiting .fly{pointer-events:auto;cursor:pointer}
+.fly:focus-visible{outline:none}
+
+@media (max-width:480px){
+  .maker{margin-top:28px}
+  .lang.making{place-items:start center;padding:12vh 0 40px}
+  .lang.making .lang-xi{position:static;transform:none;margin-bottom:36px}
+  .lang-inner{gap:0}
+  .lang-xi{position:absolute;left:50%;top:max(56px, 18vh);transform:translateX(-50%)}
+  .lang-options{flex-direction:column;gap:14px}
+  .lang-rule{width:26px;height:1px}
+}
+
+.stage{position:fixed;inset:0;display:grid;place-items:center}
+
+/* ------------------------------------------------------------------
+   Envelope
+   ------------------------------------------------------------------ */
+.env-land{position:relative;top:calc(var(--he) * .1);transform:translateY(130vh)}
+.env-land.landed{transform:none}
+.env-move{position:relative}
+.env-hover{
+  position:relative;cursor:pointer;outline:none;
+  -webkit-user-select:none;user-select:none;
+  transition:transform .8s cubic-bezier(.2,.8,.2,1);
+}
+.env{
+  position:relative;width:var(--we);height:var(--he);
+  isolation:isolate;background:var(--lacquer-deep);
+  box-shadow:
+    0 1px 1px rgba(40,30,25,.18),
+    0 14px 24px -12px rgba(38,48,40,.45),
+    0 38px 70px -30px rgba(38,48,40,.55);
+  transition:box-shadow .8s cubic-bezier(.2,.8,.2,1);
+}
+.env-back,.env-pocket{position:absolute;inset:0;width:100%;height:100%;display:block}
+.env-back{z-index:1}
+.letter{
+  position:absolute;left:0;top:0;z-index:2;
+  width:var(--wf);height:var(--hh);transform-origin:0 0;
+  box-shadow:0 1px 3px rgba(40,5,5,.35);
+}
+.env-pocket{z-index:3}
+
+.flap{
+  position:absolute;left:0;top:0;width:100%;height:62%;z-index:4;
+  transform-origin:50% 0;transform-style:preserve-3d;
+  transform:perspective(var(--persp)) rotateX(0deg);
+  transition:transform .8s cubic-bezier(.2,.8,.2,1);
+  pointer-events:none;
+}
+.flap-inner{position:absolute;inset:0;transform-origin:50% 0;transform-style:preserve-3d}
+.flap-face{
+  position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+}
+.flap-out{filter:drop-shadow(0 2px 3px rgba(35,0,4,.4));transition:filter .8s ease}
+.flap-in{transform:rotateX(180deg);filter:drop-shadow(0 -1px 2px rgba(35,0,4,.25))}
+
+/* red-foil round medallion with 囍 — doubles as the seal */
+.seal{
+  position:absolute;left:50%;top:87%;
+  width:calc(var(--we) * .22);aspect-ratio:1;
+  transform:translate(-50%,-50%) translateZ(2px);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+}
+.medal{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(30,0,3,.45))}
+.seal.is-falling{position:fixed;z-index:30;pointer-events:none;will-change:transform}
+
+/* surface light: grain, glimmer, pointer glow — blended onto the lacquer */
+.env-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.env-fx i{position:absolute;inset:0;z-index:6;transition:opacity .6s ease}
+.fx-grain{background-image:var(--grain-gray);background-size:200px;mix-blend-mode:overlay;opacity:.2}
+.fx-light{
+  background:linear-gradient(142deg, rgba(255,214,196,.22) 0%, rgba(255,214,196,0) 42%, rgba(0,0,0,0) 62%, rgba(20,0,0,.22) 100%);
+  mix-blend-mode:soft-light;
+}
+.fx-glow{
+  background:radial-gradient(circle at var(--mx,50%) var(--my,35%), rgba(255,228,206,.5), rgba(255,228,206,0) 45%);
+  mix-blend-mode:soft-light;opacity:0;
+}
+.hint{
+  position:absolute;left:50%;top:calc(100% + clamp(22px, 4.4vh, 40px));
+  transform:translateX(-50%);white-space:nowrap;
+  font-style:italic;font-size:15px;letter-spacing:.04em;color:#4b5c51;
+  opacity:0;transition:opacity 1.2s ease, color .5s ease, letter-spacing .8s cubic-bezier(.2,.8,.2,1);
+}
+.is-ready.hint-on:not(.is-busy) .hint{opacity:.7}
+.is-busy .hint{opacity:0;transition:opacity .35s ease}
+.is-busy .env-fx i{opacity:0 !important}
+
+@media (hover:hover){
+  .is-ready:not(.is-opening) .env-hover:hover{transform:translateY(-6px)}
+  .is-ready:not(.is-opening) .env-hover:hover .env{
+    box-shadow:
+      0 1px 1px rgba(40,30,25,.16),
+      0 22px 32px -14px rgba(38,48,40,.5),
+      0 52px 90px -34px rgba(38,48,40,.6);
+  }
+  .is-ready:not(.is-opening) .env-hover:hover .flap{transform:perspective(var(--persp)) rotateX(17deg)}
+  .is-ready:not(.is-opening) .env-hover:hover .flap-out{filter:drop-shadow(0 8px 8px rgba(35,0,4,.42))}
+  .is-ready:not(.is-busy) .env-hover:hover .fx-glow{opacity:1}
+  .is-ready.hint-on:not(.is-busy) .env-hover:hover + .hint{opacity:1;color:#3d4c43;letter-spacing:.09em}
+}
+.is-ready:not(.is-opening) .env-hover:focus-visible{transform:translateY(-6px)}
+.is-ready:not(.is-opening) .env-hover:focus-visible .flap{transform:perspective(var(--persp)) rotateX(17deg)}
+.env-hover:focus-visible .env{outline:1px solid rgba(60,80,68,.55);outline-offset:8px}
+.is-busy .env-hover .env{outline-color:transparent}
+
+@media (hover:none){
+  .is-ready:not(.is-busy) .flap{animation:nudge 5.2s cubic-bezier(.45,0,.3,1) 1.2s infinite}
+  .is-ready.hint-on:not(.is-busy) .hint{animation:breathe 3.6s ease-in-out 1.4s infinite}
+}
+@keyframes nudge{
+  0%,64%,100%{transform:perspective(var(--persp)) rotateX(0deg)}
+  76%{transform:perspective(var(--persp)) rotateX(14deg)}
+  88%{transform:perspective(var(--persp)) rotateX(1deg)}
+}
+@keyframes breathe{0%,100%{opacity:.7}50%{opacity:.35}}
+
+.is-opening .flap{transform:perspective(var(--persp)) rotateX(0deg)}
+.is-opening .env-hover{transform:none;transition:transform 1s ease}
+
+/* ------------------------------------------------------------------
+   Card
+   ------------------------------------------------------------------ */
+.paper{
+  background-color:var(--paper);
+  background-image:var(--grain-paper), linear-gradient(172deg, #fefbf5 0%, #f9f4ea 60%, #f5efe3 100%);
+  background-size:220px, 100% 100%;
+}
+.fly{
+  position:fixed;left:50%;top:50%;z-index:10;
+  width:var(--wf);height:var(--hh);
+  margin-left:calc(var(--wf) / -2);margin-top:calc(var(--hh) / -2);
+  transform-origin:0 0;visibility:hidden;pointer-events:none;
+}
+.fly.is-live{visibility:visible}
+.is-open .fly{pointer-events:auto}
+.shift{position:absolute;inset:0;perspective:calc(var(--wf) * 3.2);perspective-origin:50% 50%}
+
+.card-shadow{position:absolute;inset:0;pointer-events:none}
+/* the shadow on the table: soft filled shapes (not box-shadows), so nothing pale shows through
+   when the card turns, and it can narrow smoothly under the card without vanishing */
+.cs-far{position:absolute;inset:0;opacity:0}
+.cs-far i{position:absolute;background:rgb(30,42,34)}
+.cs-far i:nth-child(1){inset:2px;transform:translateY(2px);filter:blur(3px);opacity:.25}
+.cs-far i:nth-child(2){inset:18px;transform:translateY(26px);filter:blur(25px);opacity:.45}
+.cs-far i:nth-child(3){inset:38px;transform:translateY(46px);filter:blur(40px);opacity:.4}
+.is-open .cs-far{opacity:1}
+/* the thin contact shadow is part of each face, so it always follows the card's outline */
+.fly .face{box-shadow:0 1px 3px rgba(40,5,5,.3)}
+
+.card3d{position:absolute;inset:0;transform-style:preserve-3d}
+.is-open .card3d{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.face-back{transform:rotateY(180deg)}
+.shade{position:absolute;inset:0;opacity:0;pointer-events:none;background:linear-gradient(to right, rgba(36,30,26,.03), rgba(36,30,26,.2))}
+.face-back .shade{background:linear-gradient(to left, rgba(36,30,26,.03), rgba(36,30,26,.2))}
+
+/* engraved frame */
+.frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid var(--gold-line);pointer-events:none}
+
+/* cover */
+.cover-print{position:absolute;inset:0}
+.cover-art{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+}
+.emblem{
+  position:relative;display:grid;place-items:center;
+  width:calc(var(--u) * 19);height:calc(var(--u) * 19);
+  margin-bottom:calc(var(--u) * 4.6);
+}
+.emblem .xi{
+  font-family:var(--cjk);font-weight:600;line-height:1;font-size:calc(var(--u) * 9.6);
+  background:linear-gradient(158deg, #c29c52 8%, #ecd79f 36%, #a57d33 62%, #d6b56c 92%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.cover-names{
+  font-style:italic;font-weight:400;font-size:calc(var(--u) * 6.2);
+  line-height:1;color:var(--cinnabar);letter-spacing:.01em;
+}
+.cover-names .amp{color:var(--gold);padding:0 .12em}
+.cover-date{
+  margin-top:calc(var(--u) * 2.4);font-size:calc(var(--u) * 2.7);
+  color:var(--ink-soft);letter-spacing:.06em;
+}
+
+/* inside */
+.inner{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:calc(var(--u) * 7) calc(var(--u) * 8);
+}
+.inner-top{padding-top:calc(var(--u) * 13);padding-bottom:calc(var(--u) * 3)}
+.hearts-line{
+  margin-top:calc(var(--u) * 4.4);max-width:82%;font-style:italic;font-size:calc(var(--u) * 3);
+  line-height:1.5;color:var(--ink-soft);letter-spacing:.02em;
+}
+.hearts-line::after{
+  content:"";display:inline-block;width:.78em;height:.72em;margin-left:.4em;vertical-align:-.05em;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 30'%3E%3Cpath d='M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z' fill='%23c4313a'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* heart balloons gathering under the gold frame */
+.balloons{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.balloon{position:absolute;left:0;top:0;will-change:transform}
+.balloon svg{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 90%;animation:bob 3.4s ease-in-out infinite alternate}
+.balloon:nth-child(3n) svg{animation-duration:2.8s;animation-delay:-1.1s}
+.balloon:nth-child(3n+1) svg{animation-duration:3.9s;animation-delay:-2.3s}
+@keyframes bob{from{transform:rotate(-5deg) translateY(0)}to{transform:rotate(5deg) translateY(-6%)}}
+.inner-bottom{padding-top:calc(var(--u) * 4.5);padding-bottom:calc(var(--u) * 7.5)}
+
+.lead{font-style:italic;font-size:calc(var(--u) * 3.4);color:var(--ink-soft);letter-spacing:.02em}
+.names{
+  display:flex;flex-direction:column;align-items:center;
+  font-weight:400;margin-top:calc(var(--u) * 3.2);
+}
+.names .name{
+  font-style:italic;font-weight:400;font-size:calc(var(--u) * 9.6);
+  line-height:1.08;color:var(--cinnabar);letter-spacing:-.005em;
+}
+.names .amp{
+  font-style:italic;font-size:calc(var(--u) * 6.4);line-height:1;color:var(--gold);
+  margin:calc(var(--u) * .2) 0 calc(var(--u) * .6);
+}
+.request{
+  margin-top:calc(var(--u) * 3.8);font-size:calc(var(--u) * 3.2);
+  line-height:1.55;color:var(--ink);
+}
+
+.date{display:flex;flex-direction:column;align-items:center}
+.date .day{font-style:italic;font-size:calc(var(--u) * 4.6);line-height:1.15;color:var(--cinnabar)}
+.date .year{margin-top:calc(var(--u) * .8);font-size:calc(var(--u) * 3);color:var(--ink-soft);letter-spacing:.04em}
+
+.events{
+  display:grid;grid-template-columns:1fr auto 1fr;column-gap:calc(var(--u) * 3.6);
+  width:100%;margin-top:calc(var(--u) * 5.4);
+}
+.vrule{width:1px;background:linear-gradient(to bottom, rgba(168,130,60,0), var(--gold-line) 18%, var(--gold-line) 82%, rgba(168,130,60,0))}
+.event h2{
+  font-style:italic;font-weight:400;font-size:calc(var(--u) * 3.9);
+  line-height:1.2;color:var(--cinnabar);
+}
+.event .time{margin-top:calc(var(--u) * 1.1);font-size:calc(var(--u) * 2.9);line-height:1.45;color:var(--ink-soft)}
+.event .venue{margin-top:calc(var(--u) * 2.2);font-size:calc(var(--u) * 3.25);font-weight:500;line-height:1.25;color:var(--ink)}
+.event .addr{
+  display:inline-block;margin-top:calc(var(--u) * .7);
+  font-size:calc(var(--u) * 2.9);line-height:1.45;color:var(--ink-soft);
+  text-decoration:none;border-bottom:1px solid rgba(168,130,60,0);
+  transition:border-color .4s ease, color .4s ease;
+}
+.event .addr:hover,.event .addr:focus-visible{color:var(--ink);border-color:var(--gold-line);outline:none}
+
+.attire{margin-top:calc(var(--u) * 5.2);display:flex;flex-direction:column;align-items:center}
+.attire::before{content:"";width:calc(var(--u) * 7);height:1px;background:var(--gold-line);margin-bottom:calc(var(--u) * 2.4)}
+/* back of the card: title near the top, names just above the middle, date and place low */
+.std{position:absolute;inset:0;text-align:center}
+.std-row{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;transform:translateY(-50%)}
+.std-top{top:calc(var(--hh) * .2)}
+.std-mid{top:50%}
+.std-foot{top:calc(var(--hh) * .785)}
+.std-title{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 3.7);line-height:1.2;color:var(--cinnabar);letter-spacing:.14em;padding-left:.14em}
+.std-lead{font-family:"Playfair Display SC","Noto Serif TC",serif}
+.std-lead{position:absolute;left:0;right:0;bottom:100%;margin-bottom:calc(var(--u) * 1.6);white-space:nowrap;font-size:max(calc(var(--u) * 2.2), 9.5px);color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
+.std-names{font-family:"Beau Rivage","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 9.3);line-height:1.15;color:var(--cinnabar);letter-spacing:0;white-space:nowrap}
+.std-names .amp{color:var(--gold);padding:0 .26em}
+.std-day,.std-place{font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;font-size:max(calc(var(--u) * 2.2), 9.5px);line-height:1.35;color:var(--ink);letter-spacing:.12em;padding-left:.12em}
+.std-day,.std-place{text-transform:lowercase}   /* all small capitals, like the line above the names */
+.std-place{margin-top:calc(var(--u) * .9)}
+html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
+.attire span{font-style:italic;font-size:calc(var(--u) * 3.5);color:var(--ink);letter-spacing:.02em}
+
+/* two ducklings standing on the card's bottom gold line */
+.ducks{
+  position:absolute;left:calc(var(--u) * 3.6);right:calc(var(--u) * 3.6);bottom:calc(var(--u) * 3.6 + 1px);height:0;
+  z-index:2;pointer-events:none;--duck-w:calc(var(--u) * 8);--duck-gap:calc(var(--u) * 3);
+}
+.duck{position:absolute;bottom:0;width:var(--duck-w);height:var(--duck-w);pointer-events:auto;outline:none}
+.duck-a{left:var(--duck-gap)}
+.duck.has-heart,.ducks.paired .duck{cursor:pointer}
+.duck-b{right:var(--duck-gap)}
+.duck-a.together{left:auto;right:calc(var(--duck-gap) + var(--duck-w) * .8)}
+.duck-b.together{right:auto;left:calc(var(--duck-gap) + var(--duck-w) * .8)}
+.duck-face,.duck-bob{width:100%;height:100%}
+.duck-b .duck-face,.duck-a.back .duck-face{transform:scaleX(-1)}
+.duck-b.back .duck-face{transform:none}
+.duck-bob{transform-origin:50% 100%}
+.duck svg{display:block;width:100%;height:100%;overflow:visible}
+.duck .held{transform-box:fill-box;transform-origin:50% 50%;transition:opacity .2s ease}
+.duck .held.gone{opacity:0}
+.ducks:not(.paired) .duck.has-heart:not(.busy) .held{animation:beat 1.5s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}60%{transform:scale(.96)}}
+.duck.running .duck-bob{animation:waddle .1s ease-in-out infinite alternate}
+/* the left duckling waits outside the card and walks in from behind the gold frame line */
+.ducks.awaiting .duck-a,.ducks.entering .duck-a{clip-path:inset(-200% -200% -200% calc(var(--duck-gap) * -1))}
+.ducks.awaiting .duck-a .duck-face{transform:translateX(calc(var(--duck-gap) * -1 - var(--duck-w) * 1.15))}
+.duck.walking .duck-bob{animation:waddle .2s ease-in-out infinite alternate}
+.duck.walking .foot-back{animation:pedal .4s linear infinite}
+.duck.walking .foot-front{animation:pedal .4s linear infinite;animation-delay:-.2s}
+@keyframes waddle{from{transform:rotate(-9deg) translateY(0)}to{transform:rotate(8deg) translateY(-7%)}}
+.duck .foot{transform-box:fill-box;transform-origin:50% 50%}
+.duck.running .foot-back{animation:pedal .11s linear infinite}
+.duck.running .foot-front{animation:pedal .11s linear infinite;animation-delay:-.055s}
+@keyframes pedal{
+  0%,100%{transform:translate(-3.2px, 0) rotate(-14deg)}
+  25%{transform:translate(0, -3.8px) rotate(0deg)}
+  50%{transform:translate(3.2px, -1px) rotate(16deg)}
+  75%{transform:translate(0, 1px) rotate(0deg)}
+}
+.duck .eyes-heart{display:none}
+.duck .blush{opacity:0;transition:opacity .5s ease}
+.duck.blushing .blush{opacity:1;transition-duration:var(--blush-ms, .6s)}
+.duck-a .eyes-heart,.duck-b.smitten .eyes-heart{display:inline}
+.duck-a .eyes-dot,.duck-b.smitten .eyes-dot{display:none}
+.duck:focus-visible .duck-bob{outline:1px solid var(--gold-line);outline-offset:2px;border-radius:50%}
+
+/* words settle onto the card once it opens */
+.rv{
+  opacity:0;transform:translateY(calc(var(--u) * 1.1));filter:blur(3px);
+  transition:opacity 1.2s ease, transform 1.6s cubic-bezier(.2,.75,.2,1), filter 1.2s ease;
+  transition-delay:calc(var(--i) * 130ms);
+}
+.is-revealed .rv{opacity:1;transform:none;filter:none}
+
+.replay{
+  position:fixed;right:max(18px, env(safe-area-inset-right));bottom:max(18px, env(safe-area-inset-bottom));
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(55,75,62,.22);background:rgba(250,252,248,.35);color:#4b5c51;
+  cursor:pointer;opacity:0;pointer-events:none;
+  transition:opacity 1s ease, background .3s ease, border-color .3s ease;
+}
+.is-done .replay{opacity:.75;pointer-events:auto}
+.replay:hover,.replay:focus-visible{opacity:1;background:rgba(250,252,248,.7);border-color:rgba(55,75,62,.4);outline:none}
+
+@media (prefers-reduced-motion:reduce){
+  .rv{filter:none;transform:none}
+}
+</style>
+<noscript><style>.env-land{transform:none}</style></noscript>
+</head>
+<body>
+
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gFlap" x1="0" y1="0" x2=".3" y2="1">
+      <stop offset="0" stop-color="#83171c"/>
+      <stop offset="1" stop-color="#691115"/>
+    </linearGradient>
+    <linearGradient id="gSideL" x1="0" y1="0" x2="1" y2=".35">
+      <stop offset="0" stop-color="#7a161b"/>
+      <stop offset="1" stop-color="#671115"/>
+    </linearGradient>
+    <linearGradient id="gSideR" x1="1" y1="0" x2="0" y2=".35">
+      <stop offset="0" stop-color="#6b1216"/>
+      <stop offset="1" stop-color="#5a0d11"/>
+    </linearGradient>
+    <linearGradient id="gBottom" x1="0" y1="0" x2=".25" y2="1">
+      <stop offset="0" stop-color="#78161a"/>
+      <stop offset="1" stop-color="#5e0f13"/>
+    </linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9c7531"/>
+      <stop offset=".3" stop-color="#ead497"/>
+      <stop offset=".55" stop-color="#b08843"/>
+      <stop offset=".8" stop-color="#e6cd8c"/>
+      <stop offset="1" stop-color="#a27b35"/>
+    </linearGradient>
+    <linearGradient id="gBackShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#140002" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#140002" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#140002" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gFlapInShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#140002" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#140002" stop-opacity="0"/>
+    </linearGradient>
+    <!-- liner: plain deep red -->
+    <pattern id="pLiner" width="28" height="28" patternUnits="userSpaceOnUse">
+      <rect width="28" height="28" fill="#560b10"/>
+    </pattern>
+    <filter id="fEdge" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.6" flood-color="#250104" flood-opacity=".55"/>
+    </filter>
+
+    <!-- tone-on-tone red foil: peonies, leaves, scrolling vines and 囍 roundels.
+         The motif is a mask; the foil itself is a gradient whose light follows the pointer. -->
+    <radialGradient id="gFoilRed" gradientUnits="userSpaceOnUse" cx="210" cy="110" r="560">
+      <stop offset="0" stop-color="#e5484f"/>
+      <stop offset=".28" stop-color="#b8252c"/>
+      <stop offset=".6" stop-color="#87151b"/>
+      <stop offset="1" stop-color="#55090e"/>
+    </radialGradient>
+    <path id="fl-petal" d="M0 -2 C-11 -7 -15 -19 -9 -25 C-6 -28 -3 -25 0 -27.5 C3 -25 6 -28 9 -25 C15 -19 11 -7 0 -2Z"/>
+    <path id="fl-petal-in" d="M0 -1 C-7 -4 -9 -12 -5 -16 C-2 -18 2 -18 5 -16 C9 -12 7 -4 0 -1Z"/>
+    <g id="fl-peony" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round">
+      <use href="#fl-petal"/><use href="#fl-petal" transform="rotate(60)"/><use href="#fl-petal" transform="rotate(120)"/>
+      <use href="#fl-petal" transform="rotate(180)"/><use href="#fl-petal" transform="rotate(240)"/><use href="#fl-petal" transform="rotate(300)"/>
+      <use href="#fl-petal-in" transform="rotate(18)"/><use href="#fl-petal-in" transform="rotate(90)"/><use href="#fl-petal-in" transform="rotate(162)"/>
+      <use href="#fl-petal-in" transform="rotate(234)"/><use href="#fl-petal-in" transform="rotate(306)"/>
+      <circle r="4.2"/>
+      <circle r="1" cx="-1.4" cy="-.8" fill="#000" stroke="none"/><circle r=".9" cx="1.6" cy="1.1" fill="#000" stroke="none"/>
+    </g>
+    <g id="fl-leaf">
+      <path d="M0 0 C7 -8 17 -9 25 -2.5 C17 4 7 4.5 0 0Z" fill="#fff"/>
+      <path d="M3 -.6 C10 -2.6 16 -3 22 -2.4" fill="none" stroke="#000" stroke-width=".9"/>
+    </g>
+    <g id="fl-plum" fill="#fff">
+      <circle cy="-4.6" r="3.6"/><circle cx="4.4" cy="-1.4" r="3.6"/><circle cx="2.7" cy="3.7" r="3.6"/>
+      <circle cx="-2.7" cy="3.7" r="3.6"/><circle cx="-4.4" cy="-1.4" r="3.6"/>
+      <circle r="1.7" fill="#000"/><circle r=".8"/>
+    </g>
+    <g id="fl-dots" fill="#fff"><circle cy="-3.6" r="1.5"/><circle cx="3.1" cy="1.8" r="1.5"/><circle cx="-3.1" cy="1.8" r="1.5"/></g>
+    <!-- a looser version of the vine pattern: the same diagonal vines, but over a larger repeat every rose,
+         bend, leaf, tendril and blossom varies (generated once, so it is the same for every guest) -->
+    <pattern id="pFloral" width="360" height="360" patternUnits="userSpaceOnUse" patternTransform="rotate(-9) translate(18 6) scale(1.1)">
+      <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M45.3 43.5 C57.2 71.7 98.6 121.8 136.5 133.7" stroke-width="1.8"/>
+        <path d="M136.5 133.7 C178.2 142 212 174.4 231.2 222.1" stroke-width="1.8"/>
+        <path d="M231.2 222.1 C236.7 256.1 268.8 294.5 314.6 305" stroke-width="1.8"/>
+        <g transform="translate(-360 -360)"><path d="M314.6 305 C349 315.4 382.5 362.6 405.3 403.5" stroke-width="1.8"/></g>
+        <g transform="translate(-360 0)"><path d="M314.6 305 C349 315.4 382.5 362.6 405.3 403.5" stroke-width="1.8"/></g>
+        <g transform="translate(0 -360)"><path d="M314.6 305 C349 315.4 382.5 362.6 405.3 403.5" stroke-width="1.8"/></g>
+        <path d="M314.6 305 C349 315.4 382.5 362.6 405.3 403.5" stroke-width="1.8"/>
+        <path d="M238.4 43.9 C237.2 91.6 266.3 127.1 303.1 138.2" stroke-width="1.8"/>
+        <g transform="translate(-360 0)"><path d="M303.1 138.2 C334.6 153.3 381.9 178.9 397 225.1" stroke-width="1.8"/></g>
+        <path d="M303.1 138.2 C334.6 153.3 381.9 178.9 397 225.1" stroke-width="1.8"/>
+        <g transform="translate(-360 0)"><path d="M397 225.1 C417.9 276.5 454 298 499.6 308.9" stroke-width="1.8"/></g>
+        <g transform="translate(-360 -360)"><path d="M499.6 308.9 C546.2 335.5 590.9 363.4 598.4 403.9" stroke-width="1.8"/></g>
+        <g transform="translate(-360 0)"><path d="M499.6 308.9 C546.2 335.5 590.9 363.4 598.4 403.9" stroke-width="1.8"/></g>
+        <g transform="translate(-360 0)"><path d="M347.8 325.5 L349.3 325 L350.8 324.4 L352.2 323.8 L353.7 323.1 L355.1 322.4 L356.6 321.7 L357.8 320.7 L358.9 319.5 L359.5 318.1 L359.7 316.5 L359.5 314.9 L358.7 313.5 L357.5 312.4 L356 311.9 L354.5 312.2 L353.2 313.1 L352.8 313.8" stroke-width="1.2"/></g>
+        <path d="M347.8 325.5 L349.3 325 L350.8 324.4 L352.2 323.8 L353.7 323.1 L355.1 322.4 L356.6 321.7 L357.8 320.7 L358.9 319.5 L359.5 318.1 L359.7 316.5 L359.5 314.9 L358.7 313.5 L357.5 312.4 L356 311.9 L354.5 312.2 L353.2 313.1 L352.8 313.8" stroke-width="1.2"/>
+        <path d="M246 86.1 L247.6 86.3 L249.2 86.5 L250.8 86.6 L252.4 86.7 L254 86.8 L255.6 86.8 L257.2 86.8 L258.8 86.7 L260.3 86.5 L261.8 85.9 L263.2 85.1 L264.4 84 L265.3 82.7 L265.8 81.2 L266 79.6 L265.8 78 L265.1 76.6 L264 75.4 L262.6 74.7 L261 74.5 L259.5 75.1 L258.5 76.2 L258.2 77.8 L258.2 77.8" stroke-width="1.2"/>
+        <path d="M259.1 108.3 L258.3 109.6 L257.4 111 L256.5 112.3 L255.6 113.6 L254.7 114.9 L253.7 116.2 L252.7 117.4 L251.5 118.5 L250.1 119.3 L248.6 119.8 L247 120 L245.4 119.9 L244 119.3 L242.7 118.4 L241.7 117.1 L241.2 115.6 L241.2 114 L241.9 112.5 L243.1 111.5 L243.9 111.3" stroke-width="1.2"/>
+        <g transform="translate(-360 0)"><path d="M370.6 183 L371.3 181.5 L371.8 180 L372.4 178.5 L372.9 177 L373.4 175.5 L373.8 174 L374.2 172.4 L374.6 170.9 L374.7 169.3 L374.4 167.7 L373.8 166.2 L372.8 165 L371.5 164 L370 163.5 L368.4 163.4 L366.9 163.9 L365.6 164.8 L364.7 166.1 L364.5 167.7 L364.9 169.2 L366 170.4 L367.5 170.8 L368.3 170.7" stroke-width="1.2"/></g>
+        <g transform="translate(-360 0)"><path d="M440.4 283.2 L441.9 282.9 L443.5 282.5 L445 282.1 L446.6 281.7 L448.1 281.2 L449.6 280.7 L451.1 280.2 L452.6 279.5 L453.8 278.5 L454.9 277.3 L455.7 276 L456.3 274.5 L456.4 272.9 L456.2 271.3 L455.5 269.8 L454.5 268.6 L453.1 267.9 L451.5 267.7 L450 268.2 L449 269.4 L449 269.4" stroke-width="1.2"/></g>
+        <g transform="translate(-360 -360)"><path d="M565.1 352.4 L564.7 354 L564.3 355.5 L563.9 357.1 L563.4 358.6 L562.9 360.1 L562.3 361.6 L561.7 363.1 L560.7 364.3 L559.4 365.3 L558 366 L556.4 366.2 L554.8 365.9 L553.4 365.2 L552.3 364 L551.8 362.5 L551.9 360.9 L552.7 359.6 L554.1 358.8 L554.9 358.8" stroke-width="1.2"/></g>
+        <g transform="translate(-360 0)"><path d="M565.1 352.4 L564.7 354 L564.3 355.5 L563.9 357.1 L563.4 358.6 L562.9 360.1 L562.3 361.6 L561.7 363.1 L560.7 364.3 L559.4 365.3 L558 366 L556.4 366.2 L554.8 365.9 L553.4 365.2 L552.3 364 L551.8 362.5 L551.9 360.9 L552.7 359.6 L554.1 358.8 L554.9 358.8" stroke-width="1.2"/></g>
+      </g>
+      <use href="#fl-leaf" transform="translate(72 84.5) rotate(15.1) scale(0.63)"/>
+      <use href="#fl-leaf" transform="translate(93 106.3) rotate(90.6) scale(0.83)"/>
+      <use href="#fl-leaf" transform="translate(174.7 149.3) rotate(68.9) scale(0.87)"/>
+      <use href="#fl-leaf" transform="translate(207.6 180.1) rotate(16.3) scale(0.79)"/>
+      <use href="#fl-leaf" transform="translate(195.8 166.6) rotate(177.6) scale(0.73)"/>
+      <use href="#fl-leaf" transform="translate(248.9 261.8) rotate(89.9) scale(0.82)"/>
+      <use href="#fl-leaf" transform="translate(261.4 275.9) rotate(-11.9) scale(0.66)"/>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(359.1 336.9) rotate(11.9) scale(0.74)"/></g>
+      <use href="#fl-leaf" transform="translate(359.1 336.9) rotate(11.9) scale(0.74)"/>
+      <g transform="translate(-360 -360)"><use href="#fl-leaf" transform="translate(375.8 357.2) rotate(-2.7) scale(0.74)"/></g>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(375.8 357.2) rotate(-2.7) scale(0.74)"/></g>
+      <use href="#fl-leaf" transform="translate(252.2 98.3) rotate(184.3) scale(0.73)"/>
+      <use href="#fl-leaf" transform="translate(268.7 118.5) rotate(90.8) scale(0.71)"/>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(358.2 171.7) rotate(82.9) scale(0.87)"/></g>
+      <use href="#fl-leaf" transform="translate(358.2 171.7) rotate(82.9) scale(0.87)"/>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(341.8 159.6) rotate(-6.8) scale(0.64)"/></g>
+      <use href="#fl-leaf" transform="translate(341.8 159.6) rotate(-6.8) scale(0.64)"/>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(451.8 290.7) rotate(83.7) scale(0.68)"/></g>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(429.1 273.7) rotate(96.1) scale(0.61)"/></g>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(540.5 333.8) rotate(77.8) scale(0.79)"/></g>
+      <g transform="translate(-360 -360)"><use href="#fl-leaf" transform="translate(575.7 362.7) rotate(-8.6) scale(0.89)"/></g>
+      <g transform="translate(-360 0)"><use href="#fl-leaf" transform="translate(575.7 362.7) rotate(-8.6) scale(0.89)"/></g>
+      <use href="#fl-peony" transform="translate(45.3 43.5) rotate(27.9) scale(1.14)"/>
+      <use href="#fl-peony" transform="translate(136.5 133.7) rotate(30.7) scale(0.96)"/>
+      <use href="#fl-peony" transform="translate(231.2 222.1) rotate(18.2) scale(0.94)"/>
+      <use href="#fl-peony" transform="translate(314.6 305) rotate(2.5) scale(1.09)"/>
+      <use href="#fl-peony" transform="translate(238.4 43.9) rotate(36.9) scale(1.08)"/>
+      <use href="#fl-peony" transform="translate(303.1 138.2) rotate(3.6) scale(1.05)"/>
+      <g transform="translate(-360 0)"><use href="#fl-peony" transform="translate(397 225.1) rotate(27.8) scale(0.93)"/></g>
+      <g transform="translate(-360 0)"><use href="#fl-peony" transform="translate(499.6 308.9) rotate(38.4) scale(1.04)"/></g>
+      <use href="#fl-plum" transform="translate(325 233) rotate(48.8) scale(0.71)"/>
+      <use href="#fl-plum" transform="translate(193.5 269.2) rotate(54.6) scale(0.79)"/>
+      <use href="#fl-plum" transform="translate(181.7 273.9) rotate(84.6) scale(0.57)"/>
+      <g transform="translate(360 0)"><circle cx="-6.7" cy="90.3" r="1.6" fill="#fff"/></g>
+      <use href="#fl-plum" transform="translate(275.1 2.5) rotate(21.9) scale(0.67)"/>
+      <g transform="translate(0 360)"><use href="#fl-plum" transform="translate(275.1 2.5) rotate(21.9) scale(0.67)"/></g>
+      <use href="#fl-plum" transform="translate(283.1 12.3) rotate(51.9) scale(0.56)"/>
+      <use href="#fl-plum" transform="translate(178.2 82.3) rotate(27.1) scale(1.11)"/>
+      <use href="#fl-plum" transform="translate(215.9 323.3) rotate(71.2) scale(0.63)"/>
+      <circle cx="306.9" cy="38.3" r="1.8" fill="#fff"/>
+      <use href="#fl-plum" transform="translate(51 133.1) rotate(35.5) scale(1.05)"/>
+      <circle cx="8" cy="278.7" r="1.4" fill="#fff"/>
+      <use href="#fl-plum" transform="translate(133.4 35.6) rotate(50.6) scale(1.24)"/>
+      <use href="#fl-plum" transform="translate(215.7 128.1) rotate(20.5) scale(1.17)"/>
+      <use href="#fl-plum" transform="translate(84.9 -0) rotate(41.9) scale(0.81)"/>
+      <g transform="translate(0 360)"><use href="#fl-plum" transform="translate(84.9 -0) rotate(41.9) scale(0.81)"/></g>
+      <use href="#fl-dots" transform="translate(47.5 319.4) rotate(63.3) scale(0.86)"/>
+      <use href="#fl-plum" transform="translate(268.5 191.3) rotate(38.7) scale(0.66)"/>
+      <use href="#fl-plum" transform="translate(276.8 181.7) rotate(68.7) scale(0.51)"/>
+      <use href="#fl-plum" transform="translate(90.9 181.7) rotate(65.9) scale(1.14)"/>
+      <use href="#fl-plum" transform="translate(129.7 212.4) rotate(64.1) scale(0.66)"/>
+      <use href="#fl-plum" transform="translate(134.2 224.9) rotate(94.1) scale(0.50)"/>
+    </pattern>
+    <mask id="mFoil" maskUnits="userSpaceOnUse" x="0" y="0" width="700" height="500">
+      <rect width="700" height="500" fill="url(#pFloral)"/>
+    </mask>
+    <filter id="fFoil" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feDropShadow dx=".5" dy=".8" stdDeviation=".45" flood-color="#160002" flood-opacity=".55"/>
+    </filter>
+    <filter id="fSoft" x="-5%" y="-10%" width="110%" height="120%"><feGaussianBlur stdDeviation="1.4"/></filter>
+    <clipPath id="cPocket">
+      <path d="M0 0 L344 248 Q356 258 344 268 L0 500 Z"/>
+      <path d="M700 0 L356 248 Q344 258 356 268 L700 500 Z"/>
+      <path d="M0 500 L330 228 Q350 210 370 228 L700 500 Z"/>
+    </clipPath>
+    <clipPath id="cF"><path d="M0 0 H700 L388 266 Q350 298 312 266 Z"/></clipPath>
+    <linearGradient id="gHeart" x1="0" y1="0" x2=".6" y2="1">
+      <stop offset="0" stop-color="#f0505e"/><stop offset=".55" stop-color="#d21f36"/><stop offset="1" stop-color="#9e0f22"/>
+    </linearGradient>
+    <linearGradient id="gHeart2" x1="0" y1="0" x2=".6" y2="1">
+      <stop offset="0" stop-color="#ff7b88"/><stop offset=".5" stop-color="#e3293f"/><stop offset="1" stop-color="#b0142a"/>
+    </linearGradient>
+    <!-- the ducklings: watercolour wash and ink -->
+    <radialGradient id="gDuckBody" cx=".62" cy=".28" r=".8">
+      <stop offset="0" stop-color="#fdf0b4"/><stop offset=".5" stop-color="#f8dc78"/><stop offset="1" stop-color="#eebd52"/>
+    </radialGradient>
+    <linearGradient id="gDuckShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset=".5" stop-color="#c9862a" stop-opacity="0"/><stop offset="1" stop-color="#c9862a" stop-opacity=".28"/>
+    </linearGradient>
+    <linearGradient id="gDuckWing" x1="0" y1="0" x2=".3" y2="1">
+      <stop offset="0" stop-color="#f8dc7a"/><stop offset="1" stop-color="#e8b74c"/>
+    </linearGradient>
+    <linearGradient id="gDuckBill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6b553"/><stop offset="1" stop-color="#e2862e"/>
+    </linearGradient>
+    <linearGradient id="gDuckFoot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3a648"/><stop offset="1" stop-color="#dc7f2b"/>
+    </linearGradient>
+    <radialGradient id="gDuckBlushHot">
+      <stop offset="0" stop-color="#ec5468" stop-opacity=".8"/><stop offset=".6" stop-color="#f07a86" stop-opacity=".45"/><stop offset="1" stop-color="#f07a86" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gDuckBlush">
+      <stop offset="0" stop-color="#f08a7e" stop-opacity=".55"/><stop offset="1" stop-color="#f08a7e" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="fDuckWash" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="4" result="wob"/>
+      <feDisplacementMap in="SourceGraphic" in2="wob" scale=".9" xChannelSelector="R" yChannelSelector="G" result="wash"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="9" result="grain"/>
+      <feColorMatrix in="grain" type="matrix" values="0 0 0 0 .72  0 0 0 0 .5  0 0 0 0 .18  0 0 0 -3.6 1.22" result="specks"/>
+      <feComposite in="specks" in2="wash" operator="in" result="granul"/>
+      <feMerge><feMergeNode in="wash"/><feMergeNode in="granul"/></feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<main class="stage" id="stage">
+
+  <div class="lang" id="lang" role="dialog" aria-label="Language · 語言 · Ngôn ngữ">
+    <div class="lang-inner">
+      <span class="lang-xi" id="langXi" aria-hidden="true">囍</span>
+      <div class="lang-options">
+        <button type="button" data-lang="zh-Hant" lang="zh-Hant">中文</button>
+        <span class="lang-rule" aria-hidden="true"></span>
+        <button type="button" data-lang="vi" lang="vi">Tiếng Việt</button>
+        <span class="lang-rule" aria-hidden="true"></span>
+        <button type="button" data-lang="en" lang="en">English</button>
+      </div>
+      <form class="maker" id="maker" hidden>
+        <input id="makerPass" type="password" placeholder="Password" aria-label="Admin password"
+               autocomplete="current-password" enterkeyhint="go">
+        <button type="submit" class="maker-copy" id="makerGo">Enter</button>
+        <p class="maker-msg" id="makerMsg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="env-land" id="envLand">
+    <div class="env-move" id="envMove">
+      <div class="env-hover" id="envBtn" role="button" tabindex="0" aria-label="Open the wedding invitation from Ivan and Ana">
+        <div class="env" id="env">
+
+          <svg class="env-back" viewBox="0 0 700 500" preserveAspectRatio="none" aria-hidden="true">
+            <rect width="700" height="500" fill="url(#pLiner)"/>
+            <rect width="700" height="500" fill="url(#gBackShade)"/>
+          </svg>
+
+          <div class="letter paper" id="letter" aria-hidden="true"></div>
+
+          <svg class="env-pocket" viewBox="0 0 700 500" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0 L344 248 Q356 258 344 268 L0 500 Z" fill="url(#gSideL)" filter="url(#fEdge)"/>
+            <path d="M700 0 L356 248 Q344 258 356 268 L700 500 Z" fill="url(#gSideR)" filter="url(#fEdge)"/>
+            <path d="M0 500 L330 228 Q350 210 370 228 L700 500 Z" fill="url(#gBottom)" filter="url(#fEdge)"/>
+            <g filter="url(#fFoil)" clip-path="url(#cPocket)">
+              <rect width="700" height="500" fill="url(#gFoilRed)" mask="url(#mFoil)"/>
+            </g>
+            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" stroke="#1a0003" stroke-opacity=".4" stroke-width="3" filter="url(#fSoft)"/>
+            <path d="M0 0 L344 248" fill="none" stroke="#ffd8c6" stroke-opacity=".08" stroke-width="1"/>
+            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" stroke="#ffd8c6" stroke-opacity=".14" stroke-width="1"/>
+          </svg>
+
+          <div class="flap" id="flap">
+            <div class="flap-inner" id="flapInner">
+              <svg class="flap-face flap-out" viewBox="0 0 700 310" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 0 H700 L388 266 Q350 298 312 266 Z" fill="url(#gFlap)"/>
+                <g filter="url(#fFoil)" clip-path="url(#cF)">
+                  <rect width="700" height="310" fill="url(#gFoilRed)" mask="url(#mFoil)"/>
+                </g>
+                <path d="M0 0 L312 266 Q350 298 388 266 L700 0" fill="none" stroke="#ffb3a8" stroke-opacity=".18" stroke-width="1.2"/>
+              </svg>
+              <svg class="flap-face flap-in" viewBox="0 0 700 310" preserveAspectRatio="none" aria-hidden="true">
+                <g transform="matrix(1 0 0 -1 0 310)">
+                  <path d="M0 0 H700 L388 266 Q350 298 312 266 Z" fill="url(#pLiner)"/>
+                  <path d="M0 0 H700 L388 266 Q350 298 312 266 Z" fill="url(#gFlapInShade)"/>
+                  <path d="M0 0 L312 266 Q350 298 388 266 L700 0" fill="none" stroke="url(#gGold)" stroke-width="1.6" opacity=".9"/>
+                </g>
+              </svg>
+              <div class="seal" id="seal" aria-hidden="true">
+                <svg class="medal" viewBox="-200 -200 400 400">
+                  <defs>
+                    <path id="qf" d="M175 0 A175 175 0 1 1 -175 0 A175 175 0 1 1 175 0Z"/>
+                    <linearGradient id="gMedal" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#8e161c"/><stop offset=".34" stop-color="#cf3a41"/>
+                      <stop offset=".47" stop-color="#f17378"/><stop offset=".6" stop-color="#bd2930"/>
+                      <stop offset="1" stop-color="#7a1217"/>
+                    </linearGradient>
+                    <linearGradient id="gMedalIn" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#7c1318"/><stop offset=".5" stop-color="#a51f26"/><stop offset="1" stop-color="#6c0f14"/>
+                    </linearGradient>
+                    <linearGradient id="gMedalXi" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#ef5d63"/><stop offset=".45" stop-color="#d0353c"/><stop offset="1" stop-color="#9c1c22"/>
+                    </linearGradient>
+                  </defs>
+                  <use href="#qf" transform="scale(1.05)" fill="#6c1216"/>
+                  <use href="#qf" fill="url(#gMedal)"/>
+                  <use href="#qf" transform="scale(.885)" fill="none" stroke="#4a070b" stroke-opacity=".65" stroke-width="4"/>
+                  <use href="#qf" transform="scale(.83)" fill="url(#gMedalIn)"/>
+                  <g font-family="'Noto Serif SC','Songti SC','STSong','SimSun',serif" font-weight="600" font-size="150" text-anchor="middle">
+                    <text x="4" y="58" fill="#2e0306" fill-opacity=".6">囍</text>
+                    <text x="-2" y="50" fill="#ff9a9a" fill-opacity=".4">囍</text>
+                    <text x="0" y="53" fill="url(#gMedalXi)">囍</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="env-fx" aria-hidden="true">
+            <i class="fx-light"></i><i class="fx-grain"></i><i class="fx-glow"></i>
+          </div>
+        </div>
+      </div>
+      <p class="hint" id="hint">Click to open</p>
+    </div>
+  </div>
+
+  <div class="fly" id="fly" aria-hidden="true">
+    <div class="shift" id="shift">
+      <div class="card-shadow" id="cardShadow"><i class="cs-far" id="csFar"><i></i><i></i><i></i></i></div>
+      <div class="card3d" id="card3d">
+
+          <div class="face face-front paper">
+            <div class="cover-print" id="coverPrint">
+              <span class="frame"></span>
+              <div class="cover-art">
+                <div class="emblem"><span class="xi">囍</span></div>
+                <p class="cover-dear" hidden>Dear</p>
+                <p class="cover-names">Ivan<span class="amp">&amp;</span>Ana</p>
+                <p class="cover-date" data-i18n="coverDate">5 March 2027</p>
+              </div>
+            </div>
+            <i class="shade" id="shadeFront"></i>
+          </div>
+
+          <section class="face face-back paper" aria-label="Save the date">
+            <span class="frame"></span>
+            <div class="std">
+              <div class="std-row std-top">
+                <p class="std-title rv" style="--i:0" data-i18n="stdTitle">Save the date</p>
+              </div>
+              <div class="std-row std-mid">
+                <p class="std-lead rv" style="--i:1" data-i18n="lead">for the wedding of</p>
+                <h1 class="std-names rv" style="--i:2">Ivan Sam<span class="amp">&amp;</span>Ana Nguyen</h1>
+              </div>
+              <div class="std-row std-foot">
+                <p class="std-day rv" style="--i:3" data-i18n="day">5 March 2027</p>
+                <p class="std-place rv" style="--i:4" data-i18n="place">Melbourne</p>
+              </div>
+            </div>
+          <div class="ducks rv awaiting" style="--i:6">
+            <div class="duck duck-a has-heart" id="duckA" role="button" tabindex="0" aria-label="Send a heart">
+              <div class="duck-face"><div class="duck-bob">
+                <svg viewBox="0 0 60 60" aria-hidden="true">
+                  <g class="foot foot-back"><g transform="translate(20.6 57.2) scale(0.9)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
+                  <g filter="url(#fDuckWash)"><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckBody)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckShade)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="none" stroke="#d9a23e" stroke-opacity=".4" stroke-width="1.3" stroke-linejoin="round"/></g>
+                  <path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" transform="translate(.3 -.2)" fill="none" stroke="#6d4a2b" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="22 1.8 19 1.4 24 2 15 1.2 30"/>
+                  <g fill="none" stroke="#c98d2a" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"><path d="M39.6 46 l1.1 -.3 M37 50.2 l1 -.6 M16.4 50.6 l-.9 -.7 M12.6 45.6 l-1 -.2 M28 31.8 l-.3 1"/></g>
+                  <g fill="none" stroke="#6d4a2b" stroke-width=".5" stroke-linecap="round"><path d="M32.4 8.6 C31.6 5.9 33.4 4 35.4 4.7"/><path d="M33.9 8.6 C34.6 6.5 36.6 6.2 37.6 7.3"/><path d="M31.1 8.9 C29.6 7.2 29.8 5.4 31.2 4.8"/></g>
+                  <ellipse cx="37.4" cy="22.4" rx="3.2" ry="2.1" fill="url(#gDuckBlush)"/>
+                  <g class="blush"><ellipse cx="37.2" cy="22.6" rx="4.2" ry="2.7" fill="url(#gDuckBlushHot)"/><path d="M35.1 23.6 l1 -1.7 M36.8 23.8 l1 -1.7 M38.5 24 l1 -1.7" fill="none" stroke="#d6485a" stroke-opacity=".85" stroke-width=".45" stroke-linecap="round"/></g>
+                  <g class="eyes-heart" fill="#c4313a"><path transform="translate(37.8 17) scale(.72)" d="M0 3C0 3 -3.4 .9 -3.4 -1.1C-3.4 -2.3 -2.4 -3 -1.5 -3C-.8 -3 -.2 -2.6 0 -2C.2 -2.6 .8 -3 1.5 -3C2.4 -3 3.4 -2.3 3.4 -1.1C3.4 .9 0 3 0 3Z"/></g>
+                  <g class="eyes-dot"><ellipse cx="37.8" cy="17" rx="1.35" ry="1.65" fill="#2b1d14"/><circle cx="38.3" cy="16.4" r=".5" fill="#fff"/></g>
+                  <path d="M34 40.4 C31 37.8 24 38 18.8 41 C17.2 42 15.6 43.4 14.4 45 C18.6 45.8 22.8 47 27.2 46.6 C31.2 46.2 34 43.8 34 40.4Z" fill="url(#gDuckWing)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round" stroke-opacity=".9"/><path d="M31.6 41 C27.8 40.4 22.8 41.4 18.4 43.6 M31 43.6 C27.6 43.4 23.6 44.2 20.6 45.6" fill="none" stroke="#c98d2a" stroke-opacity=".75" stroke-width=".4" stroke-linecap="round"/>
+                  <path d="M43.4 18.1 C46.9 17.1 51.3 17.7 52.9 19.7 C53.7 21.1 51.5 22.7 48.3 23.1 C46.3 23.3 44.5 22.9 43.5 22.1 C43 21 42.9 19.1 43.4 18.1Z" fill="url(#gDuckBill)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/>
+                  <path d="M43.7 20.7 C46.7 21 50.1 20.7 52.7 20" fill="none" stroke="#6d4a2b" stroke-opacity=".65" stroke-width=".4" stroke-linecap="round"/><circle cx="46.9" cy="19.1" r=".33" fill="#6d4a2b"/>
+                  <g class="held"><path d="M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z" transform="translate(47.8 19.4) scale(0.38)" fill="#c4313a"/><path d="M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z" fill="none" stroke="#7d1218" stroke-opacity=".7" stroke-width="1.6" transform="translate(47.8 19.4) scale(0.38) translate(16 15) scale(.74) translate(-16 -15)"/></g>
+                  <g class="foot foot-front"><g transform="translate(30 57.4) scale(1)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
+                </svg>
+              </div></div>
+            </div>
+            <div class="duck duck-b" id="duckB" role="button" tabindex="0" aria-label="Send a heart">
+              <div class="duck-face"><div class="duck-bob">
+                <svg viewBox="0 0 60 60" aria-hidden="true">
+                  <g class="foot foot-back"><g transform="translate(20.6 57.2) scale(0.9)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
+                  <g filter="url(#fDuckWash)"><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckBody)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckShade)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="none" stroke="#d9a23e" stroke-opacity=".4" stroke-width="1.3" stroke-linejoin="round"/></g>
+                  <path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" transform="translate(.3 -.2)" fill="none" stroke="#6d4a2b" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="22 1.8 19 1.4 24 2 15 1.2 30"/>
+                  <g fill="none" stroke="#c98d2a" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"><path d="M39.6 46 l1.1 -.3 M37 50.2 l1 -.6 M16.4 50.6 l-.9 -.7 M12.6 45.6 l-1 -.2 M28 31.8 l-.3 1"/></g>
+                  <g fill="none" stroke="#6d4a2b" stroke-width=".5" stroke-linecap="round"><path d="M32.4 8.6 C31.6 5.9 33.4 4 35.4 4.7"/><path d="M33.9 8.6 C34.6 6.5 36.6 6.2 37.6 7.3"/><path d="M31.1 8.9 C29.6 7.2 29.8 5.4 31.2 4.8"/></g>
+                  <ellipse cx="37.4" cy="22.4" rx="3.2" ry="2.1" fill="url(#gDuckBlush)"/>
+                  <g class="blush"><ellipse cx="37.2" cy="22.6" rx="4.2" ry="2.7" fill="url(#gDuckBlushHot)"/><path d="M35.1 23.6 l1 -1.7 M36.8 23.8 l1 -1.7 M38.5 24 l1 -1.7" fill="none" stroke="#d6485a" stroke-opacity=".85" stroke-width=".45" stroke-linecap="round"/></g>
+                  <g class="eyes-heart" fill="#c4313a"><path transform="translate(37.8 17) scale(.72)" d="M0 3C0 3 -3.4 .9 -3.4 -1.1C-3.4 -2.3 -2.4 -3 -1.5 -3C-.8 -3 -.2 -2.6 0 -2C.2 -2.6 .8 -3 1.5 -3C2.4 -3 3.4 -2.3 3.4 -1.1C3.4 .9 0 3 0 3Z"/></g>
+                  <g class="eyes-dot"><ellipse cx="37.8" cy="17" rx="1.35" ry="1.65" fill="#2b1d14"/><circle cx="38.3" cy="16.4" r=".5" fill="#fff"/></g>
+                  <g class="bow" transform="translate(25.4 12.4) rotate(-40) scale(1.05)" stroke="#6e1016" stroke-width=".5" stroke-linejoin="round"><path d="M-.4 .6 C-1 2.2 -1.6 3.4 -2.5 4.3 L-.9 4.2 L-.3 5.3 C.1 3.8 .1 2.1 .2 .6Z" fill="#a8222a"/><path d="M.4 .6 C1.3 2.1 2 3.2 2.8 4.1 L1.3 4" fill="#a8222a"/><path d="M0 0 C-1.6 -3.6 -6.8 -4.2 -7 -.4 C-7.1 3 -2.4 3 0 0Z" fill="#c4313a"/><path d="M0 0 C1.6 -3.6 6.8 -4.2 7 -.4 C7.1 3 2.4 3 0 0Z" fill="#c4313a"/><path d="M-1.4 -.4 C-3 -1.6 -4.6 -1.6 -5.4 -.6 M1.4 -.4 C3 -1.6 4.6 -1.6 5.4 -.6" fill="none" stroke="#8e1a22" stroke-opacity=".7" stroke-width=".4"/><ellipse rx="1.4" ry="1.6" fill="#d23a44"/></g>
+                  <path d="M34 40.4 C31 37.8 24 38 18.8 41 C17.2 42 15.6 43.4 14.4 45 C18.6 45.8 22.8 47 27.2 46.6 C31.2 46.2 34 43.8 34 40.4Z" fill="url(#gDuckWing)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round" stroke-opacity=".9"/><path d="M31.6 41 C27.8 40.4 22.8 41.4 18.4 43.6 M31 43.6 C27.6 43.4 23.6 44.2 20.6 45.6" fill="none" stroke="#c98d2a" stroke-opacity=".75" stroke-width=".4" stroke-linecap="round"/>
+                  <path d="M43.4 18.1 C46.9 17.1 51.3 17.7 52.9 19.7 C53.7 21.1 51.5 22.7 48.3 23.1 C46.3 23.3 44.5 22.9 43.5 22.1 C43 21 42.9 19.1 43.4 18.1Z" fill="url(#gDuckBill)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/>
+                  <path d="M43.7 20.7 C46.7 21 50.1 20.7 52.7 20" fill="none" stroke="#6d4a2b" stroke-opacity=".65" stroke-width=".4" stroke-linecap="round"/><circle cx="46.9" cy="19.1" r=".33" fill="#6d4a2b"/>
+                  <g class="held gone"><path d="M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z" transform="translate(47.8 19.4) scale(0.38)" fill="#c4313a"/><path d="M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z" fill="none" stroke="#7d1218" stroke-opacity=".7" stroke-width="1.6" transform="translate(47.8 19.4) scale(0.38) translate(16 15) scale(.74) translate(-16 -15)"/></g>
+                  <g class="foot foot-front"><g transform="translate(30 57.4) scale(1)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
+                </svg>
+              </div></div>
+            </div>
+          </div>
+            <div class="balloons" id="balloons" aria-hidden="true"></div>
+            <i class="shade" id="shadeBack"></i>
+          </section>
+
+      </div>
+    </div>
+  </div>
+
+  <p class="card-hint" id="cardHint" aria-hidden="true"></p>
+  <div class="hearts" id="hearts" aria-hidden="true"></div>
+
+  <button class="replay" id="replay" type="button" aria-label="Play the invitation again" title="Play again">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/>
+    </svg>
+  </button>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const root = document.documentElement;
+  const stage = $('stage'), envLand = $('envLand'), envMove = $('envMove'), envBtn = $('envBtn'),
+        env = $('env'), letter = $('letter'), flap = $('flap'), flapInner = $('flapInner'),
+        seal = $('seal'), hint = $('hint'), fly = $('fly'), shift = $('shift'),
+        cardShadow = $('cardShadow'), csFar = $('csFar'), replay = $('replay'),
+        shadeFront = $('shadeFront'), shadeBack = $('shadeBack'), card3d = $('card3d');
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = (ms) => (reduce ? Math.round(ms * 0.4) : ms);
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  /* ---------- sound: only the hearts popping and bubbling up, and the ducklings' footsteps ----------
+     Browsers only allow sound after a tap or click, so a ?lang= link stays silent until the
+     envelope is opened. On iPhone the ring/silent switch also mutes it. */
+  /* SFX-START */
+  const SFX = (() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    let ctx = null, out = null, bus = null, noise = null, on = true;
+    const VOL = 1.3;
+    function unlock() {
+      if (!AC) return;
+      if (!ctx) {
+        try { ctx = new AC(); } catch (e) { return; }
+        const comp = ctx.createDynamicsCompressor();          // keeps busy moments from getting loud
+        comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 3.5;
+        comp.attack.value = 0.004; comp.release.value = 0.25;
+        out = ctx.createGain(); out.gain.value = on ? VOL : 0;
+        out.connect(comp); comp.connect(ctx.destination);
+        bus = ctx.createGain(); bus.connect(out);
+        noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const d = noise.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        const w = ctx.createBufferSource(); w.buffer = ctx.createBuffer(1, 1, 22050); w.connect(ctx.destination); w.start(0);
+      }
+      if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(() => {});
+    }
+    const live = () => !!ctx && on && ctx.state !== 'closed';
+    const now = (delay = 0) => ctx.currentTime + 0.01 + delay;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+
+    function gate(t, a, peak, d) {
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(peak, t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+      g.connect(bus);
+      return g;
+    }
+    function hiss(t, dur) {
+      const n = ctx.createBufferSource(); n.buffer = noise; n.loop = true;
+      n.start(t, Math.random() * 1.5); n.stop(t + dur + 0.05);
+      return n;
+    }
+    function filt(type, f, q = 0.7) { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; }
+    function tone(type, t, path, g) {                       // path: [[time offset, Hz], ...]
+      const o = ctx.createOscillator(); o.type = type;
+      o.frequency.setValueAtTime(path[0][1], t);
+      path.slice(1).forEach(([dt, f]) => o.frequency.exponentialRampToValueAtTime(f, t + dt));
+      o.connect(g); o.start(t); o.stop(t + 2.6);
+      return o;
+    }
+    function pop(t, size, gain) {                            // a heart bursting: a quick upward bloop and a click
+      const f = 1500 - 650 * size;
+      tone('sine', t, [[0, f * 0.6], [0.04, f * 1.5]], gate(t, 0.002, gain, 0.06));
+      const n = hiss(t, 0.02), b = filt('highpass', 2500);
+      n.connect(b); b.connect(gate(t, 0.001, gain * 0.6, 0.01));
+    }
+    function pat(t, k, gain) {                               // one little webbed footstep
+      tone('sine', t, [[0, 230 * k], [0.03, 135 * k]], gate(t, 0.002, gain, 0.05));
+      const n = hiss(t, 0.02), b = filt('lowpass', 1500);
+      n.connect(b); b.connect(gate(t, 0.001, gain * 0.45, 0.012));
+    }
+
+    const play = (fn) => (...args) => { if (live()) try { fn(...args); } catch (e) {} };
+    return {
+      unlock,
+      get on() { return on; },
+      set on(v) { on = v; if (out) out.gain.setTargetAtTime(on ? VOL : 0, ctx.currentTime, 0.05); },
+      cut() {                                                  // replaying: fade out anything still scheduled
+        if (!ctx) return;
+        const old = bus;
+        old.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+        setTimeout(() => old.disconnect(), 400);
+        bus = ctx.createGain(); bus.connect(out);
+      },
+      burst: play((size) => pop(now(), size, 0.1)),
+      steps: play((ms, gap = 110) => { const t = now(); for (let i = 0; i * gap < ms - 50; i++) pat(t + (i * gap) / 1000, i % 2 ? 1.12 : 1, 0.05); }),
+      bubble: play((d) => {                                   // a heart balloon appears; bigger ones sound lower
+        const t = now(), f = 430 - (d - 1.6) * 55;
+        tone('sine', t, [[0, f], [0.09, f * 2.3]], gate(t, 0.004, 0.09, 0.12));
+      })
+    };
+  })();
+  /* SFX-END */
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) =>
+    window.addEventListener(ev, SFX.unlock, { capture: true, passive: true }));
+
+  /* paper, lacquer and glaze textures, generated once */
+  const noise = (freq, matrix, size = 240) => {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${matrix}'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  };
+  root.style.setProperty('--grain-gray',  noise(0.85, '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1'));
+  root.style.setProperty('--grain-paper', noise(0.7,  '0 0 0 0 .30  0 0 0 0 .22  0 0 0 0 .14  .5 0 0 0 -.21'));
+  root.style.setProperty('--grain-linen', noise(0.6,  '0 0 0 0 .22  0 0 0 0 .28  0 0 0 0 .24  .55 0 0 0 -.21'));
+
+  /* the foil catches the light: its highlight eases toward the pointer */
+  const foil = $('gFoilRed');
+  const LIGHT = { x: 210, y: 110 };
+  let light = { ...LIGHT }, aimAt = { ...LIGHT }, lightRaf = 0;
+  const stepLight = () => {
+    light.x += (aimAt.x - light.x) * 0.1;
+    light.y += (aimAt.y - light.y) * 0.1;
+    foil.setAttribute('cx', light.x.toFixed(1));
+    foil.setAttribute('cy', light.y.toFixed(1));
+    lightRaf = Math.abs(aimAt.x - light.x) + Math.abs(aimAt.y - light.y) > 0.6 ? requestAnimationFrame(stepLight) : 0;
+  };
+  const aimLight = (x, y) => { aimAt = { x, y }; if (!lightRaf) lightRaf = requestAnimationFrame(stepLight); };
+
+  /* ---------- languages ---------- */
+  const touch = matchMedia('(hover: none)').matches;
+  const TEXT = {
+    en: {
+      title: 'Save the date — Ivan & Ana — 5 March 2027',
+      hint: touch ? 'Tap to open' : 'Click to open',
+      open: 'Open the save the date from Ivan and Ana',
+      replay: 'Choose a language and play again',
+      coverDate: '5 March 2027',
+      lead: 'for the wedding of',
+      stdTitle: 'Save the date',
+      day: 'Friday, 5 March 2027',
+      place: 'Melbourne',
+      note: 'Formal invitation to follow',
+      heartsLine: 'Your presence will fill our day with hearts'
+    },
+    vi: {
+      title: 'Lưu lại ngày vui — Ivan & Ana — 5.3.2027',
+      hint: touch ? 'Chạm để mở' : 'Nhấn để mở',
+      open: 'Mở thiệp báo tin của Ivan và Ana',
+      replay: 'Chọn ngôn ngữ và xem lại',
+      coverDate: 'Ngày 5 tháng 3 năm 2027',
+      lead: 'cho hôn lễ của',
+      stdTitle: 'Lưu lại ngày vui',
+      day: 'Thứ Sáu, ngày 5 tháng 3 năm 2027',
+      place: 'Melbourne',
+      note: 'Thiệp mời chính thức sẽ được gửi sau',
+      heartsLine: 'Sự hiện diện của quý khách sẽ khiến ngày vui của chúng tôi ngập tràn yêu thương'
+    },
+    'zh-Hant': {
+      title: '敬請預留日期 — Ivan & Ana — 2027年3月5日',
+      hint: touch ? '輕觸開啟' : '點擊開啟',
+      open: '開啟 Ivan 與 Ana 的預留日期通知',
+      replay: '選擇語言並重新播放',
+      coverDate: '二〇二七年三月五日',
+      lead: '誠邀您共賀',
+      stdTitle: '敬請預留日期',
+      day: '二〇二七年三月五日　星期五',
+      place: '墨爾本',
+      note: '正式請柬隨後奉上',
+      heartsLine: '您的光臨，將讓我們的這一天充滿愛'
+    }
+  };
+  const FONTS = {
+    en: ['italic 400 40px "Bodoni Moda"', '400 20px "Bodoni Moda"', 'italic 300 20px "Spectral"', '400 20px "Spectral"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"'],
+    vi: ['italic 400 40px "Playfair Display"', '400 20px "Playfair Display"', '500 20px "Playfair Display"', 'italic 300 20px "Spectral"', '400 20px "Spectral"', '400 30px "Playfair Display SC"'],
+    'zh-Hant': ['400 20px "Bodoni Moda"', 'italic 400 40px "Bodoni Moda"', '400 20px "Noto Serif TC"', '400 20px "Spectral"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"']
+  };
+
+  /* guest names: a group's link (/<id>) asks the backend for them, in the order the admin ranked them.
+     Links made before the guest list existed (?to=Name&to=Name) still work. */
+  const cleanNames = (list) => list.map((n) => String(n).replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 10);
+  try { sessionStorage.removeItem('std-guests'); } catch (e) {}      // names are no longer kept across a refresh
+  const query = new URLSearchParams(location.search);
+  let GUESTS = cleanNames(query.getAll('to'));
+  const groupId = (location.pathname.split('/').filter(Boolean)[0] || query.get('g') || '').toLowerCase();
+  const guestsReady = /^[a-z0-9]{4,32}$/.test(groupId)
+    ? Promise.race([
+        fetch(`/api/invite/${groupId}`)
+          .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
+          .then((d) => { if (d && Array.isArray(d.names) && d.names.length) GUESTS = cleanNames(d.names); })
+          .catch(() => {}),                                           // offline or unknown link: the plain card
+        wait(4000)
+      ])
+    : Promise.resolve();
+  const DEAR = { en: 'Dear', vi: 'Thân gửi', 'zh-Hant': '親愛的' };
+  const joinNames = (list, code) => {
+    const and = { en: ' & ', vi: ' và ', 'zh-Hant': ' 及 ' }[code], sep = code === 'zh-Hant' ? '、' : ', ';
+    return list.length < 2 ? (list[0] || '') : list.slice(0, -1).join(sep) + and + list[list.length - 1];
+  };
+
+  function applyLanguage(code) {
+    const t = TEXT[code];
+    $('coverPrint').querySelector('.cover-art').classList.toggle('is-blank', !GUESTS.length);   // no guest name: just the 囍
+    if (GUESTS.length) {
+      const art = $('coverPrint');
+      const dear = art.querySelector('.cover-dear');
+      dear.hidden = false;
+      dear.textContent = DEAR[code];
+      const names = art.querySelector('.cover-names');
+      const esc = (n) => n.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const joined = joinNames(GUESTS.map(esc), code);
+      names.innerHTML = code === 'en' ? joined.replace(/ &amp; (?=[^&]*$)/, '<span class="amp">&amp;</span>') : joined;
+      names.classList.add('is-guests');
+      const L = names.textContent.length;
+      names.style.fontSize = `calc(var(--u) * ${L <= 18 ? 5 : L <= 30 ? 4.1 : L <= 46 ? 3.4 : 2.9})`;
+    }
+    $('cardHint').textContent = t.hint;
+    root.lang = code;
+    document.title = t.title;
+    hint.textContent = t.hint;
+    envBtn.setAttribute('aria-label', t.open);
+    replay.setAttribute('aria-label', t.replay);
+    replay.title = t.replay;
+    $('duckA').setAttribute('aria-label', DUCK_LABEL[code]);
+    $('duckB').setAttribute('aria-label', DUCK_LABEL[code]);
+    document.querySelectorAll('#fly [data-i18n]').forEach((el) => { el.innerHTML = t[el.dataset.i18n]; });
+    /* the letter inside the envelope is a copy of the card's cover */
+    letter.textContent = '';
+    const print = $('coverPrint').cloneNode(true);
+    print.removeAttribute('id');
+    letter.appendChild(print);
+  }
+  const loadFonts = (code) => {
+    if (!document.fonts) return Promise.resolve();
+    const sample = Object.values(TEXT[code]).join('');
+    const jobs = FONTS[code].map((f) => document.fonts.load(f, sample));
+    jobs.push(document.fonts.load('600 40px "Noto Serif SC"', '囍'));
+    jobs.push(document.fonts.load('400 40px "Beau Rivage"', 'Ivan Sam & Ana Nguyen'));
+    return Promise.race([Promise.all(jobs).catch(() => {}), wait(2200)]);
+  };
+
+  /* ---------- sizing ---------- */
+  let L = {}, CARD_W = 122, CARD_H = 75;
+  const letterT = (dy = 0) => `translate(${L.lx}px, ${L.ly + dy}px) scale(${L.s})`;
+  function layout() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const we = Math.round(Math.min(500, vw * 0.84, vh * 0.56));
+    const he = we / 1.4;
+    /* the card is wider than it is tall; type keeps its size, so the extra width is white space */
+    const k = vw < 600 ? 1.12 : 1.22;
+    const wf = Math.round(Math.min(560 * k, vw * 0.92, ((vh * 0.9) / 1.4) * k));
+    const u = wf / k / 100;
+    const hh = wf / 1.618;
+    const s = (we * 0.92) / wf;
+    L = { vw, vh, we, he, wf, hh, s, u, k, lx: we * 0.04, ly: he - we * 0.028 - hh * s };
+    root.style.setProperty('--we', we + 'px');
+    root.style.setProperty('--he', he + 'px');
+    root.style.setProperty('--wf', wf + 'px');
+    root.style.setProperty('--hh', hh + 'px');
+    root.style.setProperty('--u', u + 'px');
+    CARD_W = wf / u; CARD_H = hh / u;
+    if (state === 'idle' || state === 'ready') letter.style.transform = letterT(0);
+  }
+
+  /* ---------- states ---------- */
+  let state = 'idle', run = 0, pending = false;
+
+  async function land() {
+    const my = ++run;
+    state = 'idle';
+    const a = envLand.animate([
+      { transform: `translateY(${L.vh * 0.62 + L.he}px) rotate(-1.4deg)` },
+      { transform: 'translateY(0) rotate(0deg)' }
+    ], { duration: T(3000), easing: 'cubic-bezier(.06,.8,.14,1)', fill: 'both' });
+    setTimeout(() => {
+      if (my !== run) return;
+      state = 'ready';
+      stage.classList.add('is-ready');
+      if (pending) { pending = false; open(); }
+    }, T(1900));
+    try { await a.finished; } catch (e) { return; }
+    if (my !== run) return;
+    envLand.classList.add('landed');
+    a.cancel();
+    /* the envelope rests for 3 seconds before the hint fades in */
+    setTimeout(() => { if (my === run) stage.classList.add('hint-on'); }, 3000);
+  }
+
+  async function open() {
+    if (state === 'idle') { pending = true; return; }
+    if (state !== 'ready') return;
+    state = 'opening';
+    const my = run;
+    const alive = () => my === run;
+    stage.classList.add('is-busy');
+
+    /* 1 — the seal pops off, hops and falls away under gravity */
+    if (reduce) {
+      try {
+        await seal.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).finished;
+      } catch (e) { return; }
+    } else {
+      await dropSeal();
+      await wait(650);                                  // let it fall before the flap opens
+    }
+    if (!alive()) return;
+
+    /* 2 — the flap opens */
+    const fd = T(1100), fEase = 'cubic-bezier(.65,0,.35,1)';
+    flap.style.transition = `transform ${fd}ms ${fEase}`;
+    stage.classList.add('is-opening');
+    flapInner.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }],
+      { duration: fd, easing: fEase, fill: 'forwards' });
+    setTimeout(() => { if (alive()) flap.style.zIndex = '0'; }, fd * 0.49);
+    await wait(fd * 0.84);
+    if (!alive()) return;
+
+    /* 3 — the card slides out as the envelope sinks */
+    const rise = L.ly + L.hh * L.s + 6;
+    const sink = L.he * 0.5;
+    const rd = T(1500), rEase = 'cubic-bezier(.5,0,.2,1)';
+    const rA = letter.animate([{ transform: letterT(0) }, { transform: letterT(-rise) }],
+      { duration: rd, easing: rEase, fill: 'forwards' });
+    envMove.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${sink}px)` }],
+      { duration: rd, easing: rEase, fill: 'forwards' });
+    try { await rA.finished; } catch (e) { return; }
+    if (!alive()) return;
+
+    /* 4 — hand the card to the front layer and bring it forward */
+    fly.style.transform = 'none';
+    const R = letter.getBoundingClientRect();
+    const F = fly.getBoundingClientRect();
+    const from = `translate(${R.left - F.left}px, ${R.top - F.top}px) scale(${R.width / F.width})`;
+    fly.style.transform = from;
+    fly.classList.add('is-live');
+    letter.style.visibility = 'hidden';
+
+    const flyD = T(1350);
+    const flyA = fly.animate([{ transform: from }, { transform: 'translate(0px, 0px) scale(1)' }],
+      { duration: flyD, easing: 'cubic-bezier(.3,.1,.15,1)', fill: 'forwards' });
+    csFar.animate([{ opacity: 0 }, { opacity: 0.75 }], { duration: flyD, easing: 'ease-out', fill: 'forwards' });
+    envMove.animate([
+      { transform: `translateY(${sink}px)`, opacity: 1 },
+      { transform: `translateY(${sink + L.vh * 0.75}px)`, opacity: 0 }
+    ], { duration: T(1250), easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+    await wait(flyD * 0.86);
+    if (!alive()) return;
+
+    /* the card rests showing Ivan & Ana (or the guest's name) until it is tapped */
+    try { await flyA.finished; } catch (e) { return; }
+    if (!alive()) return;
+    await waitForCardTap();
+    if (!alive()) return;
+
+    /* 5 — the card turns over */
+    const ud = T(1500), uEase = 'cubic-bezier(.55,0,.25,1)';
+    const opts = { duration: ud, easing: uEase, fill: 'forwards' };
+    const uA = card3d.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(180deg)' }], opts);
+    /* everything else follows the card's angle on smooth curves, sampled at the same eased progress p */
+    const N = 30, FLOOR = 0.2;
+    const curve = (fn) => Array.from({ length: N + 1 }, (_, i) => fn(i / N));
+    const lift = (p) => Math.sin(Math.PI * p);                                   // 0 → 1 (edge-on) → 0
+    const wide = (p) => Math.sqrt(Math.cos(Math.PI * p) ** 2 + FLOOR ** 2) / Math.sqrt(1 + FLOOR ** 2);
+    shift.animate(curve((p) => ({ transform: `scale(${(1 + 0.05 * lift(p)).toFixed(4)})` })), opts);
+    cardShadow.animate(curve((p) => ({
+      transform: `translateY(${(lift(p) * L.u * 2).toFixed(2)}px) scaleX(${wide(p).toFixed(4)})`,
+      opacity: (1 - 0.4 * lift(p)).toFixed(4)
+    })), opts);
+    csFar.animate([{ opacity: 0.75 }, { opacity: 1 }], opts);
+    const shading = curve((p) => ({ opacity: lift(p).toFixed(4) }));
+    shadeFront.animate(shading, opts);
+    shadeBack.animate(shading, opts);
+    setTimeout(() => { if (alive()) stage.classList.add('is-revealed'); }, ud * 0.6);
+    try { await uA.finished; await flyA.finished; } catch (e) { return; }
+    if (!alive()) return;
+
+    /* settle into plain CSS so the card follows window resizes */
+    stage.classList.add('is-open');
+    [fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack]
+      .forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+    fly.style.transform = '';
+    fly.setAttribute('aria-hidden', 'false');
+    state = 'open';
+    setTimeout(() => { if (alive()) duckEnter(); }, 7000);     // the left duckling arrives a little later
+    setTimeout(() => { if (alive()) stage.classList.add('is-done'); }, T(2200));
+  }
+
+  /* the seal leaves the flap as a free body: a small hop, then gravity takes it off the page */
+  function dropSeal() {
+    const r = seal.getBoundingClientRect();
+    const body = seal.cloneNode(true);
+    body.removeAttribute('id');
+    body.classList.add('is-falling');
+    Object.assign(body.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', transform: 'none' });
+    document.body.appendChild(body);
+    seal.style.visibility = 'hidden';
+
+    const unit = r.width / 110;                         // scale the physics to the seal's size
+    const g = 2600 * unit;                              // px / s²
+    let x = 0, y = 0, rot = 0;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    let vx = rand(-280, 280) * unit;                    // anywhere from a hard left to a hard right
+    let vy = rand(-620, -480) * unit;                   // the hop
+    const vr = (Math.random() < 0.5 ? -1 : 1) * rand(140, 320);   // a gentle spin, either way
+    let last = performance.now();
+    const t0 = last;
+    return new Promise((resolve) => {
+      let peaked = false;
+      const step = (now) => {
+        const dt = Math.min(0.032, (now - last) / 1000);
+        last = now;
+        vy += g * dt; x += vx * dt; y += vy * dt; rot += vr * dt;
+        const lift = Math.max(0, 1 - (now - t0) / 260) * 0.08;   // rises toward you on the hop
+        body.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${1 + lift})`;
+        if (!peaked && vy >= 0) { peaked = true; resolve(); }
+        if (r.top + y < window.innerHeight + 40 && body.isConnected) requestAnimationFrame(step);
+        else body.remove();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  let cardWait = null;
+  function waitForCardTap() {
+    stage.classList.add('is-awaiting');
+    const hintTimer = setTimeout(() => {
+      if (cardWait) stage.classList.add('card-hint-on');
+    }, 3000);
+    fly.setAttribute('aria-hidden', 'false');
+    fly.setAttribute('role', 'button');
+    fly.setAttribute('aria-label', TEXT[root.lang].hint);
+    fly.tabIndex = 0;
+    return new Promise((resolve) => {
+      const go = (e) => {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        cardWait();
+        resolve();
+      };
+      cardWait = () => {
+        fly.removeEventListener('click', go);
+        fly.removeEventListener('keydown', go);
+        clearTimeout(hintTimer);
+        stage.classList.remove('is-awaiting', 'card-hint-on');
+        fly.removeAttribute('role');
+        fly.removeAttribute('tabindex');
+        cardWait = null;
+      };
+      fly.addEventListener('click', go);
+      fly.addEventListener('keydown', go);
+    });
+  }
+
+  function reset() {
+    SFX.cut();
+    turnSheen(0);
+    if (cardWait) cardWait();
+    document.querySelectorAll('.seal.is-falling').forEach((el) => el.remove());
+    resetDucks();
+    seal.style.visibility = '';
+    run++;
+    [envLand, envMove, letter, seal, flapInner, fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack]
+      .forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+    stage.className = 'stage';
+    envLand.classList.remove('landed');
+    flap.style.zIndex = '';
+    flap.style.transition = '';
+    letter.style.visibility = '';
+    fly.classList.remove('is-live');
+    fly.style.transform = '';
+    fly.setAttribute('aria-hidden', 'true');
+    state = 'idle';
+    pending = false;
+    layout();
+  }
+
+  /* ---------- the ducklings ---------- */
+  const duckA = $('duckA'), duckB = $('duckB'), ducks = duckA.parentElement;
+  const DUCK_LABEL = { en: 'Send a heart', vi: 'Gửi trái tim', 'zh-Hant': '送出愛心' };
+  let duckRounds = 0, duckBusy = false, holder = duckA;
+  const other = (d) => (d === duckA ? duckB : duckA);
+  const part = (d, sel) => d.querySelector(sel);
+  const hop = (d, h = 30) => part(d, '.duck-bob').animate([
+      { transform: 'translateY(0) scale(1, 1)' },
+      { transform: 'translateY(0) scale(1.08, .9)', offset: 0.18 },
+      { transform: `translateY(-${h}%) scale(.95, 1.06)`, offset: 0.5 },
+      { transform: 'translateY(0) scale(1.06, .94)', offset: 0.82 },
+      { transform: 'translateY(0) scale(1, 1)' }
+    ], { duration: 420, easing: 'ease-out' }).finished.catch(() => {});
+  const popIn = (el) => {
+    el.classList.remove('gone');
+    el.animate([{ transform: 'scale(0)' }, { transform: 'scale(1.3)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 360, easing: 'ease-out' });
+  };
+  function floatHeart(from, rise) {
+    const r = from.getBoundingClientRect(), w = r.width, h = r.height, x = r.left, y = r.top;
+    const el = document.createElement('div');
+    el.className = 'heart';
+    el.style.width = w + 'px'; el.style.height = h + 'px';
+    el.innerHTML = HEART.replace('fill="G"', 'fill="#c4313a"');
+    $('hearts').appendChild(el);
+    el.animate([
+      { transform: `translate(${x}px, ${y}px) scale(1)`, opacity: 1 },
+      { transform: `translate(${x + 4}px, ${y - rise * 0.6}px) scale(1.05)`, opacity: 1, offset: 0.65 },
+      { transform: `translate(${x}px, ${y - rise}px) scale(1.5)`, opacity: 0 }
+    ], { duration: 900, easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'forwards' });
+    setTimeout(() => sparks(x + w / 2, y - rise + h / 2, w * 1.3), 820);
+    setTimeout(() => el.remove(), 960);
+  }
+  /* the finale: 17 hearts rise from the pair and pop */
+  function heartFountain(x, y) {
+    const layer = $('hearts'), k = Math.min(1.25, Math.max(0.7, Math.min(innerWidth, innerHeight) / 760));
+    const N = 17;
+    const sizes = Array.from({ length: N }, (_, i) => 6 + i * (12 / (N - 1)));
+    for (let i = sizes.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [sizes[i], sizes[j]] = [sizes[j], sizes[i]]; }
+    sizes.forEach((sz, i) => {
+      setTimeout(() => {
+        const w = sz * k, h = w * 0.94;
+        const sx = x + rand(-16, 16) - w / 2, sy = y + rand(-6, 6) - h / 2;
+        const ex = x + rand(-95, 95) * k - w / 2, ey = y - rand(110, 250) * k - h / 2;
+        const sway = rand(10, 26) * k * (Math.random() < 0.5 ? -1 : 1);
+        const r0 = rand(-18, 18), r1 = rand(-14, 14), dur = rand(950, 1350);
+        const el = document.createElement('div');
+        el.className = 'heart';
+        el.style.width = w + 'px'; el.style.height = h + 'px';
+        el.innerHTML = HEART.replace('fill="G"', `fill="${i % 3 ? '#c4313a' : '#a8222a'}"`);
+        layer.appendChild(el);
+        const at = (t) => {
+          const q = 1 - (1 - t) * (1 - t);                    // shoot up, then ease
+          const px = sx + (ex - sx) * q + sway * Math.sin(q * Math.PI * 1.5);
+          const py = sy + (ey - sy) * q;
+          return `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) rotate(${(r0 + (r1 - r0) * q).toFixed(1)}deg)`;
+        };
+        const frames = [{ transform: `${at(0)} scale(0)`, offset: 0, easing: 'cubic-bezier(.2,1.7,.4,1)' },
+                        { transform: `${at(0.04)} scale(1)`, offset: 0.12 }];
+        for (let f = 1; f <= 8; f++) frames.push({ transform: `${at(0.04 + 0.96 * f / 8)} scale(1)`, offset: 0.12 + 0.78 * f / 8 });
+        frames.push({ transform: `${at(1)} scale(1.6)`, opacity: 0, offset: 1 });
+        frames[frames.length - 2].opacity = 1;
+        el.animate(frames, { duration: dur, fill: 'forwards' });
+        setTimeout(() => sparks(ex + w / 2, ey + h / 2, w), dur * 0.92);
+        setTimeout(() => el.remove(), dur + 60);
+      }, i * 45 + rand(0, 30));
+    });
+  }
+  function travel(d, from, to, ms) {
+    d.classList.add('running');
+    SFX.steps(ms);
+    return d.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }],
+      { duration: ms, easing: 'cubic-bezier(.45,.05,.4,1)', fill: 'forwards' })
+      .finished.then(() => d.classList.remove('running'), () => d.classList.remove('running'));
+  }
+  /* whoever holds the heart runs it over to the other; the third time, they stay together */
+  async function sendHeart(d) {
+    if (duckBusy || state !== 'open') return;
+    const my = run;
+    if (duckRounds >= 3) {
+      duckBusy = true;
+      hop(duckA, 26); await hop(duckB, 26);
+      spawnBalloon(part(holder, '.held'));
+      duckBusy = false;
+      return;
+    }
+    if (d !== holder) { duckBusy = true; await hop(d, 14); duckBusy = false; return; }
+    const to = other(d);
+    duckBusy = true;
+    d.classList.add('busy');
+    const rd = d.getBoundingClientRect(), rt = to.getBoundingClientRect();
+    const D = d === duckA ? rt.left - rd.width * 0.8 - rd.left : rt.right + rd.width * 0.8 - rd.right;
+    const ms = Math.max(380, Math.min(720, Math.abs(D) * 2.2));
+    await hop(d, 16);
+    if (duckRounds === 0) {                               // the first time, she blushes as he runs up
+      to.style.setProperty('--blush-ms', ms + 'ms');
+      to.classList.add('blushing');
+    }
+    await travel(d, 0, D, ms);
+    if (my !== run) return;
+    part(d, '.held').classList.add('gone');               // hand the heart over
+    d.classList.remove('has-heart');
+    popIn(part(to, '.held'));
+    to.classList.add('has-heart', 'smitten');
+    holder = to;
+    hop(to, 24);
+    duckRounds++;
+    await wait(440);
+    if (my !== run) return;
+    if (duckRounds < 3) {
+      d.classList.add('back');
+      await travel(d, D, 0, ms);
+      if (my !== run) return;
+      d.classList.remove('back', 'busy');
+      duckBusy = false;
+    } else {
+      await Promise.all([hop(d, 32), hop(to, 32)]);
+      if (my !== run) return;
+      const ra = duckA.getBoundingClientRect(), rb = duckB.getBoundingClientRect();
+      balloonFountain((Math.min(ra.left, rb.left) + Math.max(ra.right, rb.right)) / 2, Math.min(ra.top, rb.top) + ra.height * 0.3);
+      d.classList.add('together');
+      ducks.classList.add('paired');
+      d.getAnimations().forEach((a) => a.cancel());
+      d.classList.remove('busy');
+      duckBusy = false;
+    }
+  }
+  /* ---------- heart balloons: they rise, then gather under the gold frame like balloons ---------- */
+  const balloonLayer = $('balloons');
+  const bodies = [];
+  const FRAME = 3.6, MAX_BALLOONS = 90;                  // card units (1u = type unit, see layout)
+  let bRaf = 0, bLast = 0, bCalm = 0;
+  const unitPx = () => L.u;
+  const toCard = (sx, sy) => {
+    const r = balloonLayer.getBoundingClientRect(), u = r.width / CARD_W;
+    return [(sx - r.left) / u, (sy - r.top) / u];
+  };
+  function renderBody(b, u) {
+    b.el.style.transform = `translate(${((b.x - b.d / 2) * u).toFixed(2)}px, ${((b.y - b.h / 2) * u).toFixed(2)}px) rotate(${b.a.toFixed(1)}deg)`;
+  }
+  const renderBalloons = () => { const u = unitPx(); bodies.forEach((b) => renderBody(b, u)); };
+  function addBalloon(x, y, d, vx, vy) {
+    if (bodies.length >= MAX_BALLOONS) {                         // the oldest makes room with a pop
+      const old = bodies.shift(), r = old.el.getBoundingClientRect();
+      sparks(r.left + r.width / 2, r.top + r.height / 2, r.width);
+      SFX.burst(0.6);
+      old.el.remove();
+    }
+    const h = d * 0.94, el = document.createElement('div');
+    el.className = 'balloon';
+    el.style.width = `calc(var(--u) * ${d})`;
+    el.style.height = `calc(var(--u) * ${h})`;
+    el.innerHTML = HEART.replace('fill="G"', `fill="${Math.random() < 0.34 ? '#a8222a' : '#c4313a'}"`);
+    balloonLayer.appendChild(el);
+    SFX.bubble(d);
+    el.firstElementChild.animate([{ transform: 'scale(0)' }, { transform: 'scale(1.2)', offset: 0.6 }, { transform: 'scale(1)' }],
+      { duration: 380, easing: 'ease-out' });
+    const b = { el, x, y, vx, vy, d, h, r: d * 0.47, m: d * d, a: rand(-12, 12), ph: Math.random() * 6.28 };
+    bodies.push(b);
+    renderBody(b, unitPx());
+    bCalm = 0;
+    if (!bRaf) { bLast = performance.now(); bRaf = requestAnimationFrame(stepBalloons); }
+  }
+  function stepBalloons(now) {
+    const dt = Math.min(1 / 30, Math.max(0, (now - bLast) / 1000));
+    bLast = now;
+    const t = now / 1000, lo = FRAME + 0.5, hiX = CARD_W - FRAME - 0.5, hiY = CARD_H - FRAME - 0.5;
+    const SUB = 2, h = dt / SUB;
+    for (let s = 0; s < SUB; s++) {
+      for (const b of bodies) {                                   // lift, a little drift, and air drag
+        b.vy -= 64 * h;
+        b.vx += Math.sin(t * 1.6 + b.ph) * 1.6 * h;
+        const drag = Math.exp(-1.9 * h);
+        b.vx *= drag; b.vy *= drag;
+        b.x += b.vx * h; b.y += b.vy * h;
+      }
+      for (let it = 0; it < 3; it++) {
+        for (let i = 0; i < bodies.length; i++) {                  // hearts bump into one another
+          const p = bodies[i];
+          for (let j = i + 1; j < bodies.length; j++) {
+            const q = bodies[j];
+            const dx = q.x - p.x, dy = q.y - p.y, min = p.r + q.r, d2 = dx * dx + dy * dy;
+            if (d2 >= min * min) continue;
+            const dist = Math.sqrt(d2) || 0.001, nx = dx / dist, ny = dy / dist, over = min - dist, tot = p.m + q.m;
+            p.x -= nx * over * (q.m / tot); p.y -= ny * over * (q.m / tot);
+            q.x += nx * over * (p.m / tot); q.y += ny * over * (p.m / tot);
+            const vn = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+            if (vn < 0) {
+              const J = -1.25 * vn / (1 / p.m + 1 / q.m);
+              p.vx -= J * nx / p.m; p.vy -= J * ny / p.m;
+              q.vx += J * nx / q.m; q.vy += J * ny / q.m;
+            }
+          }
+        }
+        for (const b of bodies) {                                 // and stay inside the gold frame
+          if (b.x - b.r < lo) { b.x = lo + b.r; b.vx = Math.abs(b.vx) * 0.35; }
+          if (b.x + b.r > hiX) { b.x = hiX - b.r; b.vx = -Math.abs(b.vx) * 0.35; }
+          if (b.y - b.r < lo) { b.y = lo + b.r; b.vy = Math.abs(b.vy) * 0.3; }
+          if (b.y + b.r > hiY) { b.y = hiY - b.r; b.vy = -Math.abs(b.vy) * 0.3; }
+        }
+      }
+    }
+    let fastest = 0;
+    for (const b of bodies) {
+      const lean = Math.max(-26, Math.min(26, b.vx * 1.8));       // lean into sideways motion
+      b.a += (lean - b.a) * Math.min(1, dt * 4);
+      fastest = Math.max(fastest, Math.abs(b.vx) + Math.abs(b.vy));
+    }
+    renderBalloons();
+    bCalm = fastest < 0.6 ? bCalm + dt : 0;
+    bRaf = bodies.length && bCalm < 1 ? requestAnimationFrame(stepBalloons) : 0;
+  }
+  function balloonFountain(sx, sy) {
+    const my = run, [x, y] = toCard(sx, sy);
+    const sizes = Array.from({ length: 17 }, (_, i) => 1.6 + i * (2.6 / 16));
+    for (let i = sizes.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [sizes[i], sizes[j]] = [sizes[j], sizes[i]]; }
+    sizes.forEach((d, i) => setTimeout(() => {
+      if (my === run) addBalloon(x + rand(-3, 3), y + rand(-1, 1), d, (CARD_W / 2 - x) * rand(0.15, 1.5) + rand(-18, 18), -rand(34, 64));
+    }, i * 60));
+  }
+  function spawnBalloon(from) {
+    const r = from.getBoundingClientRect(), [x, y] = toCard(r.left + r.width / 2, r.top + r.height / 2);
+    addBalloon(x, y, rand(1.8, 3.6), (CARD_W / 2 - x) * rand(0.1, 1.3) + rand(-10, 10), -rand(36, 52));
+  }
+  function resetBalloons() {
+    if (bRaf) cancelAnimationFrame(bRaf);
+    bRaf = 0;
+    bodies.splice(0).forEach((b) => b.el.remove());
+  }
+  window.addEventListener('resize', renderBalloons);
+
+  /* the left duckling walks in from behind the gold frame line, then hops */
+  async function duckEnter() {
+    if (!ducks.classList.contains('awaiting')) return;
+    const my = run, face = part(duckA, '.duck-face');
+    const from = getComputedStyle(face).transform;
+    duckBusy = true;
+    ducks.classList.replace('awaiting', 'entering');
+    duckA.classList.add('walking');
+    const ms = 1700;
+    SFX.steps(ms, 200);
+    try {
+      await face.animate([{ transform: from }, { transform: 'none' }], { duration: ms, easing: 'cubic-bezier(.3,.15,.4,1)' }).finished;
+    } catch (e) { return; }
+    if (my !== run) return;
+    duckA.classList.remove('walking');
+    ducks.classList.remove('entering');
+    await hop(duckA, 22);
+    if (my === run) duckBusy = false;
+  }
+  function resetDucks() {
+    resetBalloons();
+    duckRounds = 0; duckBusy = false; holder = duckA;
+    ducks.classList.remove('paired', 'entering');
+    ducks.classList.add('awaiting');
+    duckA.classList.remove('walking');
+    [duckA, duckB].forEach((d) => {
+      d.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+      d.classList.remove('busy', 'back', 'together', 'running', 'smitten', 'has-heart', 'blushing');
+    });
+    duckA.classList.add('has-heart');
+    part(duckA, '.held').classList.remove('gone');
+    part(duckB, '.held').classList.add('gone');
+  }
+  [duckA, duckB].forEach((d) => {
+    d.addEventListener('click', () => sendHeart(d));
+    d.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sendHeart(d); } });
+  });
+
+  /* ---------- hidden admin: tap 囍 five times on the language screen ----------
+     The password is checked by the backend, and decides the level (root, or links only).
+     admin.js is fetched only now, so guests never download it. */
+  const maker = $('maker'), passEl = $('makerPass'), makerGo = $('makerGo'), makerMsg = $('makerMsg');
+  let xiTaps = 0, xiTimer = 0, adminMod = null;
+  const loadAdmin = () => (adminMod ||= import('/admin.js').catch((e) => { adminMod = null; throw e; }));
+  const adminOptions = { onExpired: () => toggleMaker(true) };
+  $('langXi').addEventListener('click', () => {
+    clearTimeout(xiTimer);
+    xiTimer = setTimeout(() => { xiTaps = 0; }, 1600);
+    if (++xiTaps >= 5) { xiTaps = 0; summonAdmin(); }
+  });
+  async function summonAdmin() {
+    if (!maker.hidden) { toggleMaker(false); return; }
+    try {
+      const admin = await loadAdmin();
+      const me = await admin.session();                    // still signed in on this device: straight in
+      if (me) { admin.openAdmin(me, adminOptions); return; }
+    } catch (e) { /* no backend reachable: the password field will say so */ }
+    toggleMaker(true);
+  }
+  function toggleMaker(show) {
+    if (show) {
+      maker.hidden = false;
+      picker.classList.add('making');
+      makerMsg.textContent = '';
+      requestAnimationFrame(() => maker.classList.add('is-open'));
+      setTimeout(() => passEl.focus({ preventScroll: true }), 300);
+    } else {
+      maker.classList.remove('is-open');
+      passEl.value = '';
+      passEl.blur();
+      setTimeout(() => { maker.hidden = true; picker.classList.remove('making'); }, 450);
+    }
+  }
+  maker.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!passEl.value || makerGo.disabled) return;
+    makerGo.disabled = true;
+    makerMsg.textContent = '';
+    try {
+      const admin = await loadAdmin();
+      const me = await admin.login(passEl.value);
+      toggleMaker(false);
+      admin.openAdmin(me, adminOptions);
+    } catch (err) {
+      makerMsg.textContent = err.status === 401 ? 'Incorrect password'
+        : err.status === 429 ? 'Too many tries. Please wait a while.'
+        : 'Could not sign in. Please try again.';
+      maker.classList.remove('is-wrong');
+      void maker.offsetWidth;                                // restart the shake
+      maker.classList.add('is-wrong');
+      passEl.select();
+    } finally {
+      makerGo.disabled = false;
+    }
+  });
+
+  /* ---------- events ---------- */
+  envBtn.addEventListener('click', open);
+  envBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+  });
+  envBtn.addEventListener('pointermove', (e) => {
+    const r = env.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    env.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+    env.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+    if (e.pointerType === 'mouse' && state === 'ready') aimLight(px * 700, py * 500);
+  });
+  envBtn.addEventListener('pointerleave', () => aimLight(LIGHT.x, LIGHT.y));
+  /* hovering turns the medallion's sheen a little, as if it caught the light */
+  const sheenGrads = ['gMedal', 'gMedalIn', 'gMedalXi'].map($);
+  let sheen = 0, sheenTo = 0, sheenRaf = 0;
+  const stepSheen = () => {
+    sheen += (sheenTo - sheen) * 0.07;
+    if (Math.abs(sheenTo - sheen) < 0.05) sheen = sheenTo;
+    sheenGrads.forEach((g) => g.setAttribute('gradientTransform', `rotate(${sheen.toFixed(2)} .5 .5)`));
+    sheenRaf = sheen !== sheenTo ? requestAnimationFrame(stepSheen) : 0;
+  };
+  const turnSheen = (deg) => { sheenTo = deg; if (!sheenRaf) sheenRaf = requestAnimationFrame(stepSheen); };
+  envBtn.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && state === 'ready') turnSheen(28); });
+  envBtn.addEventListener('pointerleave', () => turnSheen(0));
+  envBtn.addEventListener('focus', () => { if (state === 'ready') turnSheen(28); });
+  envBtn.addEventListener('blur', () => turnSheen(0));
+  const picker = $('lang');
+  function showPicker() {
+    picker.classList.add('is-shown');
+  }
+  /* 17 hearts pop up at the bottom right, float to the top right and burst;
+     resolves as the last few are bursting, which is the cue for the envelope */
+  /* flat red, with a fine engraved inner line like the medallion */
+  const HEART_D = 'M16 29C16 29 1 19.5 1 9.5C1 4.5 5 1 9.5 1C12.5 1 15 2.8 16 5.2C17 2.8 19.5 1 22.5 1C27 1 31 4.5 31 9.5C31 19.5 16 29 16 29Z';
+  const HEART = `<svg viewBox="0 0 32 30"><path d="${HEART_D}" fill="G"/><path d="${HEART_D}" fill="none" stroke="#7d1218" stroke-opacity=".7" stroke-width="1.6" transform="translate(16 15) scale(.74) translate(-16 -15)"/></svg>`;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  function sparks(x, y, size) {
+    const layer = $('hearts'), n = 7, colours = ['#c4313a', '#a8222a', '#d4505a'];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand(-0.3, 0.3), d = size * rand(0.6, 1.05), r = Math.max(2.5, size * rand(0.09, 0.15));
+      const el = document.createElement('i');
+      el.className = 'spark';
+      Object.assign(el.style, { width: r + 'px', height: r + 'px', background: colours[i % colours.length] });
+      layer.appendChild(el);
+      el.animate([
+        { transform: `translate(${x - r / 2}px, ${y - r / 2}px) scale(1)`, opacity: 1 },
+        { transform: `translate(${x - r / 2 + Math.cos(a) * d}px, ${y - r / 2 + Math.sin(a) * d}px) scale(.3)`, opacity: 0 }
+      ], { duration: 420, easing: 'cubic-bezier(.2,.7,.3,1)' }).finished.then(() => el.remove(), () => el.remove());
+    }
+  }
+  function heartsBurst() {
+    return new Promise((resolve) => {
+      const layer = $('hearts'), vw = innerWidth, vh = innerHeight;
+      const k = Math.min(1.25, Math.max(0.7, Math.min(vw, vh) / 760));
+      const N = 17, cue = N - 3;
+      const sizes = Array.from({ length: N }, (_, i) => 6 + i * (12 / (N - 1)));
+      for (let i = sizes.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [sizes[i], sizes[j]] = [sizes[j], sizes[i]]; }
+      let popped = 0;
+      const pop = () => { if (++popped === cue) resolve(); };
+      sizes.forEach((sz, i) => {
+        setTimeout(() => {
+          const w = sz * k, h = w * 0.94;
+          const sx = vw * rand(0.7, 0.95) - w / 2, sy = vh * rand(0.8, 0.95) - h / 2;
+          const ex = vw * rand(0.68, 0.96) - w / 2, ey = vh * rand(0.05, 0.22) - h / 2;
+          const sway = rand(16, 42) * k * (Math.random() < 0.5 ? -1 : 1);
+          const r0 = rand(-18, 18), r1 = rand(-14, 14);
+          const dur = rand(1000, 1400);
+          const el = document.createElement('div');
+          el.className = 'heart';
+          el.style.width = w + 'px'; el.style.height = h + 'px';
+          el.innerHTML = HEART.replace('fill="G"', `fill="${i % 3 ? '#c4313a' : '#a8222a'}"`);
+          layer.appendChild(el);
+          const at = (t) => {
+            const p = t * t * (3 - 2 * t);                       // ease in and out of the rise
+            const x = sx + (ex - sx) * p + sway * Math.sin(p * Math.PI * 1.5);
+            const y = sy + (ey - sy) * p;
+            return `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(r0 + (r1 - r0) * p).toFixed(1)}deg)`;
+          };
+          const frames = [{ transform: `${at(0)} scale(0)`, offset: 0, easing: 'cubic-bezier(.2,1.7,.4,1)' },
+                          { transform: `${at(0.03)} scale(1)`, offset: 0.13 }];
+          for (let f = 1; f <= 8; f++) frames.push({ transform: `${at(0.03 + 0.97 * f / 8)} scale(1)`, offset: 0.13 + 0.77 * f / 8 });
+          frames.push({ transform: `${at(1)} scale(1.6)`, opacity: 0, offset: 1 });
+          frames[frames.length - 2].opacity = 1;
+          el.animate(frames, { duration: dur, fill: 'forwards' });
+          setTimeout(() => { sparks(ex + w / 2, ey + h / 2, w); SFX.burst((sz - 6) / 12); pop(); }, dur * 0.92);
+          setTimeout(() => el.remove(), dur + 60);
+        }, i * 55 + rand(0, 40));
+      });
+    });
+  }
+
+  async function choose(code, celebrate) {
+    picker.classList.remove('is-shown');
+    applyLanguage(code);
+    const cue = celebrate && !reduce ? wait(180).then(heartsBurst) : wait(T(700));
+    await Promise.all([loadFonts(code), cue]);
+    requestAnimationFrame(() => requestAnimationFrame(land));
+  }
+  picker.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-lang]');
+    if (b && picker.classList.contains('is-shown')) choose(b.dataset.lang, true);
+  });
+  replay.addEventListener('click', () => { reset(); showPicker(); });
+  window.addEventListener('resize', layout);
+
+  /* ---------- begin once the type has arrived ---------- */
+  /* a link ending in ?lang=zh, ?lang=vi or ?lang=en skips the choice */
+  layout();
+  applyLanguage('en');
+  const asked = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+  const direct = { zh: 'zh-Hant', 'zh-hant': 'zh-Hant', vi: 'vi', en: 'en' }[asked];
+  if (direct) guestsReady.then(() => choose(direct));
+  else {
+    const pickerFonts = document.fonts
+      ? Promise.race([Promise.all([
+          document.fonts.load('italic 400 23px "Bodoni Moda"', 'English'),
+          document.fonts.load('italic 400 23px "Playfair Display"', 'Tiếng Việt'),
+          document.fonts.load('400 23px "Noto Serif TC"', '中文'),
+          document.fonts.load('600 30px "Noto Serif SC"', '囍')
+        ]).catch(() => {}), wait(1500)])
+      : Promise.resolve();
+    Promise.all([pickerFonts, guestsReady]).then(showPicker);
+  }
+})();
+</script>
+</body>
+</html>

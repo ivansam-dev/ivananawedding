@@ -1,0 +1,40 @@
+name: wedding
+
+services:
+  api:
+    build:
+      context: ./backend
+      target: runtime
+    restart: unless-stopped
+    environment:
+      ROOT_ADMIN_PASSWORD: ${ROOT_ADMIN_PASSWORD:-}
+      LINK_ADMIN_PASSWORD: ${LINK_ADMIN_PASSWORD:-}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      SESSION_HOURS: ${SESSION_HOURS:-72}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    volumes:
+      - wedding-data:/data
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:80"
+
+  # Runs only with `--profile tunnel` (make up does this when CLOUDFLARE_TUNNEL_TOKEN is set).
+  # In Cloudflare, point the tunnel's public hostname at http://web:80
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - web
+
+volumes:
+  wedding-data:
