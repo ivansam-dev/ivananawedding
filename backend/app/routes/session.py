@@ -29,7 +29,8 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
     if role is None:
         limiter.failed(ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect password")
-    limiter.succeeded(ip)
+    if role == "root":
+        limiter.succeeded(ip)
 
     now = utcnow()
     token = new_token()

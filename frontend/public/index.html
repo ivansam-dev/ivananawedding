@@ -7,12 +7,23 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Ivan and Ana&#39;s Wedding</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script>
+/* A group's link (/<id>) asks for its names straight away. Up here, before the font stylesheets,
+   the request runs while they and the rest of the page load; further down it would have to wait
+   for them. The main script at the bottom picks the answer up from window.inviteRequest. */
+window.inviteRequest = (() => {
+  const id = (location.pathname.split('/').filter(Boolean)[0] || new URLSearchParams(location.search).get('g') || '').toLowerCase();
+  if (!/^[a-z0-9]{4,32}$/.test(id)) return null;
+  return fetch(`/api/invite/${id}`)
+    .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
+    .catch(() => null);                                         // offline or unknown link: the plain card
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&display=swap">
+<!-- 囍 needs its own request: text= subsets every family in a request to that one glyph -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600&text=%E5%9B%8D&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;1,300;1,400&family=Playfair+Display+SC:wght@400&family=Beau+Rivage&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..600;1,400..600&family=Noto+Serif+TC:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&family=Playfair+Display:ital,wght@0,400..600;1,400..600&family=Playfair+Display+SC:wght@400&family=Beau+Rivage&family=Noto+Serif+TC:wght@400;600&display=swap">
 <style>
 /* ------------------------------------------------------------------
    Palette — cinnabar lacquer, gold leaf, Ru-ware celadon, ivory stock
@@ -1054,9 +1065,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     }
   };
   const FONTS = {
-    en: ['italic 400 40px "Bodoni Moda"', '400 20px "Bodoni Moda"', 'italic 300 20px "Spectral"', '400 20px "Spectral"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"'],
-    vi: ['italic 400 40px "Playfair Display"', '400 20px "Playfair Display"', '500 20px "Playfair Display"', 'italic 300 20px "Spectral"', '400 20px "Spectral"', '400 30px "Playfair Display SC"'],
-    'zh-Hant': ['400 20px "Bodoni Moda"', 'italic 400 40px "Bodoni Moda"', '400 20px "Noto Serif TC"', '400 20px "Spectral"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"']
+    en: ['italic 400 40px "Bodoni Moda"', '400 20px "Bodoni Moda"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"'],
+    vi: ['italic 400 40px "Playfair Display"', '400 20px "Playfair Display"', '500 20px "Playfair Display"', '400 30px "Playfair Display SC"'],
+    'zh-Hant': ['400 20px "Bodoni Moda"', 'italic 400 40px "Bodoni Moda"', '400 20px "Noto Serif TC"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"']
   };
 
   /* guest names: a group's link (/<id>) asks the backend for them, in the order the admin ranked them.
@@ -1065,14 +1076,11 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   try { sessionStorage.removeItem('std-guests'); } catch (e) {}      // names are no longer kept across a refresh
   const query = new URLSearchParams(location.search);
   let GUESTS = cleanNames(query.getAll('to'));
-  const groupId = (location.pathname.split('/').filter(Boolean)[0] || query.get('g') || '').toLowerCase();
-  const hasGroup = /^[a-z0-9]{4,32}$/.test(groupId);
+  const hasGroup = !!window.inviteRequest;                           // started in <head>
   const guestsReady = hasGroup
     ? Promise.race([
-        fetch(`/api/invite/${groupId}`)
-          .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
-          .then((d) => { if (d && Array.isArray(d.names) && d.names.length) GUESTS = cleanNames(d.names); })
-          .catch(() => {}),                                           // offline or unknown link: the plain card
+        window.inviteRequest
+          .then((d) => { if (d && Array.isArray(d.names) && d.names.length) GUESTS = cleanNames(d.names); }),
         wait(4000)
       ])
     : Promise.resolve();

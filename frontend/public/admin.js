@@ -224,9 +224,9 @@ function createPanel(me, { onExpired } = {}) {
     const n = sentCount(g, kind);
     return !g.guests.length || !n ? 'none' : n === g.guests.length ? 'all' : 'some';
   }
-  function matches(g) {
-    const q = fold(state.query.trim());
-    if (q && !fold(g.name).includes(q) && !g.guests.some((x) => fold(nameOf(x)).includes(q))) return false;
+  /* q is the search text, already folded */
+  function matches(g, q) {
+    if (q &&!fold(g.name).includes(q) && !g.guests.some((x) => fold(nameOf(x)).includes(q))) return false;
     switch (state.filter) {
       case 'std_unsent': return sentState(g, 'save_the_date') !== 'all';
       case 'inv_unsent': return sentState(g, 'invitation') !== 'all';
@@ -235,9 +235,8 @@ function createPanel(me, { onExpired } = {}) {
     }
   }
 
-  function guestMatches(x, g) {
-    const q = fold(state.query.trim());
-    if (q && !fold(x.name).includes(q) && !fold(g.name).includes(q)) return false;
+  function guestMatches(x, g, q) {
+    if (q &&!fold(x.name).includes(q) && !fold(g.name).includes(q)) return false;
     switch (state.filter) {
       case 'attending':
       case 'not_attending':
@@ -284,14 +283,14 @@ function createPanel(me, { onExpired } = {}) {
   function renderList() {
     keepFocus(list, () => {
       let shown;
+      const q = fold(state.query.trim());
       if (state.view === 'guests') {
         shown = state.groups
-          .flatMap((g) => g.guests.map((x) => [x, g]))
-          .filter(([x, g]) => guestMatches(x, g))
-          .sort(([a], [b]) => fold(a.name).localeCompare(fold(b.name)))
-          .map(([x, g]) => guestRowEl(g, x));
+          .flatMap((g) => g.guests.filter((x) => guestMatches(x, g, q)).map((x) => [fold(x.name), x, g]))
+          .sort(([a], [b]) => a.localeCompare(b))           // folded once each, not on every comparison
+          .map(([, x, g]) => guestRowEl(g, x));
       } else {
-        shown = state.groups.filter(matches).map(groupEl);
+        shown = state.groups.filter((g) => matches(g, q)).map(groupEl);
       }
       const hasGuests = state.groups.some((g) => g.guests.length);
       const empty = !state.groups.length || (state.view === 'guests' && !hasGuests)

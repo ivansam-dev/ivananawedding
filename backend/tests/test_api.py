@@ -95,6 +95,39 @@ def test_repeated_wrong_passwords_are_blocked(client):
     assert client.post("/api/auth/login", json={"password": ROOT_PW}).status_code == 429
 
 
+def login_from(client: TestClient, ip: str, password: str) -> int:
+    return client.post("/api/auth/login", json={"password": password},
+                       headers={"x-real-ip": ip}).status_code
+
+
+def test_guessing_from_many_addresses_cannot_lock_the_admins_out(client):
+    for i in range(100):                                   # 10 addresses, 10 wrong guesses each
+        assert login_from(client, f"10.0.0.{i // 10}", "guess") == 401
+    # an address that hasn't been guessing can still sign in
+    assert login_from(client, "192.168.1.5", ROOT_PW) == 200
+    # but while that many guesses are recent, every address gets just one wrong try
+    assert login_from(client, "10.9.9.9", "guess") == 401
+    assert login_from(client, "10.9.9.9", "guess") == 429
+
+
+def test_link_sign_in_does_not_reset_failed_guesses(client):
+    ip = "10.1.1.1"
+    for _ in range(9):
+        assert login_from(client, ip, "guess") == 401
+    assert login_from(client, ip, LINK_PW) == 200          # knowing the link password...
+    assert login_from(client, ip, "guess") == 401          # ...doesn't buy more root guesses
+    assert login_from(client, ip, "guess") == 429
+
+
+def test_root_sign_in_resets_failed_guesses(client):
+    ip = "10.2.2.2"
+    for _ in range(9):
+        assert login_from(client, ip, "typo") == 401
+    assert login_from(client, ip, ROOT_PW) == 200
+    for _ in range(9):
+        assert login_from(client, ip, "typo") == 401       # a fresh allowance after signing in
+
+
 def test_changing_the_password_signs_people_out(settings):
     with TestClient(create_app(settings)) as c:
         sign_in(c, ROOT_PW)

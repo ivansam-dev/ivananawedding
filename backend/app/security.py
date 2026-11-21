@@ -68,10 +68,18 @@ def client_ip(request: Request) -> str:
 
 
 class LoginLimiter:
-    """Counts failed sign-ins: per address, and in total (so many addresses can't share the work)."""
+    """Counts failed sign-ins per address, and in total.
 
-    def __init__(self, per_ip: int = 10, overall: int = 100, window_s: float = 15 * 60) -> None:
-        self.per_ip, self.overall, self.window = per_ip, overall, window_s
+    An address is blocked after `per_ip` failures in the window. When failures across all addresses
+    reach `overall` (guessing spread over many addresses), each address gets only `under_attack`
+    failures instead. An address with no recent failures can always try, so a flood of wrong
+    guesses can't lock the admins out.
+    """
+
+    def __init__(
+        self, per_ip: int = 10, overall: int = 100, under_attack: int = 1, window_s: float = 15 * 60
+    ) -> None:
+        self.per_ip, self.overall, self.under_attack, self.window = per_ip, overall, under_attack, window_s
         self._by_ip: dict[str, deque[float]] = {}
         self._all: deque[float] = deque()
         self._lock = threading.Lock()
@@ -90,7 +98,10 @@ class LoginLimiter:
                 if not q:
                     del self._by_ip[ip]
                     q = None
-            return len(self._all) >= self.overall or (q is not None and len(q) >= self.per_ip)
+            if q is None:
+                return False
+            limit = self.under_attack if len(self._all) >= self.overall else self.per_ip
+            return len(q) >= limit
 
     def failed(self, ip: str) -> None:
         now = time.monotonic()
@@ -102,5 +113,7 @@ class LoginLimiter:
                     del self._by_ip[key]
 
     def succeeded(self, ip: str) -> None:
+        """Forgets an address's failures. Only for root sign-ins: if the link password cleared
+        them, someone who knows it could keep resetting their count while guessing root."""
         with self._lock:
             self._by_ip.pop(ip, None)

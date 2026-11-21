@@ -67,6 +67,8 @@ Tap 囍 five times on the language screen, then enter a password. The password d
 
 A device stays signed in for `SESSION_HOURS` (72 by default), and tapping 囍 five times again goes
 straight in. After 10 wrong passwords from one address within 15 minutes, that address has to wait.
+If there have been 100 wrong passwords from all addresses together in that time, each address gets
+one wrong try instead of 10, but an address that hasn't been guessing can always sign in.
 
 Passwords are stored hashed (scrypt) in the database. Each time the site starts, a password set in
 `.env` replaces the stored one and signs out devices using the old one. A blank one keeps whatever was

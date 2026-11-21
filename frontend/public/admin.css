@@ -1,6 +1,9 @@
 /* Guest list & RSVP manager: the card's paper, cinnabar and gold, laid out for work.
    Uses the custom properties index.html defines (--paper, --ink, --cinnabar, --grain-paper…). */
 
+/* the panel's body face; the card doesn't use it, so guests never download it */
+@import url("https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;1,400&display=swap");
+
 .adm{
   --line:rgba(168,130,60,.42);
   --line-soft:rgba(168,130,60,.2);
