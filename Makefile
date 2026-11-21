@@ -1,5 +1,6 @@
 COMPOSE := docker compose
-DEV     := $(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml
+DEV_PORT := 8081
+DEV     := WEB_PORT=$(DEV_PORT) $(COMPOSE) -p wedding-dev -f docker-compose.yml -f docker-compose.dev.yml
 TUNNEL  := $(shell grep -qsE '^CLOUDFLARE_TUNNEL_TOKEN=.+' .env && echo --profile tunnel)
 STAMP   := $(shell date +%Y%m%d-%H%M%S)
 PORT    := $(or $(shell sed -nE 's/^WEB_PORT=([0-9]+).*/\1/p' .env 2>/dev/null),8080)
@@ -15,8 +16,8 @@ help: ## List the commands
 	@echo "Created .env. Set ROOT_ADMIN_PASSWORD and LINK_ADMIN_PASSWORD in it, then run make again."
 	@exit 1
 
-dev: .env ## Run on this machine with live reload (Ctrl-C to stop)
-	@echo "Starting on http://localhost:$(PORT)"
+dev: .env ## Run locally with live reload and a separate database (Ctrl-C to stop)
+	@echo "Starting dev on http://localhost:$(DEV_PORT) (separate database from prod)"
 	$(DEV) up --build
 
 up: .env ## Run in the background, plus the Cloudflare tunnel if a token is set

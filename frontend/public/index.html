@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#c8d3c9">
 <meta name="robots" content="noindex, nofollow">
-<title>Save the date — Ivan &amp; Ana — 5 March 2027</title>
+<title>Ivan and Ana&#39;s Wedding</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&display=swap">
@@ -87,12 +88,14 @@ html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
 .lang-options button[data-lang="en"]{font-family:"Bodoni Moda",serif;font-style:italic}
 /* hidden admin sign-in (tap 囍 five times); the guest list itself is admin.js / admin.css */
 .lang{overflow-y:auto}
+.lang-inner{position:relative}
 .lang-inner,.lang-options,.lang-options button,.lang-rule{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lang-options button::selection,.lang-options button *::selection{background:transparent}
 .maker input{-webkit-user-select:text;user-select:text}
 .lang-xi{cursor:default;-webkit-user-select:none;user-select:none}
 .maker{
-  display:flex;flex-direction:column;align-items:center;gap:14px;width:min(300px, 80vw);margin-top:8px;
+  position:absolute;top:100%;left:50%;translate:-50% 0;margin-top:8px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;width:min(300px, 80vw);
   opacity:0;transform:translateY(8px);transition:opacity .5s ease, transform .5s cubic-bezier(.2,.8,.2,1);
 }
 .maker[hidden]{display:none}
@@ -118,6 +121,8 @@ html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
 .cover-dear[hidden]{display:none}
 html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .cover-date{display:none}
+.cover-note{max-width:78%;margin-top:calc(var(--u) * 2.6);font-style:italic;font-size:max(calc(var(--u) * 2.5), 11px);line-height:1.45;color:var(--ink-soft);letter-spacing:.02em}
+.cover-note[hidden]{display:none}
 .cover-art.is-blank .cover-names{display:none}
 .cover-art.is-blank .emblem{margin-bottom:0}
 .cover-names.is-guests{max-width:84%;font-family:"Playfair Display SC","Noto Serif TC",serif;font-style:normal;font-weight:400;line-height:1.15;color:var(--cinnabar);letter-spacing:.06em}
@@ -133,10 +138,10 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 
 @media (max-width:480px){
   .maker{margin-top:28px}
-  .lang.making{place-items:start center;padding:12vh 0 40px}
-  .lang.making .lang-xi{position:static;transform:none;margin-bottom:36px}
+  .lang.making{place-items:start center;padding:110px 0 40px}   /* lift above the keyboard */
+  .lang.making .lang-xi{margin-bottom:32px}
   .lang-inner{gap:0}
-  .lang-xi{position:absolute;left:50%;top:max(56px, 18vh);transform:translateX(-50%)}
+  .lang-xi{position:absolute;left:50%;bottom:100%;margin-bottom:clamp(36px, 9vh, 88px);transform:translateX(-50%)}
   .lang-options{flex-direction:column;gap:14px}
   .lang-rule{width:26px;height:1px}
 }
@@ -289,7 +294,7 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .face-back .shade{background:linear-gradient(to left, rgba(36,30,26,.03), rgba(36,30,26,.2))}
 
 /* engraved frame */
-.frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid var(--gold-line);pointer-events:none}
+.frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid rgba(138,26,31,.72);pointer-events:none}
 
 /* cover */
 .cover-print{position:absolute;inset:0}
@@ -304,7 +309,7 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 }
 .emblem .xi{
   font-family:var(--cjk);font-weight:600;line-height:1;font-size:calc(var(--u) * 9.6);
-  background:linear-gradient(158deg, #c29c52 8%, #ecd79f 36%, #a57d33 62%, #d6b56c 92%);
+  background:linear-gradient(158deg, #8a1a1f 8%, #c0383e 36%, #6c1216 62%, #a3242a 92%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .cover-names{
@@ -786,6 +791,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
                 <p class="cover-dear" hidden>Dear</p>
                 <p class="cover-names">Ivan<span class="amp">&amp;</span>Ana</p>
                 <p class="cover-date" data-i18n="coverDate">5 March 2027</p>
+                <p class="cover-note" hidden></p>
               </div>
             </div>
             <i class="shade" id="shadeFront"></i>
@@ -882,7 +888,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   const T = (ms) => (reduce ? Math.round(ms * 0.4) : ms);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  /* ---------- sound: only the hearts popping and bubbling up, and the ducklings' footsteps ----------
+  /* ---------- sound: the seal coming off, the hearts popping and bubbling up, and the ducklings' footsteps ----------
      Browsers only allow sound after a tap or click, so a ?lang= link stays silent until the
      envelope is opened. On iPhone the ring/silent switch also mutes it. */
   /* SFX-START */
@@ -958,6 +964,20 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       },
       burst: play((size) => pop(now(), size, 0.1)),
       steps: play((ms, gap = 110) => { const t = now(); for (let i = 0; i * gap < ms - 50; i++) pat(t + (i * gap) / 1000, i % 2 ? 1.12 : 1, 0.05); }),
+      unseal: play((fall = true) => {                         // the 囍 seal peels off with a pop, then whooshes away
+        const t = now();
+        const p = hiss(t, 0.09), pb = filt('bandpass', 1400, 1.4);   // the sticky peel
+        pb.frequency.setValueAtTime(1400, t); pb.frequency.exponentialRampToValueAtTime(4800, t + 0.07);
+        p.connect(pb); pb.connect(gate(t, 0.006, 0.07, 0.07));
+        const tp = t + 0.035;                                         // the pop as it lets go
+        tone('sine', tp, [[0, 560], [0.06, 170]], gate(tp, 0.002, 0.17, 0.1));
+        const c = hiss(tp, 0.02), cb = filt('highpass', 2800);
+        c.connect(cb); cb.connect(gate(tp, 0.001, 0.07, 0.012));
+        if (!fall) return;
+        const tw = tp + 0.12, w = hiss(tw, 0.8), wb = filt('bandpass', 1300, 0.9);   // falling away
+        wb.frequency.setValueAtTime(1300, tw); wb.frequency.exponentialRampToValueAtTime(260, tw + 0.75);
+        w.connect(wb); wb.connect(gate(tw, 0.22, 0.04, 0.5));
+      }),
       bubble: play((d) => {                                   // a heart balloon appears; bigger ones sound lower
         const t = now(), f = 430 - (d - 1.6) * 55;
         tone('sine', t, [[0, f], [0.09, f * 2.3]], gate(t, 0.004, 0.09, 0.12));
@@ -994,7 +1014,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   const touch = matchMedia('(hover: none)').matches;
   const TEXT = {
     en: {
-      title: 'Save the date — Ivan & Ana — 5 March 2027',
+      title: "Ivan and Ana's Wedding",
       hint: touch ? 'Tap to open' : 'Click to open',
       open: 'Open the save the date from Ivan and Ana',
       replay: 'Choose a language and play again',
@@ -1007,7 +1027,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       heartsLine: 'Your presence will fill our day with hearts'
     },
     vi: {
-      title: 'Lưu lại ngày vui — Ivan & Ana — 5.3.2027',
+      title: "Ivan and Ana's Wedding",
       hint: touch ? 'Chạm để mở' : 'Nhấn để mở',
       open: 'Mở thiệp báo tin của Ivan và Ana',
       replay: 'Chọn ngôn ngữ và xem lại',
@@ -1020,7 +1040,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       heartsLine: 'Sự hiện diện của quý khách sẽ khiến ngày vui của chúng tôi ngập tràn yêu thương'
     },
     'zh-Hant': {
-      title: '敬請預留日期 — Ivan & Ana — 2027年3月5日',
+      title: "Ivan and Ana's Wedding",
       hint: touch ? '輕觸開啟' : '點擊開啟',
       open: '開啟 Ivan 與 Ana 的預留日期通知',
       replay: '選擇語言並重新播放',
@@ -1046,7 +1066,8 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   const query = new URLSearchParams(location.search);
   let GUESTS = cleanNames(query.getAll('to'));
   const groupId = (location.pathname.split('/').filter(Boolean)[0] || query.get('g') || '').toLowerCase();
-  const guestsReady = /^[a-z0-9]{4,32}$/.test(groupId)
+  const hasGroup = /^[a-z0-9]{4,32}$/.test(groupId);
+  const guestsReady = hasGroup
     ? Promise.race([
         fetch(`/api/invite/${groupId}`)
           .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
@@ -1056,6 +1077,13 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       ])
     : Promise.resolve();
   const DEAR = { en: 'Dear', vi: 'Thân gửi', 'zh-Hant': '親愛的' };
+  /* a bare link (no group id, no ?to= names) shows a note on the cover instead of the details */
+  const LOCKED = !hasGroup && !GUESTS.length;
+  const NO_LINK = {
+    en: { who: ['Family', 'Friends'], note: 'Please message Ivan or Ana for your personal Save the Date link.' },
+    vi: { who: ['Gia đình', 'Bạn bè'], note: 'Vui lòng nhắn tin cho Ivan hoặc Ana để nhận đường dẫn thiệp báo tin riêng của bạn.' },
+    'zh-Hant': { who: ['家人', '朋友'], note: '請聯絡 Ivan 或 Ana，索取您的專屬預留日期通知連結。' }
+  };
   const joinNames = (list, code) => {
     const and = { en: ' & ', vi: ' và ', 'zh-Hant': ' 及 ' }[code], sep = code === 'zh-Hant' ? '、' : ', ';
     return list.length < 2 ? (list[0] || '') : list.slice(0, -1).join(sep) + and + list[list.length - 1];
@@ -1063,19 +1091,23 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 
   function applyLanguage(code) {
     const t = TEXT[code];
-    $('coverPrint').querySelector('.cover-art').classList.toggle('is-blank', !GUESTS.length);   // no guest name: just the 囍
-    if (GUESTS.length) {
+    $('coverPrint').querySelector('.cover-art').classList.toggle('is-blank', !GUESTS.length && !LOCKED);   // no guest name: just the 囍
+    if (GUESTS.length || LOCKED) {
+      const who = LOCKED ? NO_LINK[code].who : GUESTS;
       const art = $('coverPrint');
       const dear = art.querySelector('.cover-dear');
       dear.hidden = false;
       dear.textContent = DEAR[code];
       const names = art.querySelector('.cover-names');
       const esc = (n) => n.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const joined = joinNames(GUESTS.map(esc), code);
+      const joined = joinNames(who.map(esc), code);
       names.innerHTML = code === 'en' ? joined.replace(/ &amp; (?=[^&]*$)/, '<span class="amp">&amp;</span>') : joined;
       names.classList.add('is-guests');
       const L = names.textContent.length;
       names.style.fontSize = `calc(var(--u) * ${L <= 18 ? 5 : L <= 30 ? 4.1 : L <= 46 ? 3.4 : 2.9})`;
+      const note = art.querySelector('.cover-note');
+      note.hidden = !LOCKED;
+      note.textContent = LOCKED ? NO_LINK[code].note : '';
     }
     $('cardHint').textContent = t.hint;
     root.lang = code;
@@ -1158,6 +1190,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     stage.classList.add('is-busy');
 
     /* 1 — the seal pops off, hops and falls away under gravity */
+    SFX.unseal(!reduce);
     if (reduce) {
       try {
         await seal.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).finished;
@@ -1212,6 +1245,12 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     /* the card rests showing Ivan & Ana (or the guest's name) until it is tapped */
     try { await flyA.finished; } catch (e) { return; }
     if (!alive()) return;
+    if (LOCKED) {                                       // no personal link: the card stays on its cover
+      fly.setAttribute('aria-hidden', 'false');
+      state = 'locked';
+      setTimeout(() => { if (alive()) stage.classList.add('is-done'); }, T(1200));
+      return;
+    }
     await waitForCardTap();
     if (!alive()) return;
 

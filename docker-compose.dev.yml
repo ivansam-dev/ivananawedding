@@ -4,8 +4,9 @@ services:
     command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000",
               "--reload", "--reload-dir", "/srv/app"]
     environment:
+      PUBLIC_URL: ""                 # don't use the prod domain in copied links
       COOKIE_SECURE: "false"         # plain http://localhost
-      ENABLE_DOCS: "true"            # http://localhost:8080/api/docs
+      ENABLE_DOCS: "true"            # http://localhost:8081/api/docs
       WATCHFILES_FORCE_POLLING: "true"
     volumes:
       - ./backend/app:/srv/app:ro
