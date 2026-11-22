@@ -45,6 +45,7 @@ window.inviteRequest = (() => {
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   overflow:hidden;
@@ -128,11 +129,11 @@ html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 
 /* personalised cover and the pause before the letter opens */
-.cover-dear{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:max(calc(var(--u) * 2.2), 9.5px);line-height:1.35;color:var(--ink-soft);margin-bottom:calc(var(--u) * 1.3);letter-spacing:.14em;padding-left:.14em}
+.cover-dear{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 2.2);line-height:1.35;color:var(--ink-soft);margin-bottom:calc(var(--u) * 1.3);letter-spacing:.14em;padding-left:.14em}
 .cover-dear[hidden]{display:none}
 html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .cover-date{display:none}
-.cover-note{max-width:78%;margin-top:calc(var(--u) * 2.6);font-style:italic;font-size:max(calc(var(--u) * 2.5), 11px);line-height:1.45;color:var(--ink-soft);letter-spacing:.02em}
+.cover-note{max-width:78%;margin-top:calc(var(--u) * 2.6);font-family:"Playfair Display SC","Noto Serif TC",serif;font-style:normal;font-size:calc(var(--u) * 2.2);line-height:1.5;color:var(--ink-soft);letter-spacing:.08em}
 .cover-note[hidden]{display:none}
 .cover-art.is-blank .cover-names{display:none}
 .cover-art.is-blank .emblem{margin-bottom:0}
@@ -303,6 +304,14 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .face-back{transform:rotateY(180deg)}
 .shade{position:absolute;inset:0;opacity:0;pointer-events:none;background:linear-gradient(to right, rgba(36,30,26,.03), rgba(36,30,26,.2))}
 .face-back .shade{background:linear-gradient(to left, rgba(36,30,26,.03), rgba(36,30,26,.2))}
+/* once the card has settled, drop the 3D context: 3D layers are rasterised at their original
+   size, so pinch-zoom would only stretch a bitmap. Flat, the browser re-draws text and SVG sharply */
+.stage.is-flat .shift{perspective:none}
+.stage.is-flat .card3d{transform:none;transform-style:flat}
+.stage.is-flat .face{-webkit-backface-visibility:visible;backface-visibility:visible}
+.stage.is-flat.is-open .face-front,
+.stage.is-flat:not(.is-open) .face-back{visibility:hidden}
+.stage.is-flat.is-open .face-back{transform:none}
 
 /* engraved frame */
 .frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid rgba(138,26,31,.72);pointer-events:none}
@@ -409,10 +418,10 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .std-foot{top:calc(var(--hh) * .785)}
 .std-title{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 3.7);line-height:1.2;color:var(--cinnabar);letter-spacing:.14em;padding-left:.14em}
 .std-lead{font-family:"Playfair Display SC","Noto Serif TC",serif}
-.std-lead{position:absolute;left:0;right:0;bottom:100%;margin-bottom:calc(var(--u) * 1.6);white-space:nowrap;font-size:max(calc(var(--u) * 2.2), 9.5px);color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
+.std-lead{position:absolute;left:0;right:0;bottom:100%;margin-bottom:calc(var(--u) * 1.6);white-space:nowrap;font-size:calc(var(--u) * 2.2);color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
 .std-names{font-family:"Beau Rivage","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 9.3);line-height:1.15;color:var(--cinnabar);letter-spacing:0;white-space:nowrap}
 .std-names .amp{color:var(--gold);padding:0 .26em}
-.std-day,.std-place{font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;font-size:max(calc(var(--u) * 2.2), 9.5px);line-height:1.35;color:var(--ink);letter-spacing:.12em;padding-left:.12em}
+.std-day,.std-place{font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;font-size:calc(var(--u) * 2.2);line-height:1.35;color:var(--ink);letter-spacing:.12em;padding-left:.12em}
 .std-day,.std-place{text-transform:lowercase}   /* all small capitals, like the line above the names */
 .std-place{margin-top:calc(var(--u) * .9)}
 html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
@@ -442,6 +451,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 /* the left duckling waits outside the card and walks in from behind the gold frame line */
 .ducks.awaiting .duck-a,.ducks.entering .duck-a{clip-path:inset(-200% -200% -200% calc(var(--duck-gap) * -1))}
 .ducks.awaiting .duck-a .duck-face{transform:translateX(calc(var(--duck-gap) * -1 - var(--duck-w) * 1.15))}
+.ducks.awaiting .duck-a,.ducks.entering .duck-a{pointer-events:none}
 .duck.walking .duck-bob{animation:waddle .2s ease-in-out infinite alternate}
 .duck.walking .foot-back{animation:pedal .4s linear infinite}
 .duck.walking .foot-front{animation:pedal .4s linear infinite;animation-delay:-.2s}
@@ -819,8 +829,8 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
                 <h1 class="std-names rv" style="--i:2">Ivan Sam<span class="amp">&amp;</span>Ana Nguyen</h1>
               </div>
               <div class="std-row std-foot">
-                <p class="std-day rv" style="--i:3" data-i18n="day">5 March 2027</p>
-                <p class="std-place rv" style="--i:4" data-i18n="place">Melbourne</p>
+                <p class="std-day rv" style="--i:3" data-i18n="day">Thursday 4 &amp; Friday 5 March 2027, Melbourne</p>
+                <p class="std-place rv" style="--i:4" data-i18n="note">Invitations to follow</p>
               </div>
             </div>
           <div class="ducks rv awaiting" style="--i:6">
@@ -851,7 +861,6 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
                   <g filter="url(#fDuckWash)"><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckBody)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckShade)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="none" stroke="#d9a23e" stroke-opacity=".4" stroke-width="1.3" stroke-linejoin="round"/></g>
                   <path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" transform="translate(.3 -.2)" fill="none" stroke="#6d4a2b" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="22 1.8 19 1.4 24 2 15 1.2 30"/>
                   <g fill="none" stroke="#c98d2a" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"><path d="M39.6 46 l1.1 -.3 M37 50.2 l1 -.6 M16.4 50.6 l-.9 -.7 M12.6 45.6 l-1 -.2 M28 31.8 l-.3 1"/></g>
-                  <g fill="none" stroke="#6d4a2b" stroke-width=".5" stroke-linecap="round"><path d="M32.4 8.6 C31.6 5.9 33.4 4 35.4 4.7"/><path d="M33.9 8.6 C34.6 6.5 36.6 6.2 37.6 7.3"/><path d="M31.1 8.9 C29.6 7.2 29.8 5.4 31.2 4.8"/></g>
                   <ellipse cx="37.4" cy="22.4" rx="3.2" ry="2.1" fill="url(#gDuckBlush)"/>
                   <g class="blush"><ellipse cx="37.2" cy="22.6" rx="4.2" ry="2.7" fill="url(#gDuckBlushHot)"/><path d="M35.1 23.6 l1 -1.7 M36.8 23.8 l1 -1.7 M38.5 24 l1 -1.7" fill="none" stroke="#d6485a" stroke-opacity=".85" stroke-width=".45" stroke-linecap="round"/></g>
                   <g class="eyes-heart" fill="#c4313a"><path transform="translate(37.8 17) scale(.72)" d="M0 3C0 3 -3.4 .9 -3.4 -1.1C-3.4 -2.3 -2.4 -3 -1.5 -3C-.8 -3 -.2 -2.6 0 -2C.2 -2.6 .8 -3 1.5 -3C2.4 -3 3.4 -2.3 3.4 -1.1C3.4 .9 0 3 0 3Z"/></g>
@@ -999,9 +1008,18 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) =>
     window.addEventListener(ev, SFX.unlock, { capture: true, passive: true }));
 
-  /* paper, lacquer and glaze textures, generated once */
+  /* paper, lacquer and glaze textures, generated once.
+     The grain alone has no detail finer than about a third of a pixel, so under pinch-zoom it turns
+     into soft blotches that read as blur. A much finer fibre noise is mixed in (contrast restored so
+     the grain looks the same at 100%); it only shows once zoomed, where it keeps the paper crisp. */
+  const FINE = 0.4, GAIN = 1 / Math.hypot(1 - FINE, FINE);
+  const OPAQUE = '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1';
   const noise = (freq, matrix, size = 240) => {
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${matrix}'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='n' x='0' y='0' width='100%' height='100%'>`
+      + `<feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${OPAQUE}' result='a'/>`
+      + `<feTurbulence type='fractalNoise' baseFrequency='3' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${OPAQUE}' result='b'/>`
+      + `<feComposite in='a' in2='b' operator='arithmetic' k2='${((1 - FINE) * GAIN).toFixed(3)}' k3='${(FINE * GAIN).toFixed(3)}' k4='${(0.5 * (1 - GAIN)).toFixed(3)}'/>`
+      + `<feColorMatrix type='matrix' values='${matrix}'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   };
   root.style.setProperty('--grain-gray',  noise(0.85, '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1'));
@@ -1032,9 +1050,8 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       coverDate: '5 March 2027',
       lead: 'for the wedding of',
       stdTitle: 'Save the date',
-      day: 'Friday, 5 March 2027',
-      place: 'Melbourne',
-      note: 'Formal invitation to follow',
+      day: 'Thursday 4 & Friday 5 March 2027, Melbourne',
+      note: 'Invitations to follow',
       heartsLine: 'Your presence will fill our day with hearts'
     },
     vi: {
@@ -1045,9 +1062,8 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       coverDate: 'Ngày 5 tháng 3 năm 2027',
       lead: 'cho hôn lễ của',
       stdTitle: 'Lưu lại ngày vui',
-      day: 'Thứ Sáu, ngày 5 tháng 3 năm 2027',
-      place: 'Melbourne',
-      note: 'Thiệp mời chính thức sẽ được gửi sau',
+      day: 'Thứ Năm 4 & Thứ Sáu 5 tháng 3 năm 2027, Melbourne',
+      note: 'Thiệp mời sẽ được gửi sau',
       heartsLine: 'Sự hiện diện của quý khách sẽ khiến ngày vui của chúng tôi ngập tràn yêu thương'
     },
     'zh-Hant': {
@@ -1058,9 +1074,8 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       coverDate: '二〇二七年三月五日',
       lead: '誠邀您共賀',
       stdTitle: '敬請預留日期',
-      day: '二〇二七年三月五日　星期五',
-      place: '墨爾本',
-      note: '正式請柬隨後奉上',
+      day: '二〇二七年三月四日（星期四）及五日（星期五）　墨爾本',
+      note: '請柬隨後奉上',
       heartsLine: '您的光臨，將讓我們的這一天充滿愛'
     }
   };
@@ -1077,16 +1092,23 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   const query = new URLSearchParams(location.search);
   let GUESTS = cleanNames(query.getAll('to'));
   const hasGroup = !!window.inviteRequest;                           // started in <head>
+  /* a bare link (no group id, no ?to= names), or a group id the backend has no names for,
+     shows a note on the cover instead of the details */
+  let LOCKED = !hasGroup && !GUESTS.length;
+  let timedOut = false;                                              // a reply after the card has started changes nothing
   const guestsReady = hasGroup
     ? Promise.race([
         window.inviteRequest
-          .then((d) => { if (d && Array.isArray(d.names) && d.names.length) GUESTS = cleanNames(d.names); }),
-        wait(4000)
+          .then((d) => {
+            if (timedOut) return;
+            const names = d && Array.isArray(d.names) ? cleanNames(d.names) : [];
+            if (names.length) GUESTS = names;
+            else if (!GUESTS.length) LOCKED = true;                    // unknown or empty group: same note as a bare link
+          }),
+        wait(4000).then(() => { timedOut = true; })
       ])
     : Promise.resolve();
   const DEAR = { en: 'Dear', vi: 'Thân gửi', 'zh-Hant': '親愛的' };
-  /* a bare link (no group id, no ?to= names) shows a note on the cover instead of the details */
-  const LOCKED = !hasGroup && !GUESTS.length;
   const NO_LINK = {
     en: { who: ['Family', 'Friends'], note: 'Please message Ivan or Ana for your personal Save the Date link.' },
     vi: { who: ['Gia đình', 'Bạn bè'], note: 'Vui lòng nhắn tin cho Ivan hoặc Ana để nhận đường dẫn thiệp báo tin riêng của bạn.' },
@@ -1149,8 +1171,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     const vw = window.innerWidth, vh = window.innerHeight;
     const we = Math.round(Math.min(500, vw * 0.84, vh * 0.56));
     const he = we / 1.4;
-    /* the card is wider than it is tall; type keeps its size, so the extra width is white space */
-    const k = vw < 600 ? 1.12 : 1.22;
+    /* the card is wider than it is tall; type keeps its size, so the extra width is white space.
+       k is fixed so the phone renders an exact scaled-down copy of the desktop card */
+    const k = 1.22;
     const wf = Math.round(Math.min(560 * k, vw * 0.92, ((vh * 0.9) / 1.4) * k));
     const u = wf / k / 100;
     const hh = wf / 1.618;
@@ -1254,6 +1277,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     try { await flyA.finished; } catch (e) { return; }
     if (!alive()) return;
     if (LOCKED) {                                       // no personal link: the card stays on its cover
+      fly.getAnimations().forEach((a) => a.cancel());   // a held transform would keep the card a bitmap
+      fly.style.transform = '';
+      stage.classList.add('is-flat');
       fly.setAttribute('aria-hidden', 'false');
       state = 'locked';
       setTimeout(() => { if (alive()) stage.classList.add('is-done'); }, T(1200));
@@ -1285,7 +1311,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     if (!alive()) return;
 
     /* settle into plain CSS so the card follows window resizes */
-    stage.classList.add('is-open');
+    stage.classList.add('is-open', 'is-flat');
     [fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack]
       .forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
     fly.style.transform = '';
@@ -1461,6 +1487,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   /* whoever holds the heart runs it over to the other; the third time, they stay together */
   async function sendHeart(d) {
     if (duckBusy || state !== 'open') return;
+    if (d === duckA && (ducks.classList.contains('awaiting') || ducks.classList.contains('entering'))) return;   // not here yet
     const my = run;
     if (duckRounds >= 3) {
       duckBusy = true;

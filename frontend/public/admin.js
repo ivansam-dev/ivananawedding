@@ -83,6 +83,27 @@ function h(tag, attrs, ...children) {
   for (const c of children.flat(Infinity)) if (c != null && c !== false) el.append(c);
   return el;
 }
+/* small line icons for the guest rows' hover buttons */
+const ICONS = {
+  edit: ['M4 20h4L19 9l-4-4L4 16z', 'M13.5 6.5l4 4'],
+  link: ['M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1', 'M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1'],
+  open: ['M14 4h6v6', 'M20 4l-9 9', 'M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'],
+  check: ['M5 12.5l4.5 4.5L19 7']
+};
+function icon(name) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: 17, height: 17, fill: 'none', stroke: 'currentColor',
+                                        'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) {
+    svg.setAttribute(k, v);
+  }
+  for (const d of ICONS[name]) {
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}
 const clean = (s) => String(s).replace(/\s+/g, ' ').trim();
 /* search ignores case and accents, so "nguyen" finds "Nguyễn" */
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/đ/g, 'd');
@@ -115,7 +136,8 @@ function createPanel(me, { onExpired } = {}) {
   const base = (me.base_url || location.origin).replace(/\/+$/, '');
   const linkFor = (g) => `${base}/${g.public_id}`;
   /* root admins start on one row per guest; link admins only ever see groups */
-  const state = { groups: [], expanded: new Set(), query: '', filter: 'all', view: isRoot ? 'guests' : 'groups' };
+  const state = { groups: [], expanded: new Set(), query: '', filter: 'all', view: isRoot ? 'guests' : 'groups',
+                  editing: null };  // id of the guest being renamed in the guests view
   const byId = (id) => state.groups.find((g) => g.id === id);
   const nameOf = (x) => (typeof x === 'string' ? x : x.name);
   const findGuest = (id) => {
@@ -144,6 +166,26 @@ function createPanel(me, { onExpired } = {}) {
   const fileInput = isRoot && h('input', { type: 'file', accept: '.csv,text/csv,text/plain', hidden: true });
   const importBtn = isRoot && h('button', { type: 'button', class: 'adm-btn adm-btn-quiet' }, 'Import CSV');
   const clearBtn = isRoot && h('button', { type: 'button', class: 'adm-text-btn adm-danger' }, 'Clear list');
+  /* adding groups, importing and clearing live behind ⋮ in the header, out of the way of day-to-day work */
+  const menuBtn = isRoot && h('button', { type: 'button', class: 'adm-close adm-more', 'aria-label': 'Manage the list',
+                                          title: 'Add a group, import or clear', 'aria-haspopup': 'true', 'aria-expanded': 'false' }, '⋮');
+  const menu = isRoot && h('div', { class: 'adm-menu', hidden: true },
+    h('p', { class: 'adm-menu-label' }, 'Add a group'),
+    newForm,
+    h('div', { class: 'adm-menu-sep' }),
+    h('div', { class: 'adm-file' }, importBtn, fileInput),
+    h('p', { class: 'adm-hint' },
+      'CSV columns: ', h('b', null, 'group'), ', ', h('b', null, 'name'), ' and optionally ', h('b', null, 'rank'),
+      '. Guests in the same group share one link; rank sets who is named first. Guests already listed are skipped.'),
+    h('div', { class: 'adm-menu-sep' }),
+    clearBtn);
+  const menuWrap = isRoot && h('div', { class: 'adm-menu-wrap' }, menuBtn, menu);
+  function setMenu(open) {
+    if (!isRoot || menu.hidden === !open) return;
+    menu.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    if (open) newName.focus({ preventScroll: true });
+  }
   const stats = h('div', { class: 'adm-stats' });
   const flash = h('p', { class: 'adm-flash', role: 'status', 'aria-live': 'polite' });
   const list = h('div', { class: 'adm-list' }, h('p', { class: 'adm-empty' }, 'Loading…'));
@@ -153,18 +195,10 @@ function createPanel(me, { onExpired } = {}) {
       h('header', { class: 'adm-head' },
         h('div', { class: 'adm-title' },
           h('span', { class: 'adm-xi', 'aria-hidden': 'true' }, '囍'),
-          h('h1', null, title),
-          h('span', { class: 'adm-role' }, isRoot ? 'root' : 'links')),
-        h('div', { class: 'adm-head-actions' }, signOutBtn, closeBtn)),
+          h('h1', null, title)),
+        h('div', { class: 'adm-head-actions' }, signOutBtn, menuWrap, closeBtn)),
       isRoot ? stats : h('p', { class: 'adm-lede' }, 'Copy a group’s link and send it to them. The card greets them by name.'),
-      /* first row finds people; second row (root only) adds them */
       h('div', { class: 'adm-tools' }, views, search, filter),
-      isRoot && h('div', { class: 'adm-tools adm-manage' },
-        newForm,
-        h('div', { class: 'adm-file' }, importBtn, fileInput, clearBtn)),
-      isRoot && h('p', { class: 'adm-hint' },
-        'CSV columns: ', h('b', null, 'group'), ', ', h('b', null, 'name'), ' and optionally ', h('b', null, 'rank'),
-        '. Guests in the same group share one link; rank sets who is named first. Guests already listed are skipped.'),
       flash,
       list));
   document.body.append(panel);
@@ -391,23 +425,25 @@ function createPanel(me, { onExpired } = {}) {
                     'aria-label': `Remove ${x.name}`, title: 'Remove from the guest list' }, '×'));
   }
 
-  /* one row per guest: who, their RSVP and sent status, and a way to their group */
+  /* one row per guest: their name, with edit / copy link / open group on hover, and their RSVP */
   function guestRowEl(g, x) {
+    const name = state.editing === x.id
+      ? h('input', { type: 'text', class: 'adm-input adm-row-name', value: x.name, maxlength: 60, autocomplete: 'off',
+                     'aria-label': `New name for ${x.name}`, 'data-edit': 'name', 'data-key': `name-${x.id}` })
+      : h('div', { class: 'adm-row-who' },
+          h('span', { class: 'adm-row-name' }, x.name),
+          h('div', { class: 'adm-row-acts' },                // shown on hover
+            h('button', { type: 'button', class: 'adm-icon adm-edit', 'data-act': 'edit-name', 'data-key': `edit-${x.id}`,
+                          'aria-label': `Edit ${x.name}'s name`, title: 'Edit name' }, icon('edit')),
+            h('button', { type: 'button', class: 'adm-icon', 'data-act': 'copy', 'data-key': `copy-guest-${x.id}`,
+                          'aria-label': `Copy the link for ${g.name}`, title: `Copy link (${g.name})` }, icon('link')),
+            h('button', { type: 'button', class: 'adm-icon', 'data-act': 'open-group', 'data-key': `open-${x.id}`,
+                          'aria-label': `Open group: ${g.name}`, title: `Open group (${g.name})` }, icon('open'))));
     return h('div', { class: 'adm-row', 'data-group': g.id, 'data-guest': x.id },
-      h('span', { class: 'adm-row-name' }, x.name),
+      name,
       h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `RSVP for ${x.name}` },
         RSVP.map((r) => h('button', { type: 'button', class: `adm-seg is-${r.value}`, 'data-act': 'rsvp', 'data-value': r.value,
-                                      'aria-pressed': String(x.rsvp === r.value), 'data-key': `rsvp-${x.id}-${r.value}` }, r.label))),
-      h('div', { class: 'adm-sent' },
-        KINDS.map((k) => {
-          const at = x[`${k.value}_sent_at`];
-          return h('button', { type: 'button', class: `adm-mini${at ? ' is-on' : ''}`, 'data-act': 'guest-sent', 'data-kind': k.value,
-                               'aria-pressed': String(!!at), title: at ? `${k.label} sent ${fmtDate(at)}` : `${k.label} not sent`,
-                               'data-key': `sent-${x.id}-${k.value}` },
-            h('span', { class: 'adm-tick', 'aria-hidden': 'true' }), k.label);
-        })),
-      h('button', { type: 'button', class: 'adm-row-open', 'data-act': 'open-group', title: `Open ${g.name} in the group view`,
-                    'aria-label': `Open group: ${g.name}`, 'data-key': `open-${x.id}` }, 'Open group'));
+                                      'aria-pressed': String(x.rsvp === r.value), 'data-key': `rsvp-${x.id}-${r.value}` }, r.label))));
   }
 
   function setView(view, { openGroup = null } = {}) {
@@ -453,6 +489,15 @@ function createPanel(me, { onExpired } = {}) {
       case 'open-group':
         setView('groups', { openGroup: g.id });
         break;
+      case 'edit-name': {
+        if (!x) break;
+        state.editing = x.id;
+        const row = el.closest('.adm-row');
+        row.replaceWith(guestRowEl(g, x));
+        const input = list.querySelector(`[data-key="name-${x.id}"]`);
+        if (input) { input.focus(); input.select(); }
+        break;
+      }
       case 'group-sent':                                   // all sent: undo for everyone; otherwise send to everyone
         mutate(() => api('POST', `/admin/groups/${g.id}/sent`, { kind, sent: sentState(byId(g.id) || g, kind) !== 'all' }));
         break;
@@ -509,6 +554,27 @@ function createPanel(me, { onExpired } = {}) {
     }
   });
 
+  /* renaming in the guests view: Enter or clicking away saves, Escape cancels */
+  list.addEventListener('keydown', (e) => {
+    const el = e.target;
+    if (el.dataset.edit !== 'name') return;
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); el.dataset.cancel = '1'; el.blur(); }
+  });
+  list.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (el.dataset.edit !== 'name' || !el.isConnected || !list.contains(el)) return;  // a re-render took it, not the user
+    const { g, x } = context(el);
+    state.editing = null;
+    if (!g || !x) { renderList(); return; }
+    const name = clean(el.value);
+    const row = el.closest('.adm-row');
+    const back = guestRowEl(g, x);                         // only this row, so a click elsewhere still lands
+    row.replaceWith(back);
+    if (el.dataset.cancel) back.querySelector('.adm-edit').focus();
+    else if (name && name !== x.name) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { name }));
+  });
+
   async function moveGuest(x, target) {
     let groupId = Number(target);
     if (target === 'new') {
@@ -550,9 +616,10 @@ function createPanel(me, { onExpired } = {}) {
       ta.remove();
     }
     if (!ok) { window.prompt('Copy this link:', url); return; }
-    btn.textContent = 'Copied';
+    const label = [...btn.childNodes];                     // text, or an icon in the guests view
+    btn.replaceChildren(btn.classList.contains('adm-icon') ? icon('check') : 'Copied');
     btn.classList.add('is-done');
-    setTimeout(() => { btn.textContent = 'Copy link'; btn.classList.remove('is-done'); }, 1600);
+    setTimeout(() => { btn.replaceChildren(...label); btn.classList.remove('is-done'); }, 1600);
   }
 
   /* ----- toolbar ----- */
@@ -571,6 +638,7 @@ function createPanel(me, { onExpired } = {}) {
       const g = await mutate(() => api('POST', '/admin/groups', { name }), { reload: true });
       if (!g) return;
       newName.value = '';
+      setMenu(false);
       state.query = search.value = '';
       state.filter = 'all';
       state.expanded.add(g.id);
@@ -582,7 +650,11 @@ function createPanel(me, { onExpired } = {}) {
       }
     });
 
+    menuBtn.addEventListener('click', () => setMenu(menu.hidden));
+    panel.addEventListener('click', (e) => { if (!menu.hidden && !menuWrap.contains(e.target)) setMenu(false); });
+
     clearBtn.addEventListener('click', async () => {
+      setMenu(false);
       const guests = state.groups.reduce((n, g) => n + g.guests.length, 0);
       if (!state.groups.length) { say('The list is already empty.'); return; }
       const answer = window.prompt(
@@ -596,7 +668,7 @@ function createPanel(me, { onExpired } = {}) {
       say(`Cleared ${plural(r.guests_deleted, 'guest')} in ${plural(r.groups_deleted, 'group')}. Import a new list when you’re ready.`);
     });
 
-    importBtn.addEventListener('click', () => fileInput.click());
+    importBtn.addEventListener('click', () => { setMenu(false); fileInput.click(); });
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files[0];
       fileInput.value = '';
@@ -623,6 +695,7 @@ function createPanel(me, { onExpired } = {}) {
   const handle = { close };
   function onKey(e) {
     if (e.key !== 'Escape' || e.defaultPrevented) return;
+    if (isRoot && !menu.hidden) { setMenu(false); menuBtn.focus(); return; }  // Escape closes the menu first
     if (e.target.closest && e.target.closest('input, select, textarea')) return;
     close();
   }

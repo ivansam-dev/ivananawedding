@@ -39,10 +39,25 @@
 .adm-title{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
 .adm-xi{font-family:var(--cjk);font-weight:600;font-size:26px;line-height:1;color:var(--cinnabar)}
 .adm-title h1{margin:0;font-family:"Bodoni Moda",serif;font-style:italic;font-weight:400;font-size:clamp(26px, 4vw, 34px);line-height:1.1;color:var(--cinnabar)}
-.adm-role{font-family:"Playfair Display SC",serif;font-size:13px;letter-spacing:.14em;color:var(--gold-deep);border:1px solid var(--line);border-radius:999px;padding:1px 9px 2px}
 .adm-head-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .adm-close{width:40px;height:40px;border:0;border-radius:50%;background:none;font-size:28px;line-height:1;color:var(--ink-soft);cursor:pointer}
 .adm-close:hover{background:rgba(138,26,31,.07);color:var(--cinnabar)}
+.adm-more{font-size:24px}
+.adm-more[aria-expanded="true"]{background:rgba(138,26,31,.07);color:var(--cinnabar)}
+.adm-menu-wrap{position:relative}
+.adm-menu{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:5;width:min(380px, calc(100vw - 36px));
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 18px 14px;
+  background-color:var(--paper);background-image:var(--grain-paper);background-size:220px;
+  border:1px solid var(--line);box-shadow:0 18px 40px -18px rgba(30,40,32,.45);
+}
+.adm-menu[hidden]{display:none}
+.adm-menu-label{margin:0;font-size:12.5px;letter-spacing:.02em;color:var(--ink-soft)}
+.adm-menu-sep{align-self:stretch;height:1px;background:var(--line-soft)}
+.adm-menu .adm-new{align-self:stretch;max-width:none;flex:none}
+.adm-menu .adm-file{margin-left:0}
+.adm-menu .adm-hint{margin:0}
+.adm-menu > .adm-text-btn{padding-left:0}
 
 /* ---- totals ---- */
 .adm-stats{display:flex;flex-wrap:wrap;gap:1px;margin-bottom:24px;background:var(--line-soft);border:1px solid var(--line-soft)}
@@ -58,7 +73,6 @@
 .adm-tools{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 18px}
 .adm-search{flex:1 1 220px}
 .adm-filter{flex:0 1 240px}
-.adm-manage{margin-top:18px;padding-top:18px;border-top:1px solid var(--line-soft)}
 .adm-new{display:flex;align-items:flex-end;gap:8px;flex:1 1 300px;max-width:520px}
 .adm-new .adm-input{flex:1}
 .adm-file{display:flex;align-items:center;gap:6px;margin-left:auto}
@@ -194,16 +208,16 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
 
 /* ---- one row per guest ---- */
 .adm-row{
-  display:grid;grid-template-columns:minmax(180px, 1fr) auto auto auto;
+  display:grid;grid-template-columns:minmax(180px, 1fr) auto;
   align-items:center;gap:8px 18px;padding:9px 4px;border-bottom:1px solid var(--line-soft);
 }
 .adm-row-name{min-width:0;overflow-wrap:anywhere;font-family:"Bodoni Moda",serif;font-size:17px;line-height:1.25}
-.adm-row-open{
-  font:inherit;font-size:13.5px;white-space:nowrap;cursor:pointer;padding:5px 12px;
-  color:var(--gold-deep);background:transparent;border:1px solid var(--line);border-radius:3px;
-  transition:background .2s ease, color .2s ease, border-color .2s ease;
-}
-.adm-row-open:hover{color:var(--cinnabar);border-color:var(--cinnabar);background:rgba(138,26,31,.05)}
+.adm-row-who{display:flex;align-items:center;gap:4px;min-width:0}
+.adm-row-acts{display:flex;flex:none;gap:2px;opacity:0;transition:opacity .15s ease}
+.adm-row-acts .adm-icon.is-done{color:var(--yes);background:rgba(61,106,76,.1)}
+.adm-row:hover .adm-row-acts,.adm-row-acts:focus-within{opacity:1}
+@media (hover:none){.adm-row-acts{opacity:.6}}  /* phones can't hover, so keep them in sight */
+.adm-row-name.adm-input{width:100%;padding:3px 2px}
 
 .adm-offscreen{position:fixed;left:-9999px;top:0;opacity:0}
 
@@ -220,7 +234,7 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
   .adm-move{grid-area:move}
   .adm-guest > .adm-danger{grid-area:del}
   .adm-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
-  .adm-row-name{flex:1 1 220px}
+  .adm-row-who,.adm-row-name.adm-input{flex:1 1 220px}
 }
 @media (max-width:640px){
   .adm-sheet{margin:0;min-height:100%;box-shadow:none}
@@ -238,7 +252,7 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
   .adm-stat strong{font-size:22px}
   .adm-group-foot .adm-danger{margin-left:0}
   .adm-row{gap:8px 10px;padding:11px 0}
-  .adm-row-name{flex-basis:100%}
+  .adm-row-who,.adm-row-name.adm-input{flex-basis:100%}
 }
 
 @media (prefers-reduced-motion:reduce){
