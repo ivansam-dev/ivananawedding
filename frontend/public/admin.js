@@ -1,4 +1,4 @@
-/* Guest list & RSVP manager for the save the date.
+/* Guest list & RSVP manager for the card.
    Fetched only when 囍 is tapped five times on the language screen, so guests never download it.
    Root admins see and change everything; link admins see each group with its Copy link button. */
 
@@ -7,6 +7,13 @@ const RSVP = [
   { value: 'not_attending', label: 'Not attending' },
   { value: 'no_response', label: 'No response' }
 ];
+/* the events guests reply to, in the invitation's order; each guest has an RSVP answer for each (field) */
+const EVENTS = [
+  { field: 'tea_rsvp', label: 'Tea ceremony' },
+  { field: 'reception_rsvp', label: 'Reception' }
+];
+const comingTo = (x) => EVENTS.some((ev) => x[ev.field] === 'attending');
+const awaiting = (x) => EVENTS.some((ev) => x[ev.field] === 'no_response');
 const KINDS = [
   { value: 'save_the_date', label: 'Save the date' },
   { value: 'invitation', label: 'Invitation' }
@@ -14,14 +21,24 @@ const KINDS = [
 const VIEWS = [
   { value: 'guests', label: 'Guests' },
   { value: 'groups', label: 'Groups' },
-  { value: 'categories', label: 'Categories' }
+  { value: 'categories', label: 'Categories' },
+  { value: 'letters', label: 'Letters' }
 ];
+/* the card's letters (one template each in index.html) and what each holds. Guests see the ones that are
+   "Active", earliest (rank 1) on the left; their cards open on the one the admin marks "Opens first" */
+const LETTERS = {
+  save_the_date: { label: 'Save the date', inline: 'save the date', note: 'The dates and the city, and that invitations will follow.' },
+  invitation: { label: 'Invitation', inline: 'invitation', note: 'Each day’s event, time and place (set in index.html), and when to reply.' },
+  rsvp: { label: 'RSVP card', inline: 'RSVP card', note: 'Each guest on the link says whether they’re coming to the tea ceremony and to the reception, '
+    + 'with any dietary requirements. The invitation’s RSVP button brings it forward. Only on a group’s own link, since other links can’t reply.' },
+  details: { label: 'Details', inline: 'details', note: 'Questions and answers, such as the dress code and parking (FAQS in index.html).' }
+};
 const FILTERS = {
   guests: [
     { value: 'all', label: 'All guests' },
-    { value: 'attending', label: 'Attending' },
-    { value: 'not_attending', label: 'Not attending' },
-    { value: 'no_response', label: 'No response yet' },
+    { value: 'awaiting', label: 'Waiting on an RSVP' },
+    /* "tea_rsvp:attending" and so on: one answer to one event */
+    ...EVENTS.flatMap((ev) => RSVP.map((r) => ({ value: `${ev.field}:${r.value}`, label: `${ev.label}: ${r.label.toLowerCase()}` }))),
     { value: 'std_unsent', label: 'Save the date not sent' },
     { value: 'inv_unsent', label: 'Invitation not sent' }
   ],
@@ -31,15 +48,17 @@ const FILTERS = {
     { value: 'inv_unsent', label: 'Invitation not sent' },
     { value: 'awaiting', label: 'Waiting on an RSVP' }
   ],
-  categories: [{ value: 'all', label: 'All guests' }]  // the overview has no filter of its own
+  categories: [{ value: 'all', label: 'All guests' }],  // the overview has no filter of its own
+  letters: [{ value: 'all', label: 'All letters' }]     // nor do the letters
 };
-/* the overview's columns; each count opens the guests view filtered to it (filter: a FILTERS.guests value) */
+/* the overview's columns; each count opens the guests view filtered to it (filter: a FILTERS.guests value).
+   Each event has a column per answer, beneath the event's name */
 const OVERVIEW = [
   { label: 'Guests', filter: 'all', count: () => true },
-  { label: 'Attending', filter: 'attending', cls: 'is-attending', count: (x) => x.rsvp === 'attending' },
-  { label: 'Not attending', filter: 'not_attending', cls: 'is-not_attending', count: (x) => x.rsvp === 'not_attending' },
-  { label: 'No response', filter: 'no_response', cls: 'is-no_response', count: (x) => x.rsvp === 'no_response' },
-  { label: 'Save the date sent', filter: 'std_unsent', sent: true, count: (x) => !!x.save_the_date_sent_at },
+  ...EVENTS.flatMap((ev) => RSVP.map((r, i) => ({
+    label: r.label, event: ev, filter: `${ev.field}:${r.value}`, cls: `is-${r.value}${i ? '' : ' adm-ov-start'}`,
+    count: (x) => x[ev.field] === r.value }))),
+  { label: 'Save the date sent', filter: 'std_unsent', sent: true, cls: 'adm-ov-start', count: (x) => !!x.save_the_date_sent_at },
   { label: 'Invitation sent', filter: 'inv_unsent', sent: true, count: (x) => !!x.invitation_sent_at }
 ];
 const SORTS = [
@@ -161,6 +180,8 @@ function createPanel(me, { onExpired } = {}) {
   /* root admins start on one row per guest; link admins only ever see groups */
   const state = { groups: [], expanded: new Set(), query: '', filter: 'all', view: isRoot ? 'guests' : 'groups',
                   category: 'all', location: 'all', sort: 'name',
+                  letters: null,    // [{ kind, active, rank, opens_first }], earliest first; loaded with the Letters view
+
                   editing: null };  // in the guests view, what's being edited: "name-<id>", "category-<id>" or "location-<id>"
   const byId = (id) => state.groups.find((g) => g.id === id);
   const nameOf = (x) => (typeof x === 'string' ? x : x.name);
@@ -182,7 +203,8 @@ function createPanel(me, { onExpired } = {}) {
   function fillFilter() {
     filter.replaceChildren(...FILTERS[state.view].map((f) => h('option', { value: f.value }, f.label)));
     filter.value = state.filter;
-    filter.hidden = state.view === 'categories';
+    filter.hidden = state.view === 'categories' || state.view === 'letters';
+    search.hidden = state.view === 'letters';
   }
   /* the guests view can also narrow to one guest category and location, and sort by category */
   const catFilter = isRoot && h('select', { class: 'adm-filter adm-cat-filter', 'aria-label': 'Guest category' });
@@ -230,7 +252,8 @@ function createPanel(me, { onExpired } = {}) {
     h('div', { class: 'adm-file' }, importBtn, fileInput),
     h('p', { class: 'adm-hint' },
       'CSV columns: ', h('b', null, 'group'), ', ', h('b', null, 'name'), ' and optionally ', h('b', null, 'rank'),
-      ', ', h('b', null, 'rsvp'), ', ', h('b', null, 'guest category'), ' and ', h('b', null, 'guest location'),
+      ', ', h('b', null, 'rsvp'), ' (for both events, or ', h('b', null, 'tea ceremony rsvp'), ' and ', h('b', null, 'reception rsvp'),
+      '), ', h('b', null, 'guest category'), ' and ', h('b', null, 'guest location'),
       '. Guests in the same group share one link; rank sets who is named first. Guests already listed are skipped, ',
       'but get the file’s guest category and location if it has them.'),
     h('div', { class: 'adm-menu-sep' }),
@@ -285,14 +308,15 @@ function createPanel(me, { onExpired } = {}) {
     renderStats();
     renderList();
   }
-  /* changes run one after another, so each response is applied in the order it was asked for */
+  /* changes run one after another, so each response is applied in the order it was asked for.
+     A response is a group (put in place by upsert) unless apply says otherwise */
   let queue = Promise.resolve();
-  function mutate(request, { reload = false } = {}) {
+  function mutate(request, { reload = false, apply = upsert } = {}) {
     const job = queue.then(async () => {
       try {
         const out = await request();
         if (reload || !out) await refresh();
-        else upsert(out);
+        else apply(out);
         return out;
       } catch (e) {
         fail(e);
@@ -310,6 +334,19 @@ function createPanel(me, { onExpired } = {}) {
     if (state.view === 'guests') renderList(); else renderGroup(group.id);
   }
 
+  /* the letters: every change returns all of them, since a new rank can move another letter too */
+  function setLetters(letters) {
+    state.letters = letters;
+    if (state.view === 'letters') renderList();
+  }
+  function loadLetters() {
+    return api('GET', '/admin/letters').then(setLetters, fail);
+  }
+  async function changeLetter(kind, body) {
+    const out = await mutate(() => api('PATCH', `/admin/letters/${kind}`, body), { apply: setLetters });
+    if (!out && state.view === 'letters') renderList();  // refused: put the switch or rank back as it was
+  }
+
   /* ----- what's shown ----- */
   const sentCount = (g, kind) => g.guests.filter((x) => x[`${kind}_sent_at`]).length;
   function sentState(g, kind) {
@@ -322,7 +359,7 @@ function createPanel(me, { onExpired } = {}) {
     switch (state.filter) {
       case 'std_unsent': return sentState(g, 'save_the_date') !== 'all';
       case 'inv_unsent': return sentState(g, 'invitation') !== 'all';
-      case 'awaiting': return g.guests.some((x) => x.rsvp === 'no_response');
+      case 'awaiting': return g.guests.some(awaiting);
       default: return true;
     }
   }
@@ -332,12 +369,14 @@ function createPanel(me, { onExpired } = {}) {
     if (state.category === NO_CATEGORY ? x.category : state.category !== 'all' && x.category !== state.category) return false;
     if (state.location === NO_LOCATION ? x.location : state.location !== 'all' && x.location !== state.location) return false;
     switch (state.filter) {
-      case 'attending':
-      case 'not_attending':
-      case 'no_response': return x.rsvp === state.filter;
+      case 'all': return true;
+      case 'awaiting': return awaiting(x);
       case 'std_unsent': return !x.save_the_date_sent_at;
       case 'inv_unsent': return !x.invitation_sent_at;
-      default: return true;
+      default: {                                          // one answer to one event, e.g. "tea_rsvp:attending"
+        const [field, value] = state.filter.split(':');
+        return x[field] === value;
+      }
     }
   }
 
@@ -345,16 +384,21 @@ function createPanel(me, { onExpired } = {}) {
     if (!isRoot) return;
     const guests = state.groups.flatMap((g) => g.guests);
     const withGuests = state.groups.filter((g) => g.guests.length);
-    const rsvp = (v) => guests.filter((x) => x.rsvp === v).length;
     const sentGroups = (k) => withGuests.filter((g) => sentState(g, k) === 'all').length;
-    const stat = (value, label, cls = '') =>
-      h('div', { class: `adm-stat ${cls}` }, h('strong', null, String(value)), h('span', null, label));
+    const stat = (value, label, cls = '', more = null) =>
+      h('div', { class: `adm-stat ${cls}` }, h('strong', null, String(value)), h('span', null, label),
+        more && h('span', { class: 'adm-stat-more' }, more));
+    /* each event: how many are coming, then how many aren't and how many are still to say */
+    const event = (ev) => {
+      const n = (v) => guests.filter((x) => x[ev.field] === v).length;
+      return stat(n('attending'), `attending the ${ev.label.toLowerCase()}`, 'is-attending adm-stat-event',
+        [h('span', { class: 'is-not_attending' }, `${n('not_attending')} not attending`), ' · ',
+         h('span', { class: 'is-no_response' }, `${n('no_response')} no response`)]);
+    };
     stats.replaceChildren(
       stat(guests.length, guests.length === 1 ? 'guest' : 'guests'),
       stat(state.groups.length, state.groups.length === 1 ? 'group' : 'groups'),
-      stat(rsvp('attending'), 'attending', 'is-attending'),
-      stat(rsvp('not_attending'), 'not attending', 'is-not_attending'),
-      stat(rsvp('no_response'), 'no response yet', 'is-no_response'),
+      ...EVENTS.map(event),
       stat(`${sentGroups('save_the_date')}/${withGuests.length}`, 'groups sent the save the date'),
       stat(`${sentGroups('invitation')}/${withGuests.length}`, 'groups sent the invitation'));
   }
@@ -376,6 +420,11 @@ function createPanel(me, { onExpired } = {}) {
   }
   function renderList() {
     keepFocus(list, () => {
+      if (state.view === 'letters') {
+        list.classList.remove('is-guests');
+        list.replaceChildren(...letterRows());
+        return;
+      }
       let shown;
       const q = fold(state.query.trim());
       if (state.view === 'guests') {
@@ -409,9 +458,10 @@ function createPanel(me, { onExpired } = {}) {
     for (let i = 0; i < rows.length;) {
       let j = i;
       while (j < rows.length && rows[j].cat === rows[i].cat) j++;   // "Family" and "family" share a heading
-      const att = rows.slice(i, j).filter((r) => r.x.rsvp === 'attending').length;
+      const coming = EVENTS.map((ev) => [ev, rows.slice(i, j).filter((r) => r.x[ev.field] === 'attending').length])
+        .filter(([, n]) => n).map(([ev, n]) => ` · ${n} at the ${ev.label.toLowerCase()}`);
       out.push(h('h2', { class: 'adm-cat-head' }, rows[i].x.category || 'No category',
-        h('span', null, `${plural(j - i, 'guest')}${att ? ` · ${att} attending` : ''}`)));
+        h('span', null, `${plural(j - i, 'guest')}${coming.join('')}`)));
       for (let k = i; k < j; k++) out.push(guestRowEl(rows[k].g, rows[k].x));
       i = j;
     }
@@ -444,33 +494,85 @@ function createPanel(me, { onExpired } = {}) {
       const pct = total ? Math.round((n / total) * 100) : 0;
       /* "sent" columns link to the guests still waiting for it, which is what you'd act on */
       const filter = col.sent ? (n < total ? col.filter : 'all') : col.filter;
-      const tip = col.sent ? (n < total ? `Show the ${total - n} not sent yet` : 'Sent to everyone') : `Show ${col.label.toLowerCase()}`;
+      const tip = col.sent ? (n < total ? `Show the ${total - n} not sent yet` : 'Sent to everyone')
+        : `Show ${col.event ? `${col.event.label.toLowerCase()}: ` : ''}${col.label.toLowerCase()}`;
       return h('td', { class: col.cls || '' },
         r.value == null ? h('span', { class: 'adm-ov-n' }, String(n))
           : h('button', { type: 'button', class: 'adm-ov-n', 'data-cat': r.value, 'data-loc': r.loc, 'data-filter': filter, title: tip,
-                          'data-key': `ov-${r.value}-${r.loc}-${col.label}` }, String(n)),
+                          'data-key': `ov-${r.value}-${r.loc}-${col.filter}` }, String(n)),
         col.sent && total > 0 && h('span', { class: `adm-ov-pct${n === total ? ' is-done' : ''}` }, `${pct}%`));
     };
-    const bar = (list) => h('span', { class: 'adm-ov-bar', 'aria-hidden': 'true' },
-      RSVP.map((r) => {
-        const n = list.filter((x) => x.rsvp === r.value).length;
-        return n ? h('span', { class: `is-${r.value}`, style: `flex-grow:${n}` }) : null;
-      }));
+    /* a bar per event, in the invitation's order, split by answer */
+    const bars = (list) => h('span', { class: 'adm-ov-bars', 'aria-hidden': 'true' }, EVENTS.map((ev) =>
+      h('span', { class: 'adm-ov-bar', title: ev.label },
+        RSVP.map((r) => {
+          const n = list.filter((x) => x[ev.field] === r.value).length;
+          return n ? h('span', { class: `is-${r.value}`, style: `flex-grow:${n}` }) : null;
+        }))));
     const row = (r, tag = 'td') => h('tr', { class: r.sub ? 'adm-ov-sub' : '' },
       h(tag, { class: 'adm-ov-cat', scope: 'row' },
         r.value == null ? r.label
           : h('button', { type: 'button', class: 'adm-ov-name', 'data-cat': r.value, 'data-loc': r.loc, 'data-filter': 'all',
                           'data-key': `ov-${r.value}-${r.loc}`, title: `Show everyone in ${r.full || r.label}` }, r.label),
-        bar(r.guests)),
+        bars(r.guests)),
       OVERVIEW.map((col) => cell(r, col)));
 
+    /* two header rows: each event's name over its answers, which have the second row to themselves */
+    const top = OVERVIEW.flatMap((col, i) => (!col.event ? [h('th', { scope: 'col', rowspan: 2, class: col.cls || '' }, col.label)]
+      : OVERVIEW[i - 1].event === col.event ? []
+      : [h('th', { scope: 'colgroup', colspan: RSVP.length, class: 'adm-ov-event adm-ov-start' }, col.event.label)]));
     const table = h('table', { class: 'adm-ov' },
-      h('thead', null, h('tr', null, h('th', { scope: 'col' }, 'Guest category › location'),
-        OVERVIEW.map((col) => h('th', { scope: 'col', class: col.cls || '' }, col.label)))),
+      h('thead', null,
+        h('tr', null, h('th', { scope: 'col', rowspan: 2 }, 'Guest category › location'), top),
+        h('tr', null, OVERVIEW.filter((col) => col.event).map((col) => h('th', { scope: 'col', class: col.cls }, col.label)))),
       h('tbody', null, rows.map((r) => row(r, 'th'))),
       !q && rows.filter((r) => !r.sub).length > 1 && h('tfoot', null, row({ value: null, label: 'Everyone', guests }, 'th')));
     return [h('div', { class: 'adm-ov-wrap' }, table),
       h('p', { class: 'adm-hint' }, 'Click a number to see those guests.')];
+  }
+
+  /* one row per letter, earliest first, saying where guests see it; each can be switched on or off,
+     made the one guests' cards open on, given another rank, or previewed */
+  function letterRows() {
+    if (!state.letters) return [h('p', { class: 'adm-empty' }, 'Loading…')];
+    const name = (kind) => (LETTERS[kind] || { inline: kind }).inline;   // mid-sentence
+    const on = state.letters.filter((l) => l.active);
+    const opener = on.find((l) => l.opens_first) || on[on.length - 1];
+    const where = (l) => (!l.active ? 'Off: guests don’t see it.'
+      : l !== opener ? `Beneath the ${name(opener.kind)}; guests can tap it to bring it forward.`
+      : on.length > 1 ? 'Guests’ cards open on this, with the others beneath it.'
+      : 'Guests see this, on its own.');
+    const rows = state.letters.map((l) => {
+      const label = (LETTERS[l.kind] || { label: l.kind }).label, inline = name(l.kind), lastOn = l.active && on.length === 1;
+      const opens = l === opener;
+      const offTitle = lastOn ? 'One letter has to stay active, or guests would have nothing to open'
+        : opens ? 'Guests’ cards open on this one: make another open first before switching it off' : null;
+      return h('div', { class: `adm-letter${l.active ? '' : ' is-off'}`, 'data-letter': l.kind },
+        h('div', { class: 'adm-letter-about' },
+          h('span', { class: 'adm-letter-name' }, label),
+          h('span', { class: 'adm-letter-where' }, where(l)),
+          h('span', { class: 'adm-letter-note' }, (LETTERS[l.kind] || {}).note || '')),
+        h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `Show the ${inline} to guests` },
+          [true, false].map((value) => h('button', {
+            type: 'button', class: `adm-seg ${value ? 'is-on' : 'is-off'}`, 'data-act': 'letter-active', 'data-value': String(value),
+            'aria-pressed': String(l.active === value), disabled: !value && (lastOn || opens), 'data-key': `active-${l.kind}-${value}`,
+            title: value ? null : offTitle
+          }, value ? 'Active' : 'Off'))),
+        h('label', { class: `adm-letter-opens${opens ? ' is-on' : ''}`,
+                     title: opens ? 'Guests’ cards open on this letter' : `Open guests’ cards on the ${inline}${l.active ? '' : ' (this switches it on)'}` },
+          h('input', { type: 'radio', name: 'letter-opens', 'data-change': 'letter-opens', 'data-key': `opens-${l.kind}`, checked: opens }),
+          h('span', null, 'Opens first')),
+        h('label', { class: 'adm-letter-rank' }, h('span', null, 'Rank'),
+          h('select', { class: 'adm-filter', 'data-change': 'letter-rank', 'data-key': `rank-${l.kind}`,
+                        'aria-label': `Rank of the ${inline}` },
+            state.letters.map((_, i) => h('option', { value: i + 1, selected: i + 1 === l.rank }, String(i + 1))))),
+        h('a', { class: 'adm-text-btn adm-preview', href: `/?letter=${l.kind}&to=Guest`, target: '_blank', rel: 'noopener',
+                 title: `Open the card on the ${inline}, even while it’s off` }, 'Preview', icon('open')));
+    });
+    return [...rows, h('p', { class: 'adm-hint' },
+      'A guest’s card opens on the letter marked ', h('b', null, 'Opens first'), ', which needn’t be the newest. ',
+      'The other active letters sit in a row beneath it, earliest on the left, and a tap brings one forward. ',
+      'Rank 1 is the earliest letter; picking a rank another letter has swaps the two.')];
   }
 
   function renderGroup(id) {
@@ -498,11 +600,24 @@ function createPanel(me, { onExpired } = {}) {
       open && groupBody(g));
   }
 
+  /* a line per event: its name, then how many gave each answer */
   function rsvpSummary(g) {
-    return h('span', { class: 'adm-group-rsvp' },
-      RSVP.map((r) => [r, g.guests.filter((x) => x.rsvp === r.value).length])
-        .filter(([, n]) => n)
-        .map(([r, n]) => h('span', { class: `adm-dot is-${r.value}` }, `${n} ${r.label.toLowerCase()}`)));
+    return h('span', { class: 'adm-group-rsvp' }, EVENTS.map((ev) =>
+      h('span', { class: 'adm-group-event' },
+        h('span', { class: 'adm-group-event-name' }, ev.label),
+        RSVP.map((r) => [r, g.guests.filter((x) => x[ev.field] === r.value).length])
+          .filter(([, n]) => n)
+          .map(([r, n]) => h('span', { class: `adm-dot is-${r.value}` }, `${n} ${r.label.toLowerCase()}`)))));
+  }
+
+  /* a guest's answers: for each event, its name and attending / not attending / no response */
+  function answersEl(x) {
+    return h('div', { class: 'adm-answers' }, EVENTS.map((ev) => [
+      h('span', { class: 'adm-answer-name', 'aria-hidden': 'true' }, ev.label),
+      h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `${ev.label} RSVP for ${x.name}` },
+        RSVP.map((r) => h('button', { type: 'button', class: `adm-seg is-${r.value}`, 'data-act': 'rsvp', 'data-field': ev.field,
+                                      'data-value': r.value, 'aria-pressed': String(x[ev.field] === r.value),
+                                      'data-key': `rsvp-${x.id}-${ev.field}-${r.value}` }, r.label)))]));
   }
 
   function groupChip(g, k) {
@@ -545,9 +660,7 @@ function createPanel(me, { onExpired } = {}) {
                       'aria-label': `Move ${x.name} down`, 'data-key': `down-${x.id}` }, '↓')),
       h('input', { type: 'text', class: 'adm-input adm-name', value: x.name, maxlength: 60, autocomplete: 'off',
                    'aria-label': 'Guest name', 'data-change': 'rename-guest', 'data-key': `name-${x.id}` }),
-      h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `RSVP for ${x.name}` },
-        RSVP.map((r) => h('button', { type: 'button', class: `adm-seg is-${r.value}`, 'data-act': 'rsvp', 'data-value': r.value,
-                                      'aria-pressed': String(x.rsvp === r.value), 'data-key': `rsvp-${x.id}-${r.value}` }, r.label))),
+      answersEl(x),
       h('div', { class: 'adm-sent' },
         KINDS.map((k) => {
           const at = x[`${k.value}_sent_at`];
@@ -561,16 +674,21 @@ function createPanel(me, { onExpired } = {}) {
         others.map((o) => h('option', { value: o.id }, o.name)),
         h('option', { value: 'new' }, 'A new group…')),
       h('button', { type: 'button', class: 'adm-icon adm-danger', 'data-act': 'delete-guest',
-                    'aria-label': `Remove ${x.name}`, title: 'Remove from the guest list' }, '×'));
+                    'aria-label': `Remove ${x.name}`, title: 'Remove from the guest list' }, '×'),
+      (comingTo(x) || x.dietary) &&                             // guests fill this in on the card's reply
+        h('input', { type: 'text', class: 'adm-input adm-diet', value: x.dietary, maxlength: 300, autocomplete: 'off',
+                     placeholder: 'Dietary requirements', 'aria-label': `Dietary requirements for ${x.name}`,
+                     'data-change': 'dietary', 'data-key': `diet-${x.id}` }));
   }
 
-  /* one row per guest: their name, with edit / copy link / open group on hover; their category; their RSVP */
+  /* one row per guest: their name, with edit / copy link / open group on hover; their category and location; their RSVPs */
   function guestRowEl(g, x) {
     const name = state.editing === `name-${x.id}`
       ? h('input', { type: 'text', class: 'adm-input adm-row-name', value: x.name, maxlength: 60, autocomplete: 'off',
                      'aria-label': `New name for ${x.name}`, 'data-edit': 'name', 'data-key': `name-${x.id}` })
       : h('div', { class: 'adm-row-who' },
           h('span', { class: 'adm-row-name' }, x.name),
+          x.dietary && h('span', { class: 'adm-row-diet', title: 'Dietary requirements' }, x.dietary),
           h('div', { class: 'adm-row-acts' },                // shown on hover
             h('button', { type: 'button', class: 'adm-icon adm-edit', 'data-act': 'edit', 'data-field': 'name', 'data-key': `edit-${x.id}`,
                           'aria-label': `Edit ${x.name}'s name`, title: 'Edit name' }, icon('edit')),
@@ -594,9 +712,7 @@ function createPanel(me, { onExpired } = {}) {
       name,
       tag('category'),
       tag('location'),
-      h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `RSVP for ${x.name}` },
-        RSVP.map((r) => h('button', { type: 'button', class: `adm-seg is-${r.value}`, 'data-act': 'rsvp', 'data-value': r.value,
-                                      'aria-pressed': String(x.rsvp === r.value), 'data-key': `rsvp-${x.id}-${r.value}` }, r.label))));
+      answersEl(x));
   }
 
   function setView(view, { openGroup = null } = {}) {
@@ -612,6 +728,7 @@ function createPanel(me, { onExpired } = {}) {
     fillFilter();
     fillCategories();
     renderList();
+    if (view === 'letters') loadLetters();                // fresh each time, in case they changed elsewhere
     if (openGroup != null) {
       const node = list.querySelector(`[data-group="${openGroup}"]`);
       if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -640,6 +757,12 @@ function createPanel(me, { onExpired } = {}) {
     }
     const el = e.target.closest('[data-act]');
     if (!el || el.disabled) return;
+    if (el.dataset.act === 'letter-active') {
+      const kind = el.closest('[data-letter]').dataset.letter, active = el.dataset.value === 'true';
+      const l = state.letters && state.letters.find((y) => y.kind === kind);
+      if (l && l.active !== active) changeLetter(kind, { active });
+      return;
+    }
     const { g, x } = context(el);
     if (!g) return;
     const kind = el.dataset.kind;
@@ -667,9 +790,11 @@ function createPanel(me, { onExpired } = {}) {
       case 'group-sent':                                   // all sent: undo for everyone; otherwise send to everyone
         mutate(() => api('POST', `/admin/groups/${g.id}/sent`, { kind, sent: sentState(byId(g.id) || g, kind) !== 'all' }));
         break;
-      case 'rsvp':
-        if (x && x.rsvp !== el.dataset.value) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { rsvp: el.dataset.value }));
+      case 'rsvp': {
+        const field = el.dataset.field;
+        if (x && x[field] !== el.dataset.value) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { [field]: el.dataset.value }));
         break;
+      }
       case 'guest-sent':
         if (x) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { [`${kind}_sent`]: !(findGuest(x.id) || x)[`${kind}_sent_at`] }));
         break;
@@ -703,12 +828,23 @@ function createPanel(me, { onExpired } = {}) {
   list.addEventListener('change', (e) => {
     const el = e.target, act = el.dataset.change;
     if (!act) return;
+    if (act === 'letter-opens') {
+      if (el.checked) changeLetter(el.closest('[data-letter]').dataset.letter, { opens_first: true });
+      return;
+    }
+    if (act === 'letter-rank') {
+      changeLetter(el.closest('[data-letter]').dataset.letter, { rank: Number(el.value) });
+      return;
+    }
     const { g, x } = context(el);
     if (!g) return;
     if (act === 'rename-guest' && x) {
       const name = clean(el.value);
       if (!name) { el.value = x.name; return; }
       if (name !== x.name) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { name }));
+    } else if (act === 'dietary' && x) {
+      const dietary = clean(el.value);
+      if (dietary !== x.dietary) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { dietary }));
     } else if (act === 'rename-group') {
       const name = clean(el.value);
       if (!name) { el.value = g.name; return; }

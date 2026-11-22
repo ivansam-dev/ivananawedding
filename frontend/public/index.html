@@ -8,15 +8,22 @@
 <title>Ivan and Ana&#39;s Wedding</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <script>
-/* A group's link (/<id>) asks for its names straight away. Up here, before the font stylesheets,
-   the request runs while they and the rest of the page load; further down it would have to wait
-   for them. The main script at the bottom picks the answer up from window.inviteRequest. */
+/* A group's link (/<id>) asks for its names, and which letters to show, straight away. Up here,
+   before the font stylesheets, the request runs while they and the rest of the page load; further
+   down it would have to wait for them. A ?to=Name link only asks which letters to show.
+   The main script at the bottom picks the answer up from window.inviteRequest. */
 window.inviteRequest = (() => {
-  const id = (location.pathname.split('/').filter(Boolean)[0] || new URLSearchParams(location.search).get('g') || '').toLowerCase();
-  if (!/^[a-z0-9]{4,32}$/.test(id)) return null;
-  return fetch(`/api/invite/${id}`)
-    .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
-    .catch(() => null);                                         // offline or unknown link: the plain card
+  const query = new URLSearchParams(location.search);
+  const id = (location.pathname.split('/').filter(Boolean)[0] || query.get('g') || '').toLowerCase();
+  const group = /^[a-z0-9]{4,32}$/.test(id);
+  if (!group && !query.has('to')) return null;                   // a bare link: the card stays closed
+  return {
+    group,
+    id: group ? id : null,
+    reply: fetch(group ? `/api/invite/${id}` : '/api/letters')
+      .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
+      .catch(() => null)                                         // offline or unknown link: the plain card
+  };
 })();
 </script>
 <!-- Every face for every language, cut down to the characters the card draws (frontend/tools/subset_fonts.py,
@@ -327,6 +334,18 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .stage.is-flat.is-open .face-front,
 .stage.is-flat:not(.is-open) .face-back{visibility:hidden}
 .stage.is-flat.is-open .face-back{transform:none}
+/* the portrait letters (the invitation, the RSVP card, the details) are cards folded in half: one leaves the
+   envelope folded, cover outside, and opens upward
+   into a portrait sheet. While it opens (.is-unfolding) the card is the whole sheet; the cover is a flap over
+   its lower half, hinged at the middle, and the sheet's upper half stays hidden until the flap lies flat there */
+.fold-inner{display:none}
+.is-unfolding .card3d{transform:none}
+.is-unfolding .face-front,.is-unfolding .fold-inner{top:50%;transform-origin:50% 0}
+.is-unfolding .fold-inner{display:block;overflow:hidden;background-size:220px, 100% 200%;box-shadow:none}   /* the paper lines up with the sheet's; no edge drawn at the fold */
+.fold-inner .frame{bottom:auto;height:calc(200% - var(--u) * 7.2)}
+.is-unfolding .face-back{transform:translateZ(-1px);clip-path:inset(calc(50% - 1px) 0 0 0)}   /* overlaps the flap by 1px: no seam */
+.is-unfolding .face-front .shade{background:linear-gradient(to top, rgba(36,30,26,.03), rgba(36,30,26,.2))}
+.fold-inner .shade{background:linear-gradient(to bottom, rgba(36,30,26,.03), rgba(36,30,26,.2))}
 
 /* engraved frame */
 .frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid rgba(138,26,31,.72);pointer-events:none}
@@ -440,6 +459,61 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .std-day,.std-place{text-transform:lowercase}   /* all small capitals, like the line above the names */
 .std-place{margin-top:calc(var(--u) * .9)}
 html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
+/* a letter's block that isn't in front, and whatever lives on it (data-on-letter), here and in copies of the card */
+[data-letter][hidden],[data-on-letter][hidden]{display:none}
+
+/* the invitation, set like the save the date: who invites, the days side by side, and replying.
+   Everything stays above the ducklings, who walk along the bottom gold line */
+.inv{
+  position:absolute;left:calc(var(--u) * 6);right:calc(var(--u) * 6);top:calc(var(--u) * 8);bottom:calc(var(--u) * 13);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+}
+.inv-sc{
+  font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;
+  font-size:calc(var(--u) * 2.2);line-height:1.35;letter-spacing:.1em;text-transform:lowercase;   /* all small capitals */
+}
+/* a pen drawing of the venue heads the letter, two thirds of the sheet's width;
+   transparent, so the paper and its grain show through */
+.inv-art{display:block;flex:none;width:calc(var(--u) * 89);height:auto;margin:calc(var(--u) * 5) 0 auto;opacity:.85}
+/* the drawing sits at the top; the room left beneath it is shared evenly above the names, between the
+   names and the days, and below the RSVP button */
+.inv-lead{margin-top:calc(var(--u) * 6)}
+.inv-events.inv-events{margin-top:auto;padding-top:calc(var(--u) * 6)}   /* never closer than before */
+.inv-reply{margin-bottom:auto}
+.is-revealed .inv-art.rv{opacity:.85}
+.inv-lead,.inv-ask{color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
+.inv-names{
+  margin:calc(var(--u) * 3.4) 0 calc(var(--u) * 2.8);
+  font-family:"Beau Rivage","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 8.6);line-height:1.15;
+  color:var(--cinnabar);letter-spacing:0;white-space:nowrap;
+}
+.inv-names .amp{color:var(--gold);padding:0 .26em}
+/* the events share rows (subgrid), so each line (day, name, venue, address) starts at the same height in both
+   columns even when one event's name wraps onto two lines */
+.inv-events{
+  display:grid;grid-template-columns:minmax(0, calc(var(--u) * 46)) 1px minmax(0, calc(var(--u) * 46));
+  grid-template-rows:repeat(4, auto);justify-content:center;column-gap:calc(var(--u) * 4);width:100%;margin-top:calc(var(--u) * 6);
+}
+.inv-event{grid-row:1 / span 4;display:grid;grid-template-rows:subgrid;justify-items:center;align-items:start}
+.inv-rule{grid-row:1 / span 4;width:1px;background:linear-gradient(to bottom, rgba(168,130,60,0), var(--gold-line) 18%, var(--gold-line) 82%, rgba(168,130,60,0))}
+.inv-day{color:var(--ink)}
+.inv-what{align-self:center;margin-top:calc(var(--u) * 1.8);font-weight:400;font-size:calc(var(--u) * 3.6);line-height:1.2;color:var(--cinnabar)}
+.inv-venue{margin-top:calc(var(--u) * 2.4);font-size:calc(var(--u) * 2.9);font-weight:400;line-height:1.25;color:var(--ink)}
+.inv-addr{
+  margin-top:calc(var(--u) * 1);font-size:calc(var(--u) * 2.5);line-height:1.4;color:var(--ink-soft);white-space:pre-line;   /* street, then suburb */
+  text-decoration:none;border-bottom:1px solid transparent;transition:border-color .4s ease, color .4s ease;
+}
+a.inv-addr:hover,a.inv-addr:focus-visible{color:var(--ink);outline:none}   /* opens the map: no underline, it darkens when pointed at */
+/* "Kindly RSVP by …": a button that brings the RSVP card forward */
+.inv-reply{
+  margin-top:calc(var(--u) * 6);padding:calc(var(--u) * 1.3) calc(var(--u) * 3.4) calc(var(--u) * 1.3) calc(var(--u) * 3.5);
+  color:var(--cinnabar);background:transparent;border:1px solid var(--gold-line);border-radius:0;cursor:pointer;
+  transition:background .4s ease, border-color .4s ease, color .4s ease;
+}
+.inv-reply:hover,.inv-reply:focus-visible{background:rgba(138,26,31,.05);border-color:var(--cinnabar);outline:none}
+.inv-reply:disabled{color:var(--ink-soft);border-color:transparent;background:none;cursor:default}   /* a link that can't reply: just the words */
+html[lang="zh-Hant"] .inv-what{font-style:normal;letter-spacing:.14em}
+html[lang="zh-Hant"] .inv-sc{letter-spacing:.16em}
 .attire span{font-style:italic;font-size:calc(var(--u) * 3.5);color:var(--ink);letter-spacing:.02em}
 
 /* two ducklings standing on the card's bottom gold line */
@@ -504,6 +578,127 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 }
 .is-done .replay{opacity:.75;pointer-events:auto}
 .replay:hover,.replay:focus-visible{opacity:1;background:rgba(250,252,248,.7);border-color:rgba(55,75,62,.4);outline:none}
+
+/* the other letters, small, in a row beneath the open card (earliest on the left); a tap brings one forward.
+   Each is a scaled-down copy of that letter's printed side */
+.tray{
+  position:fixed;left:50%;top:calc(50% + var(--hh) / 2 + var(--tray-gap, 24px));z-index:8;
+  display:flex;align-items:flex-start;gap:20px;transform:translate(-50%, 10px);
+  opacity:0;pointer-events:none;transition:opacity .9s ease, transform 1s cubic-bezier(.2,.8,.2,1);
+}
+.has-tray .tray{opacity:1;transform:translate(-50%, 0);pointer-events:auto}
+.tray-item{
+  display:flex;flex-direction:column;align-items:center;gap:9px;padding:0;border:0;background:none;
+  font:inherit;color:inherit;letter-spacing:normal;cursor:pointer;outline:none;
+}
+.tray-item.is-away{visibility:hidden}
+.tray-card{
+  position:relative;display:block;width:var(--tw, 120px);height:calc(var(--tw, 120px) / var(--r, 1.618));overflow:hidden;
+  box-shadow:0 1px 2px rgba(40,5,5,.3), 0 10px 18px -10px rgba(38,48,40,.55);
+  transition:transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .6s cubic-bezier(.2,.8,.2,1);
+}
+.tray-print{position:absolute;left:0;top:0;width:var(--wf);height:var(--hh);transform-origin:0 0;transform:scale(var(--ts, .2));text-align:center}
+/* each letter's name stays hidden (still read out to screen readers, and keeping its place so the row
+   doesn't shift) until a pointer rests on that letter or the keyboard reaches it */
+.tray-label{font-style:italic;font-size:14px;line-height:1.2;letter-spacing:.04em;white-space:nowrap;color:#4b5c51;opacity:0;transition:opacity .4s ease}
+.tray-item:focus-visible .tray-card{outline:1px solid rgba(60,80,68,.55);outline-offset:5px}
+.tray-item:focus-visible .tray-label{opacity:1}
+@media (hover:hover){
+  .tray-item:hover .tray-card{transform:translateY(-4px);box-shadow:0 1px 2px rgba(40,5,5,.28), 0 18px 26px -12px rgba(38,48,40,.6)}
+  .tray-item:hover .tray-label{opacity:1}
+}
+@media (max-height:480px){.tray{gap:14px}.tray-item{gap:5px}.tray-label{font-size:12.5px}}
+/* while letters change places: a still copy of the one going back */
+.ghost,.ghost *,.tray-print,.tray-print *{pointer-events:none}
+.ghost{position:fixed;z-index:9;transform-origin:0 0}
+.ghost .face{box-shadow:0 1px 3px rgba(40,5,5,.3), 0 26px 50px -26px rgba(30,42,34,.55)}
+
+/* the RSVP card and the details: inside the frame, a title over what's beneath it, which alone scrolls,
+   fading at its edges */
+.sheet{
+  position:absolute;inset:calc(var(--u) * 3.6 + 1px);display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:max(calc(var(--u) * 3), 12px) max(calc(var(--u) * 5), 14px) max(calc(var(--u) * 2.4), 10px);
+}
+.sheet-head{flex:none;display:flex;flex-direction:column;align-items:center}
+.sheet-title{color:var(--cinnabar);font-size:max(calc(var(--u) * 2.4), 11px);letter-spacing:.14em;padding-left:.14em}
+.sheet-head::after{content:"";width:calc(var(--u) * 7);height:1px;margin-top:max(calc(var(--u) * 1.6), 7px);background:var(--gold-line)}
+.sheet-scroll{
+  flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;
+  margin:max(calc(var(--u) * 1.2), 6px) 0;scrollbar-width:thin;scrollbar-color:var(--gold-line) transparent;
+  -webkit-mask-image:linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+          mask-image:linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+}
+html[lang="zh-Hant"] .sheet-title{letter-spacing:.16em}
+
+/* the RSVP card: the title, the guests and the Send button, centred together when they fit. When they
+   don't, only the guests scroll (never taller than the room the other two leave), so the title and the
+   Send button stay in sight. The details are laid out the same way, so both titles sit at the same height */
+.sheet[data-letter="rsvp"],.faq{justify-content:center}
+.reply-scroll,.faq .sheet-scroll{flex:0 1 auto;max-height:65%;margin:max(calc(var(--u) * 5), 20px) 0}   /* of the card's inside */
+/* the details have no Send button: the room it takes on the RSVP card (.reply-send) is left empty instead */
+.faq::after{content:"";flex:none;font-size:max(calc(var(--u) * 1.9), 11px);height:calc(2.8em + 2px)}
+.reply-guests{margin:0 auto;padding:8px 0;width:100%;max-width:calc(var(--u) * 90)}   /* the padding keeps the first and last guest clear of the fades */
+/* a guest: their name; beneath it a line per event, the event's name on the left and its two choices on
+   the right; then a line for their dietary requirements, its box where the choices are */
+.reply-guest{
+  display:flex;flex-direction:column;gap:max(calc(var(--u) * 1.6), 9px);
+  padding:max(calc(var(--u) * 2.8), 14px) 0;border-top:1px solid rgba(168,130,60,.28);
+}
+.reply-events{display:flex;flex-direction:column;gap:max(calc(var(--u) * 1.2), 7px)}
+/* the event's name takes whatever the choices leave (they're the same in every event, so they line up on
+   the right). Where that would be under 7em, the choices go beneath the name instead, filling the line */
+.reply-event{display:flex;flex-wrap:wrap;align-items:center;gap:6px max(calc(var(--u) * 1.6), 8px)}
+.reply-event-name{
+  flex:1000 1 7em;min-width:0;text-align:left;
+  font-family:"Playfair Display SC","Noto Serif TC",serif;text-transform:lowercase;font-size:max(calc(var(--u) * 1.75), 10.5px);
+  line-height:1.3;letter-spacing:.08em;color:var(--cinnabar);
+}
+html[lang="zh-Hant"] .reply-event-name{letter-spacing:.16em}
+.reply-guest:first-child{border-top:0}
+.reply-name{
+  font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:max(calc(var(--u) * 2.7), 13px);
+  line-height:1.3;color:var(--ink);letter-spacing:.06em;overflow-wrap:anywhere;text-align:left;
+}
+.reply-choices{flex:1 0 auto;display:flex;gap:max(calc(var(--u) * 1.2), 6px)}
+.reply-choice,.reply-send{
+  font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;text-transform:lowercase;
+  font-size:max(calc(var(--u) * 1.9), 11px);line-height:1.2;letter-spacing:.1em;cursor:pointer;border-radius:0;
+  transition:background .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
+}
+.reply-choice{flex:1 1 auto;white-space:nowrap;padding:.65em .8em;color:var(--ink-soft);background:transparent;border:1px solid var(--gold-line)}
+.reply-choice:hover,.reply-choice:focus-visible{color:var(--ink);border-color:var(--gold-deep);outline:none}
+.reply-choice[aria-pressed="true"]{color:var(--paper);background:var(--cinnabar);border-color:var(--cinnabar)}
+.reply-choice[data-value="not_attending"][aria-pressed="true"]{background:var(--ink-soft);border-color:var(--ink-soft)}
+/* the dietary line: the box takes the choices' place and width (a hidden copy of them sets it) */
+.reply-diet-slot{flex:1 0 auto;display:grid;align-items:end}
+.reply-diet-slot > *{grid-area:1 / 1}
+.reply-sizer{height:0;overflow:hidden;visibility:hidden}
+.reply-diet{
+  width:100%;min-width:0;padding:.5em .8em;
+  font-family:"Playfair Display","Bodoni Moda","Noto Serif TC",serif;font-style:italic;font-size:max(calc(var(--u) * 2.1), 12px);line-height:1.2;
+  color:var(--ink);background:transparent;border:1px solid var(--gold-line);border-radius:0;outline:none;
+  -webkit-user-select:text;user-select:text;transition:border-color .3s ease;
+}
+.reply-diet::placeholder{color:var(--ink-soft);opacity:.6}
+.reply-diet:focus{border-color:var(--cinnabar)}
+@media (hover:none){.reply-diet{font-size:16px}}   /* any smaller and phones zoom in on it */
+.reply-foot{flex:none;display:flex;flex-direction:column;align-items:center;gap:max(calc(var(--u) * .8), 4px)}
+.reply-msg{font-style:italic;font-size:max(calc(var(--u) * 2.1), 12px);line-height:1.4;color:var(--cinnabar)}
+.reply-msg:empty{display:none}
+.reply-send{padding:.8em 2em;color:var(--paper);background:var(--cinnabar);border:1px solid var(--cinnabar)}
+.reply-send:hover,.reply-send:focus-visible{background:#6e1418;outline:none}
+.reply-send:disabled{opacity:.4;cursor:default;background:var(--cinnabar)}
+html[lang="zh-Hant"] .reply-choice,html[lang="zh-Hant"] .reply-send{letter-spacing:.16em}
+
+/* the details: questions and answers one beneath the other, a short gold rule between them, all of it
+   above the ducklings */
+.faq-list{margin:0;padding:8px 0;width:100%}   /* the padding keeps the first and last answer clear of the fades */
+.faq-item + .faq-item{margin-top:max(calc(var(--u) * 2.6), 12px)}
+.faq-item + .faq-item::before{content:"";display:block;width:calc(var(--u) * 4);height:1px;margin:0 auto max(calc(var(--u) * 2.6), 12px);background:var(--gold-line)}
+.faq-q{font-style:italic;font-size:max(calc(var(--u) * 3), 14px);line-height:1.25;color:var(--cinnabar)}
+.faq-a{margin-top:max(calc(var(--u) * .9), 5px);font-size:max(calc(var(--u) * 2.4), 12.5px);line-height:1.5;color:var(--ink-soft);white-space:pre-line}
+html[lang="zh-Hant"] .faq-q{font-style:normal;letter-spacing:.1em}
+html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
 
 @media (prefers-reduced-motion:reduce){
   .rv{filter:none;transform:none}
@@ -833,9 +1028,12 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
             <i class="shade" id="shadeFront"></i>
           </div>
 
-          <section class="face face-back paper" aria-label="Save the date">
+          <div class="face fold-inner paper" id="foldInner" aria-hidden="true"><span class="frame"></span><i class="shade" id="shadeInner"></i></div>
+
+          <section class="face face-back paper" id="backFace" aria-label="Save the date">
             <span class="frame"></span>
-            <div class="std">
+            <!-- one block per letter; only the one in front shows (showLetter) -->
+            <div class="std" data-letter="save_the_date">
               <div class="std-row std-top">
                 <p class="std-title rv" style="--i:0" data-i18n="stdTitle">Save the date</p>
               </div>
@@ -848,7 +1046,30 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
                 <p class="std-place rv" style="--i:4" data-i18n="note">Invitations to follow</p>
               </div>
             </div>
-          <div class="ducks rv awaiting" style="--i:6">
+            <div class="inv" data-letter="invitation" hidden>
+              <img class="inv-art rv" style="--i:0" src="/img/venue.webp" width="1000" height="612" alt="" decoding="async">
+              <p class="inv-sc inv-lead rv" style="--i:0" data-i18n="invLead">Together with their families</p>
+              <h1 class="inv-names rv" style="--i:1">Ivan Sam<span class="amp">&amp;</span>Ana Nguyen</h1>
+              <p class="inv-sc inv-ask rv" style="--i:2" data-i18n="invAsk">invite you to celebrate their wedding day</p>
+              <div class="inv-events rv" style="--i:3" id="invEvents"></div>
+              <button type="button" class="inv-sc inv-reply rv" style="--i:4" id="rsvpOpen" data-i18n="invReply" disabled>Kindly RSVP by 15 December</button>
+            </div>
+            <!-- the RSVP card: one row per guest on the link (renderReply) -->
+            <form class="sheet" data-letter="rsvp" id="replyForm" novalidate hidden>
+              <div class="sheet-head rv" style="--i:0"><h2 class="inv-sc sheet-title" id="replyTitle"></h2></div>
+              <div class="sheet-scroll reply-scroll"><div class="reply-guests rv" style="--i:1" id="replyGuests"></div></div>
+              <div class="reply-foot rv" style="--i:2">
+                <p class="reply-msg" id="replyMsg" role="status" aria-live="polite"></p>
+                <button type="submit" class="reply-send" id="replySend" disabled></button>
+              </div>
+            </form>
+            <!-- the details: questions and answers (FAQS, renderFaq) -->
+            <div class="sheet faq" data-letter="details" hidden>
+              <div class="sheet-head rv" style="--i:0"><h2 class="inv-sc sheet-title" data-i18n="faqTitle">Details</h2></div>
+              <div class="sheet-scroll rv" style="--i:1"><dl class="faq-list" id="faqList"></dl></div>
+            </div>
+          <!-- the ducklings and their heart balloons live on the invitation, and keep their state while it's away -->
+          <div class="ducks rv awaiting" style="--i:6" data-on-letter="invitation">
             <div class="duck duck-a has-heart" id="duckA" role="button" tabindex="0" aria-label="Send a heart">
               <div class="duck-face"><div class="duck-bob">
                 <svg viewBox="0 0 60 60" aria-hidden="true">
@@ -890,7 +1111,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
               </div></div>
             </div>
           </div>
-            <div class="balloons" id="balloons" aria-hidden="true"></div>
+            <div class="balloons" id="balloons" aria-hidden="true" data-on-letter="invitation"></div>
             <i class="shade" id="shadeBack"></i>
           </section>
 
@@ -898,6 +1119,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     </div>
   </div>
 
+  <div class="tray" id="tray" role="group" aria-label="More letters"></div>
   <p class="card-hint" id="cardHint" aria-hidden="true"></p>
   <div class="hearts" id="hearts" aria-hidden="true"></div>
 
@@ -917,7 +1139,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
         env = $('env'), letter = $('letter'), flap = $('flap'), flapInner = $('flapInner'),
         seal = $('seal'), hint = $('hint'), fly = $('fly'), shift = $('shift'),
         cardShadow = $('cardShadow'), csFar = $('csFar'), replay = $('replay'),
-        shadeFront = $('shadeFront'), shadeBack = $('shadeBack'), card3d = $('card3d');
+        shadeFront = $('shadeFront'), shadeBack = $('shadeBack'), card3d = $('card3d'),
+        foldInner = $('foldInner'), shadeInner = $('shadeInner'), faceFront = card3d.querySelector('.face-front'),
+        backFace = $('backFace'), tray = $('tray');
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const T = (ms) => (reduce ? Math.round(ms * 0.4) : ms);
@@ -1065,44 +1289,130 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 
   /* ---------- languages ---------- */
   const touch = matchMedia('(hover: none)').matches;
+  /* the card's wording. After changing any of it, run make fonts so any new Chinese or
+     Vietnamese characters get the card's typefaces */
   const TEXT = {
     en: {
       title: "Ivan and Ana's Wedding",
       hint: touch ? 'Tap to open' : 'Click to open',
-      open: 'Open the save the date from Ivan and Ana',
+      letters: { save_the_date: 'Save the date', invitation: 'Invitation', rsvp: 'RSVP', details: 'Details' },
+      open: { save_the_date: 'Open the save the date from Ivan and Ana', invitation: 'Open the invitation from Ivan and Ana',
+              rsvp: 'Open the RSVP card from Ivan and Ana', details: 'Open the wedding details from Ivan and Ana' },
+      more: 'More letters',
       replay: 'Choose a language and play again',
       coverDate: '5 March 2027',
       lead: 'for the wedding of',
       stdTitle: 'Save the date',
       day: 'Thursday 4 & Friday 5 March 2027, Melbourne',
       note: 'Invitations to follow',
+      invLead: 'Together with their families',
+      invAsk: 'invite you to celebrate their wedding day',
+      invReply: 'Kindly RSVP by 15 December',
+      reply: {
+        attending: 'Attending', not_attending: 'Decline', dietary: 'Dietary requirements', dietaryHint: 'e.g. vegetarian',
+        send: 'Send reply', sending: 'Sending…',
+        thanks: 'Thank you, your reply has been sent.', error: 'Something went wrong. Please try again.'
+      },
+      faqTitle: 'Details',
       heartsLine: 'Your presence will fill our day with hearts'
     },
     vi: {
       title: "Ivan and Ana's Wedding",
       hint: touch ? 'Chạm để mở' : 'Nhấn để mở',
-      open: 'Mở thiệp báo tin của Ivan và Ana',
+      letters: { save_the_date: 'Thiệp báo tin', invitation: 'Thiệp mời', rsvp: 'Thiệp hồi âm', details: 'Thông tin chi tiết' },
+      open: { save_the_date: 'Mở thiệp báo tin của Ivan và Ana', invitation: 'Mở thiệp mời của Ivan và Ana',
+              rsvp: 'Mở thiệp hồi âm của Ivan và Ana', details: 'Mở thông tin hôn lễ của Ivan và Ana' },
+      more: 'Các thiệp khác',
       replay: 'Chọn ngôn ngữ và xem lại',
       coverDate: 'Ngày 5 tháng 3 năm 2027',
       lead: 'cho hôn lễ của',
       stdTitle: 'Lưu lại ngày vui',
       day: 'Thứ Năm 4 & Thứ Sáu 5 tháng 3 năm 2027, Melbourne',
       note: 'Thiệp mời sẽ được gửi sau',
+      invLead: 'Cùng gia đình hai bên',
+      invAsk: 'trân trọng kính mời quý khách đến dự lễ thành hôn',
+      invReply: 'Xin vui lòng hồi âm trước ngày 15 tháng 12',
+      reply: {
+        attending: 'Tham dự', not_attending: 'Không tham dự', dietary: 'Yêu cầu về ăn uống', dietaryHint: 'VD: ăn chay',
+        send: 'Gửi hồi âm', sending: 'Đang gửi…',
+        thanks: 'Cảm ơn quý khách, hồi âm đã được gửi.', error: 'Đã có lỗi xảy ra. Vui lòng thử lại.'
+      },
+      faqTitle: 'Thông tin chi tiết',
       heartsLine: 'Sự hiện diện của quý khách sẽ khiến ngày vui của chúng tôi ngập tràn yêu thương'
     },
     'zh-Hant': {
       title: "Ivan and Ana's Wedding",
       hint: touch ? '輕觸開啟' : '點擊開啟',
-      open: '開啟 Ivan 與 Ana 的預留日期通知',
+      letters: { save_the_date: '預留日期通知', invitation: '請柬', rsvp: '回覆卡', details: '婚禮資訊' },
+      open: { save_the_date: '開啟 Ivan 與 Ana 的預留日期通知', invitation: '開啟 Ivan 與 Ana 的請柬',
+              rsvp: '開啟 Ivan 與 Ana 的回覆卡', details: '開啟 Ivan 與 Ana 的婚禮資訊' },
+      more: '其他信函',
       replay: '選擇語言並重新播放',
       coverDate: '二〇二七年三月五日',
       lead: '誠邀您共賀',
       stdTitle: '敬請預留日期',
       day: '二〇二七年三月四日（星期四）及五日（星期五）　墨爾本',
       note: '請柬隨後奉上',
+      invLead: '誠摯邀請您蒞臨',
+      invAsk: '之婚禮，共證良緣',
+      invReply: '敬請於十二月十五日前回覆',
+      reply: {
+        attending: '出席', not_attending: '未能出席', dietary: '飲食需求', dietaryHint: '例如：素食',
+        send: '送出回覆', sending: '傳送中…',
+        thanks: '謝謝您，回覆已送出。', error: '發生錯誤，請再試一次。'
+      },
+      faqTitle: '婚禮資訊',
       heartsLine: '您的光臨，將讓我們的這一天充滿愛'
     }
   };
+  /* the invitation's events, side by side, in this order. map is optional: a link to the place
+     (e.g. from Google Maps' Share button), opened by tapping the address. reply is the answer the
+     RSVP card asks each guest for, under the event's name: one of the backend's (tea_rsvp, reception_rsvp) */
+  const EVENTS = [
+    {
+      reply: 'tea_rsvp',
+      map: 'https://www.google.com/maps/search/?api=1&query=12+Dodds+Street%2C+Springvale+VIC+3171',
+      en: { day: 'Thursday 4 March 2027', name: 'Tea Ceremony', time: '12pm', venue: "Sam's Family Home", address: '12 Dodds Street\nSpringvale 3171' },
+      vi: { day: 'Thứ Năm, ngày 4 tháng 3 năm 2027', name: 'Lễ Dâng Trà', time: '12 giờ trưa', venue: 'Tư gia nhà Sam', address: '12 Dodds Street\nSpringvale 3171' },
+      'zh-Hant': { day: '二〇二七年三月四日（星期四）', name: '奉茶禮', time: '中午十二時', venue: 'Sam 府', address: '12 Dodds Street\nSpringvale 3171' }
+    },
+    {
+      reply: 'reception_rsvp',
+      map: 'https://www.google.com/maps/search/?api=1&query=Sunnyside%2C+1+Sunnyside+Rd%2C+Mount+Eliza+VIC+3930',
+      en: { day: 'Friday 5 March 2027', name: 'Ceremony & Reception', time: '5pm', venue: 'Sunnyside', address: '1 Sunnyside Rd\nMount Eliza VIC 3930' },
+      vi: { day: 'Thứ Sáu, ngày 5 tháng 3 năm 2027', name: 'Lễ Thành Hôn & Tiệc Cưới', time: '5 giờ chiều', venue: 'Sunnyside', address: '1 Sunnyside Rd\nMount Eliza VIC 3930' },
+      'zh-Hant': { day: '二〇二七年三月五日（星期五）', name: '證婚儀式及喜宴', time: '下午五時', venue: 'Sunnyside', address: '1 Sunnyside Rd\nMount Eliza VIC 3930' }
+    }
+  ];
+  /* the details: questions (q) and answers (a), in this order. Add, remove or reorder them freely; an answer
+     can run over several lines with \n. Fill in the [bracketed] answers before switching the details on */
+  const FAQS = [
+    {
+      en: { q: 'When is the RSVP due?', a: 'Please let us know by 15 December using the RSVP card. If your plans change, just send it again.' },
+      vi: { q: 'Hạn hồi âm là khi nào?', a: 'Xin quý khách hồi âm qua thiệp hồi âm trước ngày 15 tháng 12. Nếu kế hoạch thay đổi, quý khách cứ gửi lại nhé.' },
+      'zh-Hant': { q: '回覆期限是何時？', a: '請於十二月十五日前以回覆卡回覆。若之後計畫有變，再送出一次即可。' }
+    },
+    {
+      en: { q: 'What should I wear?', a: 'It\'s black tie, so suits and gowns. We\'re really looking forward to seeing everyone dressed up.' },
+      vi: { q: 'Trang phục nên như thế nào?', a: 'Trang phục black-tie: vest cho quý ông, đầm dạ hội cho quý bà. Chúng tôi rất mong được thấy mọi người diện đồ thật đẹp trong ngày vui này.' },
+      'zh-Hant': { q: '服裝有什麼要求？', a: '服裝要求為黑領結（Black Tie）：男士西裝，女士晚禮服。很期待看到大家盛裝出席！' }
+    },
+    {
+      en: { q: 'Can I bring a guest?', a: 'We\'d love to celebrate with everyone, but space is limited, so we\'ve kept it to the people named on your invitation. We hope you understand, and we can\'t wait to see you.' },
+      vi: { q: 'Tôi có thể đưa thêm người đi cùng không?', a: 'Chúng tôi rất muốn được chung vui cùng tất cả mọi người, nhưng vì số chỗ có hạn nên chỉ có thể mời những người có tên trong thiệp. Mong quý khách thông cảm, và chúng tôi rất mong được gặp quý khách.' },
+      'zh-Hant': { q: '可以攜伴出席嗎？', a: '我們很想邀請每一位親友，但場地座位有限，只能邀請請柬上列名的賓客，還請見諒。期待與您相見！' }
+    },
+    {
+      en: { q: 'Is there parking?', a: 'Yes, there\'s parking at both the tea ceremony and Sunnyside.' },
+      vi: { q: 'Có chỗ đậu xe không?', a: 'Có, cả tư gia nhà Sam và Sunnyside đều có chỗ đậu xe.' },
+      'zh-Hant': { q: '有停車位嗎？', a: '有的，奉茶禮與喜宴場地都有停車位。' }
+    },
+    {
+      en: { q: 'Do you have a gift registry?', a: 'Having you there means the most to us, so we don\'t have a registry. If you\'d like to give something, a monetary gift would mean a lot. Thank you!' },
+      vi: { q: 'Cô dâu chú rể có danh sách quà cưới không?', a: 'Được gặp quý khách trong ngày vui đã là món quà ý nghĩa nhất với chúng tôi, nên chúng tôi không lập danh sách quà cưới. Nếu quý khách muốn gửi tặng, chúng tôi xin được nhận quà mừng bằng phong bì. Cảm ơn quý khách rất nhiều!' },
+      'zh-Hant': { q: '有禮物清單嗎？', a: '您能到場就是最好的禮物，所以我們沒有設禮物清單。若您想另表心意，以禮金祝賀即可，我們會非常珍惜。謝謝您！' }
+    }
+  ];
   /* every face for every language, already on its way from the preloads in <head>. The first screen
      waits for all of them once, so choosing a language never waits and no text changes font mid-animation */
   const fontsReady = document.fonts
@@ -1120,28 +1430,74 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   try { sessionStorage.removeItem('std-guests'); } catch (e) {}      // names are no longer kept across a refresh
   const query = new URLSearchParams(location.search);
   let GUESTS = cleanNames(query.getAll('to'));
-  const hasGroup = !!window.inviteRequest;                           // started in <head>
+  const request = window.inviteRequest;                              // started in <head>
+  const hasGroup = !!request && request.group;
   /* a bare link (no group id, no ?to= names), or a group id the backend has no names for,
      shows a note on the cover instead of the details */
   let LOCKED = !hasGroup && !GUESTS.length;
+  /* the letters to show, earliest first (as the admin ranked them), and OPENS, the one the card opens on
+     (the admin's pick); the rest wait in a row beneath it, earliest on the left. ?letter=invitation opens
+     on that one, for the admin's preview, even while it's off.
+     Without an answer from the backend, the card is the save the date on its own */
+  const LETTER_KEYS = ['save_the_date', 'invitation', 'rsvp', 'details'];   // what this page can show, earliest first
+  const PREVIEW = LETTER_KEYS.includes(query.get('letter')) ? query.get('letter') : null;
+  const withPreview = (list) => {                    // a letter that's off goes in about where it would be
+    if (!PREVIEW || list.includes(PREVIEW)) return list;
+    const at = list.findIndex((k) => LETTER_KEYS.indexOf(k) > LETTER_KEYS.indexOf(PREVIEW));
+    return at < 0 ? [...list, PREVIEW] : [...list.slice(0, at), PREVIEW, ...list.slice(at)];
+  };
+  let LETTERS = withPreview(['save_the_date']);
+  let OPENS = PREVIEW || 'save_the_date';
   let timedOut = false;                                              // a reply after the card has started changes nothing
-  const guestsReady = hasGroup
+  const guestsReady = (request
     ? Promise.race([
-        window.inviteRequest
+        request.reply
           .then((d) => {
             if (timedOut) return;
             const names = d && Array.isArray(d.names) ? cleanNames(d.names) : [];
             if (names.length) GUESTS = names;
             else if (!GUESTS.length) LOCKED = true;                    // unknown or empty group: same note as a bare link
+            if (d && Array.isArray(d.guests) && d.guests.length) setReply(d.guests);
+            const shown = d && Array.isArray(d.letters) ? d.letters.filter((k, i, all) => LETTER_KEYS.includes(k) && all.indexOf(k) === i) : [];
+            if (shown.length) LETTERS = withPreview(shown);
+            if (!PREVIEW && d && LETTERS.includes(d.opens)) OPENS = d.opens;
+            else if (!PREVIEW) OPENS = LETTERS[LETTERS.length - 1];
           }),
         wait(4000).then(() => { timedOut = true; })
       ])
-    : Promise.resolve();
+    : Promise.resolve()
+  ).then(() => {
+    /* only a group's link can reply, so other links have no RSVP card. The admin's preview of it shows the
+       names on the link instead, and can't send */
+    if (!REPLY.length && PREVIEW === 'rsvp') setReply(GUESTS.map((name, i) => ({ id: -1 - i, name, dietary: '' })));
+    const shown = LETTERS.filter((k) => k !== 'rsvp' || REPLY.length);
+    if (shown.length) LETTERS = shown;
+    if (!LETTERS.includes(OPENS)) OPENS = LETTERS[LETTERS.length - 1];   // the RSVP card, on a link that can't reply
+  });
+  /* the RSVP card's guests, as the backend has them: [{ id, name }]. Empty when this link can't reply
+     (a ?to= link, or no answer from the backend): there is then no RSVP card, and the invitation's RSVP
+     line is just words. CHOSEN is what has been picked on the card, which may not be sent yet:
+     { answers: { tea_rsvp, reception_rsvp }, dietary }, each answer attending, not_attending or null */
+  let REPLY = [];
+  const CHOSEN = new Map();
+  const ANSWERS = EVENTS.map((e) => e.reply).filter(Boolean);       // one per event, in the invitation's order
+  const ANSWERED = ['attending', 'not_attending'];
+  const picked = (c) => ANSWERS.some((k) => c.answers[k]);
+  const coming = (c) => ANSWERS.some((k) => c.answers[k] === 'attending');
+  function setReply(list) {
+    const valid = list.filter((g) => g && Number.isInteger(g.id));
+    REPLY = valid.map((g) => ({ id: g.id, name: cleanNames([g.name])[0] || '' }));
+    CHOSEN.clear();
+    for (const g of valid) {
+      CHOSEN.set(g.id, { answers: Object.fromEntries(ANSWERS.map((k) => [k, ANSWERED.includes(g[k]) ? g[k] : null])),
+                         dietary: String(g.dietary || '') });
+    }
+  }
   const DEAR = { en: 'Dear', vi: 'Thân gửi', 'zh-Hant': '親愛的' };
   const NO_LINK = {
-    en: { who: ['Family', 'Friends'], note: 'Please message Ivan or Ana for your personal Save the Date link.' },
-    vi: { who: ['Gia đình', 'Bạn bè'], note: 'Vui lòng nhắn tin cho Ivan hoặc Ana để nhận đường dẫn thiệp báo tin riêng của bạn.' },
-    'zh-Hant': { who: ['家人', '朋友'], note: '請聯絡 Ivan 或 Ana，索取您的專屬預留日期通知連結。' }
+    en: { who: ['Family', 'Friends'], note: 'Please message Ivan or Ana for your personal link.' },
+    vi: { who: ['Gia đình', 'Bạn bè'], note: 'Vui lòng nhắn tin cho Ivan hoặc Ana để nhận đường dẫn thiệp riêng của bạn.' },
+    'zh-Hant': { who: ['家人', '朋友'], note: '請聯絡 Ivan 或 Ana，索取您的專屬連結。' }
   };
   const joinNames = (list, code) => {
     const and = { en: ' & ', vi: ' và ', 'zh-Hant': ' 及 ' }[code], sep = code === 'zh-Hant' ? '、' : ', ';
@@ -1172,17 +1528,72 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     root.lang = code;
     document.title = t.title;
     hint.textContent = t.hint;
-    envBtn.setAttribute('aria-label', t.open);
+    envBtn.setAttribute('aria-label', t.open[OPENS]);
+    tray.setAttribute('aria-label', t.more);
     replay.setAttribute('aria-label', t.replay);
     replay.title = t.replay;
     $('duckA').setAttribute('aria-label', DUCK_LABEL[code]);
     $('duckB').setAttribute('aria-label', DUCK_LABEL[code]);
     document.querySelectorAll('#fly [data-i18n]').forEach((el) => { el.innerHTML = t[el.dataset.i18n]; });
+    renderEvents(code);
+    renderFaq(code);
+    renderReply(code);
+    showLetter(front);
     /* the letter inside the envelope is a copy of the card's cover */
     letter.textContent = '';
     const print = $('coverPrint').cloneNode(true);
     print.removeAttribute('id');
     letter.appendChild(print);
+  }
+
+  const make = (tag, cls, text) => {
+    const el = document.createElement(tag);
+    el.className = cls;
+    el.textContent = text;
+    return el;
+  };
+  /* the invitation's events, one column each, with a gold rule between them */
+  function renderEvents(code) {
+    const columns = EVENTS.map((e) => {
+      const t = e[code] || e.en;
+      const addr = make(e.map ? 'a' : 'p', 'inv-sc inv-addr', t.address);
+      if (e.map) Object.assign(addr, { href: e.map, target: '_blank', rel: 'noopener' });
+      const col = make('div', 'inv-event', '');
+      /* the time leads the date ("12pm, Thursday 4 March 2027"); Chinese reads date then time */
+      const when = code === 'zh-Hant' ? t.day + t.time : `${t.time}, ${t.day}`;
+      col.append(make('p', 'inv-sc inv-day', when), make('h2', 'inv-sc inv-what', t.name),
+                 make('p', 'inv-sc inv-venue', t.venue), addr);
+      return col;
+    });
+    $('invEvents').replaceChildren(...columns.flatMap((col, i) => (i ? [make('span', 'inv-rule', ''), col] : [col])));
+  }
+
+  /* the details' questions, each with its answer beneath */
+  function renderFaq(code) {
+    $('faqList').replaceChildren(...FAQS.map((f) => {
+      const t = f[code] || f.en, item = make('div', 'faq-item', '');
+      item.append(make('dt', 'faq-q', t.q), make('dd', 'faq-a', t.a));
+      return item;
+    }));
+  }
+
+  /* which letter the card shows: one [data-letter] block, and whatever lives on it ([data-on-letter]).
+     Each letter has its own shape once open (width / height). The save the date leaves the envelope at
+     1.618 and turns over; the others leave it folded in half and unfold into a portrait sheet twice as tall */
+  const FOLDED = 1.618;
+  const SHAPE = { save_the_date: FOLDED, invitation: 0.74, rsvp: 0.74, details: 0.74 };   // a little longer than two golden halves
+  const FOLDS = new Set(['invitation', 'rsvp', 'details']);
+  const shapeOf = (key) => SHAPE[key] || FOLDED;
+  const foldedOf = (key) => (FOLDS.has(key) ? shapeOf(key) * 2 : FOLDED);   // a folding letter is half its sheet until it opens
+  let cardOpen = false;                                  // false while the card still shows its cover
+  let front = OPENS;
+  function showLetter(key) {
+    const reshape = key !== front;
+    front = key;
+    if (reshape && L.wf) layout();
+    backFace.querySelectorAll('[data-letter]').forEach((el) => { el.hidden = el.dataset.letter !== key; });
+    backFace.querySelectorAll('[data-on-letter]').forEach((el) => { el.hidden = el.dataset.onLetter !== key; });
+    backFace.setAttribute('aria-label', TEXT[root.lang].letters[key]);
   }
 
   /* ---------- sizing ---------- */
@@ -1195,11 +1606,15 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     /* the card is wider than it is tall; type keeps its size, so the extra width is white space.
        k is fixed so the phone renders an exact scaled-down copy of the desktop card */
     const k = 1.22;
-    const wf = Math.round(Math.min(560 * k, vw * 0.92, ((vh * 0.9) / 1.4) * k));
+    /* the width is shared by every letter, so type keeps its size when they swap; the tallest
+       letter this guest has must still fit the screen with room for the tray */
+    const tallest = Math.min(...LETTERS.map(shapeOf));
+    const wf = Math.round(Math.min(560 * k, vw * 0.92, ((vh * 0.9) / 1.4) * k, vh * 0.74 * tallest));
     const u = wf / k / 100;
-    const hh = wf / 1.618;
-    const s = (we * 0.92) / wf;
-    L = { vw, vh, we, he, wf, hh, s, u, k, lx: we * 0.04, ly: he - we * 0.028 - hh * s };
+    const hh = wf / (cardOpen ? shapeOf(front) : foldedOf(front));
+    /* inside the envelope the card sits 92% as wide as it, or smaller if it is too tall to hide */
+    const s = Math.min((we * 0.92) / wf, (he - we * 0.058) / hh);
+    L = { vw, vh, we, he, wf, hh, s, u, k, lx: (we - wf * s) / 2, ly: he - we * 0.028 - hh * s };
     root.style.setProperty('--we', we + 'px');
     root.style.setProperty('--he', he + 'px');
     root.style.setProperty('--wf', wf + 'px');
@@ -1207,6 +1622,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     root.style.setProperty('--u', u + 'px');
     CARD_W = wf / u; CARD_H = hh / u;
     if (state === 'idle' || state === 'ready') letter.style.transform = letterT(0);
+    sizeTray();
   }
 
   /* ---------- states ---------- */
@@ -1309,37 +1725,79 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     await waitForCardTap();
     if (!alive()) return;
 
-    /* 5 — the card turns over */
-    const ud = T(1500), uEase = 'cubic-bezier(.55,0,.25,1)';
-    const opts = { duration: ud, easing: uEase, fill: 'forwards' };
-    const uA = card3d.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(180deg)' }], opts);
-    /* everything else follows the card's angle on smooth curves, sampled at the same eased progress p */
-    const N = 30, FLOOR = 0.2;
-    const curve = (fn) => Array.from({ length: N + 1 }, (_, i) => fn(i / N));
-    const lift = (p) => Math.sin(Math.PI * p);                                   // 0 → 1 (edge-on) → 0
-    const wide = (p) => Math.sqrt(Math.cos(Math.PI * p) ** 2 + FLOOR ** 2) / Math.sqrt(1 + FLOOR ** 2);
-    shift.animate(curve((p) => ({ transform: `scale(${(1 + 0.05 * lift(p)).toFixed(4)})` })), opts);
-    cardShadow.animate(curve((p) => ({
-      transform: `translateY(${(lift(p) * L.u * 2).toFixed(2)}px) scaleX(${wide(p).toFixed(4)})`,
-      opacity: (1 - 0.4 * lift(p)).toFixed(4)
-    })), opts);
-    csFar.animate([{ opacity: 0.75 }, { opacity: 1 }], opts);
-    const shading = curve((p) => ({ opacity: lift(p).toFixed(4) }));
-    shadeFront.animate(shading, opts);
-    shadeBack.animate(shading, opts);
-    setTimeout(() => { if (alive()) stage.classList.add('is-revealed'); }, ud * 0.6);
-    try { await uA.finished; await flyA.finished; } catch (e) { return; }
+    /* 5 — the card turns over, or the invitation unfolds */
+    if (FOLDS.has(front)) {
+      if (!(await unfold(alive))) return;
+    } else {
+      cardOpen = true;
+      const ud = T(1500), uEase = 'cubic-bezier(.55,0,.25,1)';
+      const opts = { duration: ud, easing: uEase, fill: 'forwards' };
+      const uA = card3d.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(180deg)' }], opts);
+      /* everything else follows the card's angle on smooth curves, sampled at the same eased progress p */
+      const N = 30, FLOOR = 0.2;
+      const curve = (fn) => Array.from({ length: N + 1 }, (_, i) => fn(i / N));
+      const lift = (p) => Math.sin(Math.PI * p);                                   // 0 → 1 (edge-on) → 0
+      const wide = (p) => Math.sqrt(Math.cos(Math.PI * p) ** 2 + FLOOR ** 2) / Math.sqrt(1 + FLOOR ** 2);
+      shift.animate(curve((p) => ({ transform: `scale(${(1 + 0.05 * lift(p)).toFixed(4)})` })), opts);
+      cardShadow.animate(curve((p) => ({
+        transform: `translateY(${(lift(p) * L.u * 2).toFixed(2)}px) scaleX(${wide(p).toFixed(4)})`,
+        opacity: (1 - 0.4 * lift(p)).toFixed(4)
+      })), opts);
+      csFar.animate([{ opacity: 0.75 }, { opacity: 1 }], opts);
+      const shading = curve((p) => ({ opacity: lift(p).toFixed(4) }));
+      shadeFront.animate(shading, opts);
+      shadeBack.animate(shading, opts);
+      setTimeout(() => { if (alive()) stage.classList.add('is-revealed'); }, ud * 0.6);
+      try { await uA.finished; await flyA.finished; } catch (e) { return; }
+      if (!alive()) return;
+    }
     if (!alive()) return;
 
     /* settle into plain CSS so the card follows window resizes */
+    stage.classList.remove('is-unfolding');
     stage.classList.add('is-open', 'is-flat');
-    [fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack]
+    [fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack, faceFront, foldInner, shadeInner]
       .forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
     fly.style.transform = '';
     fly.setAttribute('aria-hidden', 'false');
     state = 'open';
     setTimeout(() => { if (alive()) duckEnter(); }, 7000);     // the left duckling arrives a little later
-    setTimeout(() => { if (alive()) stage.classList.add('is-done'); }, T(2200));
+    setTimeout(() => { if (alive()) finish(); }, T(2200));     // then the other letters appear beneath
+  }
+
+  /* the invitation opens like a folded card: the cover lifts toward you on its hinge across the middle
+     and lies flat above, so the card becomes a portrait sheet twice as tall. The card stays centred */
+  async function unfold(alive) {
+    const h = L.hh;                                       // the folded card: one half of the sheet
+    cardOpen = true;
+    layout();                                             // the card is now the whole sheet...
+    stage.classList.add('is-unfolding');                  // ...with the cover folded over its lower half
+    const ud = T(1700), uEase = 'cubic-bezier(.55,0,.25,1)';
+    const opts = { duration: ud, easing: uEase, fill: 'forwards' };
+    const N = 30;
+    const curve = (fn) => Array.from({ length: N + 1 }, (_, i) => fn(i / N));
+    const lift = (p) => Math.sin(Math.PI * p);
+    const up = (p) => Math.max(0, -Math.cos(Math.PI * p));               // how much of the flap shows above the fold
+    const fA = faceFront.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], opts);
+    foldInner.animate([
+      { transform: 'rotateX(0deg) translateY(50%) rotateX(180deg) translateY(-50%)' },
+      { transform: 'rotateX(180deg) translateY(50%) rotateX(180deg) translateY(-50%)' }
+    ], opts);
+    /* what shows runs from the top of the flap to the bottom of the sheet: keep it centred, shadow and all */
+    card3d.animate(curve((p) => ({ transform: `translateY(${(-h * (1 - up(p)) / 2).toFixed(2)}px)` })), opts);
+    cardShadow.animate(curve((p) => ({
+      transform: `translateY(${(lift(p) * L.u * 2).toFixed(2)}px) scaleY(${((1 + up(p)) / 2).toFixed(4)})`,
+      opacity: (1 - 0.3 * lift(p)).toFixed(4)
+    })), opts);
+    shift.animate(curve((p) => ({ transform: `scale(${(1 + 0.03 * lift(p)).toFixed(4)})` })), opts);
+    csFar.animate([{ opacity: 0.75 }, { opacity: 1 }], opts);
+    const shading = curve((p) => ({ opacity: (lift(p) * 0.8).toFixed(4) }));
+    shadeFront.animate(shading, opts);
+    shadeInner.animate(shading, opts);
+    try { await fA.finished; } catch (e) { return false; }
+    if (!alive()) return false;
+    stage.classList.add('is-revealed');                   // the flap lies flat: now the words appear
+    return true;
   }
 
   /* the seal leaves the flap as a free body: a small hop, then gravity takes it off the page */
@@ -1412,12 +1870,15 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     SFX.cut();
     turnSheen(0);
     if (cardWait) cardWait();
-    document.querySelectorAll('.seal.is-falling').forEach((el) => el.remove());
+    document.querySelectorAll('.seal.is-falling, .ghost').forEach((el) => el.remove());
+    tray.replaceChildren();
     resetDucks();
     seal.style.visibility = '';
     run++;
-    [envLand, envMove, letter, seal, flapInner, fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack]
+    [envLand, envMove, letter, seal, flapInner, fly, shift, cardShadow, csFar, card3d, shadeFront, shadeBack, faceFront, foldInner, shadeInner]
       .forEach((el) => el.getAnimations().forEach((a) => a.cancel()));
+    replyMsg.textContent = '';
+    cardOpen = false;
     stage.className = 'stage';
     envLand.classList.remove('landed');
     flap.style.zIndex = '';
@@ -1430,6 +1891,122 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     pending = false;
     layout();
   }
+
+  /* ---------- replying: the RSVP card, which "Kindly RSVP by …" on the invitation brings forward ---------- */
+  const rsvpOpen = $('rsvpOpen'), replyForm = $('replyForm'), replyGuests = $('replyGuests'),
+        replyMsg = $('replyMsg'), replySend = $('replySend');
+  const canSend = !!(request && request.id);                         // not the admin's preview
+  let sending = false;
+
+  /* one row per guest: their name; for each event, its name over attending or not; and their dietary requirements */
+  function renderReply(code) {
+    const t = TEXT[code].reply;
+    rsvpOpen.disabled = !LETTERS.includes('rsvp');
+    $('replyTitle').textContent = TEXT[code].invReply;
+    replyMsg.textContent = '';
+    replyGuests.replaceChildren(...REPLY.map((g) => {
+      const pick = CHOSEN.get(g.id);
+      const row = document.createElement('div');
+      row.className = 'reply-guest';
+      row.dataset.guest = g.id;
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', g.name);
+      const name = document.createElement('p');
+      name.className = 'reply-name';
+      name.textContent = g.name;
+      const events = make('div', 'reply-events', '');
+      events.append(...EVENTS.filter((e) => e.reply).map((e) => {
+        const what = (e[code] || e.en).name;
+        const event = make('div', 'reply-event', '');
+        event.dataset.answer = e.reply;
+        event.setAttribute('role', 'group');
+        event.setAttribute('aria-label', what);
+        const choices = make('div', 'reply-choices', '');
+        choices.append(...ANSWERED.map((value) => {
+          const b = make('button', 'reply-choice', t[value]);
+          b.type = 'button';
+          b.dataset.value = value;
+          b.setAttribute('aria-pressed', String(pick.answers[e.reply] === value));
+          return b;
+        }));
+        event.append(make('p', 'reply-event-name', what), choices);
+        return event;
+      }));
+      /* dietary requirements: a line like the events', its name on the left and the box where their choices are.
+         The box sits on hidden copies of the choices, so it is exactly as wide as they are */
+      const diet = document.createElement('input');
+      Object.assign(diet, { type: 'text', className: 'reply-diet', id: `diet${g.id}`, maxLength: 300, placeholder: t.dietaryHint,
+                            value: pick.dietary, autocomplete: 'off' });
+      diet.setAttribute('aria-label', `${t.dietary}: ${g.name}`);
+      const sizer = make('span', 'reply-choices reply-sizer', '');
+      sizer.setAttribute('aria-hidden', 'true');
+      sizer.append(...ANSWERED.map((value) => make('span', 'reply-choice', t[value])));
+      const slot = make('div', 'reply-diet-slot', '');
+      slot.append(sizer, diet);
+      const dietLine = make('div', 'reply-event', '');
+      const label = make('label', 'reply-event-name', t.dietary);
+      label.htmlFor = diet.id;
+      dietLine.append(label, slot);
+      events.append(dietLine);
+      row.append(name, events);
+      return row;
+    }));
+    updateSend();
+  }
+  function updateSend() {
+    const t = TEXT[root.lang].reply;
+    replySend.textContent = sending ? t.sending : t.send;
+    replySend.disabled = sending || !canSend || ![...CHOSEN.values()].some(picked);
+  }
+  replyGuests.addEventListener('click', (e) => {
+    const b = e.target.closest('.reply-choice');
+    if (!b || sending) return;
+    const row = b.closest('.reply-guest'), event = b.closest('.reply-event'), pick = CHOSEN.get(Number(row.dataset.guest));
+    pick.answers[event.dataset.answer] = b.dataset.value;
+    event.querySelectorAll('.reply-choice').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+    replyMsg.textContent = '';
+    updateSend();
+  });
+  replyGuests.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('reply-diet')) return;
+    CHOSEN.get(Number(e.target.closest('.reply-guest').dataset.guest)).dietary = e.target.value;
+    replyMsg.textContent = '';
+  });
+  replyForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    /* each guest with an answer, for whichever events they've answered; the dietary requirements only for someone coming */
+    const replies = REPLY.map((g) => [g, CHOSEN.get(g.id)]).filter(([, c]) => picked(c))
+      .map(([g, c]) => ({ guest_id: g.id, ...Object.fromEntries(ANSWERS.filter((k) => c.answers[k]).map((k) => [k, c.answers[k]])),
+                          dietary: coming(c) ? c.dietary.trim().slice(0, 300) : '' }));
+    if (!replies.length || sending || !canSend) return;
+    const t = () => TEXT[root.lang].reply;
+    sending = true;
+    updateSend();
+    let ok = false;
+    try {
+      const r = await fetch(`/api/invite/${request.id}/rsvp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ replies })
+      });
+      const d = r.ok ? await r.json() : null;
+      if (d && Array.isArray(d.guests)) {
+        const typed = new Map([...CHOSEN].map(([id, c]) => [id, c.dietary]));
+        setReply(d.guests);
+        for (const [id, c] of CHOSEN) if (!picked(c) && typed.has(id)) c.dietary = typed.get(id);   // keep what wasn't sent
+        ok = true;
+      }
+    } catch (err) {}
+    sending = false;
+    if (ok) renderReply(root.lang);
+    else updateSend();
+    replyMsg.textContent = ok ? t().thanks : t().error;
+  });
+
+  /* the RSVP card comes forward just as it would if tapped in the row beneath, which may not be out yet */
+  rsvpOpen.addEventListener('click', async () => {
+    const hadFocus = document.activeElement === rsvpOpen;
+    finish();
+    if ((await bringForward('rsvp')) && hadFocus) (replyGuests.querySelector('.reply-choice') || replySend).focus({ preventScroll: true });
+  });
 
   /* ---------- the ducklings ---------- */
   const duckA = $('duckA'), duckB = $('duckB'), ducks = duckA.parentElement;
@@ -1525,6 +2102,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     const D = d === duckA ? rt.left - rd.width * 0.8 - rd.left : rt.right + rd.width * 0.8 - rd.right;
     const ms = Math.max(380, Math.min(720, Math.abs(D) * 2.2));
     await hop(d, 16);
+    if (my !== run) return;                               // the card was replayed, or another letter brought forward
     if (duckRounds === 0) {                               // the first time, she blushes as he runs up
       to.style.setProperty('--blush-ms', ms + 'ms');
       to.classList.add('blushing');
@@ -1549,14 +2127,18 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     } else {
       await Promise.all([hop(d, 32), hop(to, 32)]);
       if (my !== run) return;
-      const ra = duckA.getBoundingClientRect(), rb = duckB.getBoundingClientRect();
-      balloonFountain((Math.min(ra.left, rb.left) + Math.max(ra.right, rb.right)) / 2, Math.min(ra.top, rb.top) + ra.height * 0.3);
+      pairFountain();
       d.classList.add('together');
       ducks.classList.add('paired');
       d.getAnimations().forEach((a) => a.cancel());
       d.classList.remove('busy');
       duckBusy = false;
     }
+  }
+  /* the finale's balloons, from just above the pair */
+  function pairFountain() {
+    const ra = duckA.getBoundingClientRect(), rb = duckB.getBoundingClientRect();
+    balloonFountain((Math.min(ra.left, rb.left) + Math.max(ra.right, rb.right)) / 2, Math.min(ra.top, rb.top) + ra.height * 0.3);
   }
   /* ---------- heart balloons: they rise, then gather under the gold frame like balloons ---------- */
   const balloonLayer = $('balloons');
@@ -1662,9 +2244,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   }
   window.addEventListener('resize', renderBalloons);
 
-  /* the left duckling walks in from behind the gold frame line, then hops */
+  /* the left duckling walks in from behind the gold frame line, then hops; only while their letter is in front */
   async function duckEnter() {
-    if (!ducks.classList.contains('awaiting')) return;
+    if (front !== ducks.dataset.onLetter || !ducks.classList.contains('awaiting')) return;
     const my = run, face = part(duckA, '.duck-face');
     const from = getComputedStyle(face).transform;
     duckBusy = true;
@@ -1680,6 +2262,23 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     ducks.classList.remove('entering');
     await hop(duckA, 22);
     if (my === run) duckBusy = false;
+  }
+  /* another letter is coming forward, maybe mid-move: the ducklings keep what has happened (who holds the
+     heart, how often it has gone over, the balloons) and drop what was in flight, so their letter finds
+     them as it left them. A duckling still walking in walks in again next time */
+  function settleDucks() {
+    const scripted = (a) => !(a instanceof CSSAnimation || a instanceof CSSTransition);   // hops and runs, not the heartbeat
+    [duckA, duckB].forEach((d) => {
+      d.getAnimations({ subtree: true }).filter(scripted).forEach((a) => a.cancel());
+      d.classList.remove('busy', 'back', 'running', 'walking');
+    });
+    if (ducks.classList.contains('entering')) ducks.classList.replace('entering', 'awaiting');
+    if (duckRounds >= 3 && !ducks.classList.contains('paired')) {   // the third handover happened: they stay together
+      other(holder).classList.add('together');
+      ducks.classList.add('paired');
+      pairFountain();                                     // and their balloons rise, out of sight, while the letter's away
+    }
+    duckBusy = false;
   }
   function resetDucks() {
     resetBalloons();
@@ -1698,6 +2297,127 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   [duckA, duckB].forEach((d) => {
     d.addEventListener('click', () => sendHeart(d));
     d.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sendHeart(d); } });
+  });
+
+  /* ---------- the other letters: a row beneath the open card, earliest on the left; a tap brings one forward ---------- */
+  /* copies show their words straight away, and keep no ids, working links or anything the keyboard can reach */
+  function still(el) {
+    for (const n of [el, ...el.querySelectorAll('.rv, [id], a[href]')]) {
+      n.classList.remove('rv');
+      n.removeAttribute('id');
+      n.removeAttribute('href');
+    }
+    el.inert = true;
+    return el;
+  }
+  /* a letter's printed side, drawn full size and scaled down to fit its place in the row */
+  function miniature(key) {
+    const print = document.createElement('span');
+    print.className = 'tray-print';
+    print.style.setProperty('--hh', `${L.wf / shapeOf(key)}px`);   // drawn at its own letter's height
+    const parts = [backFace.querySelector(`[data-letter="${key}"]`), ...backFace.querySelectorAll(`[data-on-letter="${key}"]`)]
+      .map((el) => Object.assign(el.cloneNode(true), { hidden: false }));
+    print.append(backFace.querySelector('.frame').cloneNode(true), ...parts);   // the letter, and the ducklings as they are now
+    return still(print);
+  }
+  /* as big as the room under the card allows, up to 150px wide */
+  function sizeTray() {
+    const others = Math.max(1, LETTERS.length - 1), gap = Math.max(14, Math.min(32, L.vh * 0.032));
+    const room = (L.vh - L.hh) / 2 - gap - (L.vh <= 480 ? 36 : 42);              // less the label and a margin
+    const shortest = Math.min(...LETTERS.filter((k) => k !== front).map(shapeOf), FOLDED);   // the tallest thumbnail
+    const tw = Math.max(44, Math.min(150, L.vw * 0.3, (L.vw * 0.9 - (others - 1) * 20) / others, room * shortest));
+    root.style.setProperty('--tw', `${tw.toFixed(1)}px`);
+    root.style.setProperty('--ts', (tw / L.wf).toFixed(4));
+    root.style.setProperty('--tray-gap', `${gap.toFixed(1)}px`);
+  }
+  /* every letter but the one in front, earliest on the left; away is kept as an empty place for now */
+  function renderTray(away = null) {
+    const t = TEXT[root.lang];
+    sizeTray();
+    tray.replaceChildren(...LETTERS.filter((k) => k !== front).map((k) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = `tray-item${k === away ? ' is-away' : ''}`;
+      item.dataset.letter = k;
+      const card = document.createElement('span');
+      card.className = 'tray-card paper';
+      card.style.setProperty('--r', shapeOf(k));
+      card.setAttribute('aria-hidden', 'true');
+      card.append(miniature(k));
+      const label = document.createElement('span');
+      label.className = 'tray-label';
+      label.textContent = t.letters[k];
+      item.append(card, label);
+      return item;
+    }));
+  }
+  function showTray() {
+    if (LETTERS.length < 2 || stage.classList.contains('has-tray')) return;
+    renderTray();
+    stage.classList.add('has-tray');
+  }
+  /* once the card is open: the replay button, and the other letters beneath */
+  function finish() {
+    stage.classList.add('is-done');
+    showTray();
+  }
+  /* the chosen letter grows up out of its place in the row as a still copy of the one in front
+     shrinks back into the row. Resolves true once it is in front */
+  async function bringForward(key) {
+    const item = tray.querySelector(`[data-letter="${key}"]`);
+    if (state !== 'open' || key === front || !item) return false;
+    state = 'swapping';
+    const my = ++run, alive = () => my === run;          // also stops the ducklings mid-run
+    const back = front, hadFocus = item.contains(document.activeElement);
+    const cardR = fly.getBoundingClientRect();
+    const fromR = item.querySelector('.tray-card').getBoundingClientRect();
+    const before = new Map([...tray.children].map((el) => [el.dataset.letter, el.getBoundingClientRect()]));
+    settleDucks();                                        // before the copy, so it carries them as they'll stay
+
+    const ghost = document.createElement('div');
+    ghost.className = 'ghost';
+    ghost.setAttribute('aria-hidden', 'true');
+    Object.assign(ghost.style, { left: `${cardR.left}px`, top: `${cardR.top}px`, width: `${cardR.width}px`, height: `${cardR.height}px` });
+    ghost.style.setProperty('--hh', `${L.hh}px`);         // the card's shape changes under it; the copy keeps the old one
+    const face = still(backFace.cloneNode(true));
+    face.classList.remove('face-back');
+    ghost.append(face);
+    stage.append(ghost);
+
+    stage.classList.add('is-swapping');
+    showLetter(key);
+    renderTray(back);
+    const toR = tray.querySelector(`[data-letter="${back}"] .tray-card`).getBoundingClientRect();
+    const newR = fly.getBoundingClientRect();             // the card in the new letter's shape
+    const at = (r, base = cardR) => `translate(${r.left - base.left}px, ${r.top - base.top}px) scale(${r.width / base.width})`;
+    const d = T(900);
+    const rise = fly.animate([{ transform: at(fromR, newR) }, { transform: 'translate(0px, 0px) scale(1)' }],
+      { duration: d, easing: 'cubic-bezier(.3,.1,.15,1)', fill: 'forwards' });
+    const sink = ghost.animate([{ transform: 'translate(0px, 0px) scale(1)' }, { transform: at(toR) }],
+      { duration: d, easing: 'cubic-bezier(.55,0,.2,1)', fill: 'forwards' });
+    for (const el of tray.children) {                     // any others slide along to their new places
+      const was = before.get(el.dataset.letter);
+      if (!was || el.dataset.letter === back) continue;
+      const now = el.getBoundingClientRect();
+      el.animate([{ transform: `translate(${was.left - now.left}px, ${was.top - now.top}px)` }, { transform: 'none' }],
+        { duration: d, easing: 'cubic-bezier(.3,.1,.15,1)' });
+    }
+    try { await Promise.all([rise.finished, sink.finished]); } catch (e) { return false; }
+    if (!alive()) return false;
+    rise.cancel();                                        // a held transform would keep the card a bitmap
+    ghost.remove();
+    const placed = tray.querySelector(`[data-letter="${back}"]`);
+    placed.classList.remove('is-away');
+    placed.querySelector('.tray-label').animate([{ opacity: 0 }, {}], { duration: 400, easing: 'ease' });
+    stage.classList.remove('is-swapping');
+    state = 'open';
+    if (hadFocus) placed.focus({ preventScroll: true });
+    setTimeout(() => { if (alive()) duckEnter(); }, 2600);   // only if it's their letter, and they haven't yet
+    return true;
+  }
+  tray.addEventListener('click', (e) => {
+    const item = e.target.closest('.tray-item');
+    if (item) bringForward(item.dataset.letter);
   });
 
   /* ---------- hidden admin: tap 囍 five times on the language screen ----------
@@ -1852,7 +2572,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 
   async function choose(code, celebrate) {
     picker.classList.remove('is-shown');
+    front = OPENS;                                       // every play opens on the admin's pick
     applyLanguage(code);
+    layout();                                            // that letter's shape, now the guest's letters are known
     const cue = celebrate && !reduce ? wait(180).then(heartsBurst) : wait(T(700));
     await Promise.all([fontsReady, cue]);
     requestAnimationFrame(() => requestAnimationFrame(land));

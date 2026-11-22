@@ -14,3 +14,12 @@ services:
   web:
     volumes:
       - ./frontend/public:/usr/share/nginx/html:ro
+      - ./frontend/dev/livereload.conf:/etc/nginx/dev.d/livereload.conf:ro
+
+  # Tells open pages to reload when anything in frontend/public changes
+  livereload:
+    image: python:3.12-alpine
+    command: ["python", "-u", "/livereload.py"]
+    volumes:
+      - ./frontend/public:/watch:ro
+      - ./frontend/dev/livereload.py:/livereload.py:ro

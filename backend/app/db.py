@@ -28,21 +28,52 @@ def get_db(request: Request) -> Iterator[Session]:
         yield db
 
 
-# Columns added after the first release. create_all() makes new tables but never changes old ones,
-# so these are added in place; each is (table, column, SQL type and default).
+# create_all() makes new tables but never changes old ones, so columns renamed or added after the
+# first release are changed in place.
+
+# (table, old name, new name)
+RENAMED_COLUMNS = [
+    ("guests", "rsvp", "reception_rsvp"),  # when the tea ceremony got an answer of its own
+]
+
+# (table, column, SQL type and default)
 ADDED_COLUMNS = [
     ("guests", "category", "VARCHAR(60) NOT NULL DEFAULT ''"),
     ("guests", "location", "VARCHAR(60) NOT NULL DEFAULT ''"),
+    ("guests", "dietary", "VARCHAR(300) NOT NULL DEFAULT ''"),
+    ("letters", "opens_first", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("guests", "tea_rsvp", "VARCHAR(16) NOT NULL DEFAULT 'no_response'"),
 ]
+
+# Added columns that start as a copy of another. Before the tea ceremony had an answer of its own, a
+# guest's one answer was to an invitation listing both events, so it holds for both.
+COPIED_COLUMNS = {
+    ("guests", "tea_rsvp"): "reception_rsvp",
+}
 
 
 def upgrade(engine: Engine) -> None:
-    """Creates missing tables and adds any missing columns. Safe to run on every start."""
+    """Creates missing tables, renames and adds any missing columns and gives each of the card's
+    letters a row. Safe to run on every start."""
+    from .letters import seed_letters
     from .models import Base
 
     Base.metadata.create_all(engine)
     with engine.begin() as conn:
-        insp = inspect(conn)
+
+        def columns(table: str) -> set[str]:
+            return {c["name"] for c in inspect(conn).get_columns(table)}  # a fresh look: inspectors cache
+
+        for table, old, new in RENAMED_COLUMNS:
+            have = columns(table)
+            if old in have and new not in have:
+                conn.execute(text(f"ALTER TABLE {table} RENAME COLUMN {old} TO {new}"))
         for table, column, ddl in ADDED_COLUMNS:
-            if column not in {c["name"] for c in insp.get_columns(table)}:
+            if column not in columns(table):
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
+                source = COPIED_COLUMNS.get((table, column))
+                if source:
+                    conn.execute(text(f"UPDATE {table} SET {column} = {source} WHERE {source} IS NOT NULL"))
+    with Session(engine) as db:
+        seed_letters(db)
+        db.commit()

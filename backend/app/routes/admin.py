@@ -18,6 +18,7 @@ from ..guests import (
     next_rank,
     renumber,
 )
+from ..letters import all_letters, change_letter
 from ..models import Group, Guest, utcnow
 from ..schemas import (
     ClearIn,
@@ -29,6 +30,9 @@ from ..schemas import (
     GuestUpdate,
     ImportIn,
     ImportOut,
+    LetterKind,
+    LetterOut,
+    LetterUpdate,
     LinkGroupOut,
     OrderIn,
     SentIn,
@@ -123,12 +127,16 @@ def update_guest(guest_id: int, body: GuestUpdate, db: Session = Depends(get_db)
     guest = get_guest(db, guest_id)
     if body.name is not None:
         guest.name = body.name
-    if body.rsvp is not None:
-        guest.rsvp = body.rsvp
+    if body.tea_rsvp is not None:
+        guest.tea_rsvp = body.tea_rsvp
+    if body.reception_rsvp is not None:
+        guest.reception_rsvp = body.reception_rsvp
     if body.category is not None:
         guest.category = body.category
     if body.location is not None:
         guest.location = body.location
+    if body.dietary is not None:
+        guest.dietary = body.dietary
     for kind in ("save_the_date", "invitation"):
         sent = getattr(body, f"{kind}_sent")
         if sent is not None:
@@ -166,6 +174,21 @@ def clear_list(_body: ClearIn, db: Session = Depends(get_db)) -> ClearOut:
     groups = db.execute(delete(Group)).rowcount
     db.commit()
     return ClearOut(groups_deleted=groups, guests_deleted=guests)
+
+
+@router.get("/letters", response_model=list[LetterOut], dependencies=root)
+def list_letters(db: Session = Depends(get_db)) -> list[LetterOut]:
+    """Every letter the card has, earliest (rank 1) first."""
+    return [LetterOut.model_validate(letter) for letter in all_letters(db)]
+
+
+@router.patch("/letters/{kind}", response_model=list[LetterOut], dependencies=root)
+def update_letter(kind: LetterKind, body: LetterUpdate, db: Session = Depends(get_db)) -> list[LetterOut]:
+    """Switches a letter on or off, gives it another rank (the letter that had it takes this one's old rank),
+    or makes it the one guests' cards open on. Returns every letter, as GET /letters does."""
+    change_letter(db, kind, active=body.active, rank=body.rank, opens_first=bool(body.opens_first))
+    db.commit()
+    return list_letters(db)
 
 
 @router.post("/import", response_model=ImportOut, dependencies=root)

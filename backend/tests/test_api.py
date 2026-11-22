@@ -167,8 +167,57 @@ def test_invite_lists_names_in_rank_order(client):
 
     client.post("/api/auth/logout")  # guests aren't signed in
     r = client.get(f"/api/invite/{g['public_id']}")
-    assert r.json() == {"names": ["Linh Tran", "Minh Tran", "Baby Tran"]}
+    assert r.json()["names"] == ["Linh Tran", "Minh Tran", "Baby Tran"]
+    assert r.json()["letters"] == ["save_the_date"]
+    assert [(x["id"], x["name"], x["tea_rsvp"], x["reception_rsvp"], x["dietary"]) for x in r.json()["guests"]] == [
+        (ids["Linh Tran"], "Linh Tran", "no_response", "no_response", ""),
+        (ids["Minh Tran"], "Minh Tran", "no_response", "no_response", ""),
+        (ids["Baby Tran"], "Baby Tran", "no_response", "no_response", ""),
+    ]
     assert client.get(f"/api/invite/{g['public_id'].upper()}").status_code == 200
+
+
+def test_guests_reply_from_their_link(client):
+    sign_in(client, ROOT_PW)
+    g = new_group(client, "Tran household", ["Minh Tran", "Linh Tran", "Baby Tran"])
+    other = new_group(client, "Nguyen household", ["Hoa Nguyen"])
+    minh, linh, baby = (x["id"] for x in g["guests"])
+    client.post("/api/auth/logout")  # guests aren't signed in
+
+    url = f"/api/invite/{g['public_id']}/rsvp"
+    answers = lambda r: [(x["tea_rsvp"], x["reception_rsvp"], x["dietary"]) for x in r.json()["guests"]]  # noqa: E731
+    r = client.post(url, json={"replies": [
+        {"guest_id": minh, "tea_rsvp": "attending", "reception_rsvp": "attending", "dietary": "  no   peanuts "},
+        {"guest_id": linh, "tea_rsvp": "not_attending", "reception_rsvp": "attending", "dietary": "Halal"},
+    ]})
+    assert r.status_code == 200, r.text
+    assert answers(r) == [
+        ("attending", "attending", "no peanuts"), ("not_attending", "attending", "Halal"),
+        ("no_response", "no_response", "")]
+
+    # a guest can change their mind; anyone left out, and any event left out, keeps their answer
+    r = client.post(url, json={"replies": [{"guest_id": minh, "reception_rsvp": "not_attending", "dietary": "no peanuts"}]})
+    assert answers(r)[0] == ("attending", "not_attending", "no peanuts")  # still coming to the tea ceremony
+    r = client.post(url, json={"replies": [{"guest_id": minh, "tea_rsvp": "not_attending", "dietary": "ignored"}]})
+    assert answers(r)[0] == ("not_attending", "not_attending", "")  # dietary only kept for someone coming
+    assert answers(r)[1] == ("not_attending", "attending", "Halal")
+
+    # only this link's guests, only real answers, at least one of them, and the admin sees it
+    assert client.post(url, json={"replies": [{"guest_id": other["guests"][0]["id"], "tea_rsvp": "attending"}]}).status_code == 422
+    assert client.post(url, json={"replies": [{"guest_id": baby, "tea_rsvp": "no_response"}]}).status_code == 422
+    assert client.post(url, json={"replies": [{"guest_id": baby, "dietary": "Vegetarian"}]}).status_code == 422
+    assert client.post(url, json={"replies": [{"guest_id": baby, "rsvp": "attending"}]}).status_code == 422  # the old shape
+    assert client.post(url, json={"replies": [{"guest_id": baby, "reception_rsvp": "attending", "dietary": "x" * 301}]}).status_code == 422
+    assert client.post(url, json={"replies": []}).status_code == 422
+    assert client.post("/api/invite/zzzzzzzz/rsvp", json={"replies": [{"guest_id": baby, "tea_rsvp": "attending"}]}).status_code == 404
+
+    client.post(url, json={"replies": [{"guest_id": baby, "reception_rsvp": "attending", "dietary": "Vegetarian"}]})
+    sign_in(client, ROOT_PW)
+    group = next(x for x in client.get("/api/admin/groups").json() if x["id"] == g["id"])
+    baby_now = group["guests"][2]
+    assert (baby_now["tea_rsvp"], baby_now["reception_rsvp"], baby_now["dietary"]) == ("no_response", "attending", "Vegetarian")
+    r = client.patch(f"/api/admin/guests/{baby}", json={"dietary": "Vegan"})
+    assert r.json()["guests"][2]["dietary"] == "Vegan"
 
 
 def test_unknown_or_malformed_links_are_404(client):
@@ -195,11 +244,14 @@ def test_rsvp_and_sent_tracking(client):
     assert all(x["invitation_sent_at"] is None for x in g["guests"])
     assert g["guests"][0]["save_the_date_sent_at"].endswith("+00:00")
 
-    g = client.patch(f"/api/admin/guests/{b}", json={"save_the_date_sent": False, "rsvp": "attending"}).json()
+    g = client.patch(f"/api/admin/guests/{b}", json={"save_the_date_sent": False, "reception_rsvp": "attending"}).json()
     assert [bool(x["save_the_date_sent_at"]) for x in g["guests"]] == [True, False]
-    assert [x["rsvp"] for x in g["guests"]] == ["no_response", "attending"]
+    assert [(x["tea_rsvp"], x["reception_rsvp"]) for x in g["guests"]] == [("no_response", "no_response"), ("no_response", "attending")]
+    g = client.patch(f"/api/admin/guests/{b}", json={"tea_rsvp": "not_attending"}).json()
+    assert (g["guests"][1]["tea_rsvp"], g["guests"][1]["reception_rsvp"]) == ("not_attending", "attending")
 
-    assert client.patch(f"/api/admin/guests/{a}", json={"rsvp": "maybe"}).status_code == 422
+    assert client.patch(f"/api/admin/guests/{a}", json={"tea_rsvp": "maybe"}).status_code == 422
+    assert client.patch(f"/api/admin/guests/{a}", json={"reception_rsvp": "maybe"}).status_code == 422
     assert client.patch(f"/api/admin/guests/{a}", json={"name": "   "}).status_code == 422
 
 
@@ -252,11 +304,30 @@ def test_import_groups_ranks_and_is_repeatable(client):
     assert list(groups) == ["Sarah Jones", "The Lees", "Tran household"]  # alphabetical
     assert [x["name"] for x in groups["The Lees"]["guests"]] == ["Grandma Lee", "Uncle David", "Aunt Mei"]
     assert [x["name"] for x in groups["Tran household"]["guests"]] == ["Linh Tran", "Minh Tran"]
-    assert [x["rsvp"] for x in groups["The Lees"]["guests"]] == ["attending", "no_response", "no_response"]
-    assert groups["Tran household"]["guests"][1]["rsvp"] == "not_attending"
+    # one RSVP column answers for both events
+    assert [x["tea_rsvp"] for x in groups["The Lees"]["guests"]] == ["attending", "no_response", "no_response"]
+    assert [x["reception_rsvp"] for x in groups["The Lees"]["guests"]] == ["attending", "no_response", "no_response"]
+    assert groups["Tran household"]["guests"][1]["tea_rsvp"] == "not_attending"
+    assert groups["Tran household"]["guests"][1]["reception_rsvp"] == "not_attending"
 
     again = client.post("/api/admin/import", json={"csv": CSV}).json()
     assert again == {"groups_created": 0, "guests_added": 0, "guests_skipped": 6, "guests_updated": 0, "rows_ignored": 1}
+
+
+def test_import_reads_an_rsvp_for_each_event(client):
+    sign_in(client, ROOT_PW)
+    client.post("/api/admin/import", json={"csv": (
+        "Group,Name,Tea Ceremony RSVP,Reception,RSVP\n"
+        "The Lees,Grandma Lee,yes,no,no\n"
+        "The Lees,Uncle David,,yes,yes\n")})
+    (lees,) = client.get("/api/admin/groups").json()
+    # an event's own column wins over the one for both, even when it's blank
+    assert [(x["tea_rsvp"], x["reception_rsvp"]) for x in lees["guests"]] == [
+        ("attending", "not_attending"), ("no_response", "attending")]
+
+    client.post("/api/admin/import", json={"csv": "group,name,tea_rsvp\nWork,Sam Park,declined\n"})
+    work = next(g for g in client.get("/api/admin/groups").json() if g["name"] == "Work")
+    assert (work["guests"][0]["tea_rsvp"], work["guests"][0]["reception_rsvp"]) == ("not_attending", "no_response")
 
 
 def test_import_adds_to_an_existing_group_after_its_guests(client):
@@ -318,6 +389,8 @@ def test_upgrade_adds_category_to_an_older_database(settings):
                              invitation_sent_at DATETIME, created_at DATETIME, updated_at DATETIME);
         INSERT INTO groups VALUES (1, 'abc', 'Old', '2026-01-01');
         INSERT INTO guests VALUES (1, 1, 'Ana', 0, 'attending', NULL, NULL, '2026-01-01', '2026-01-01');
+        INSERT INTO guests VALUES (2, 1, 'Bo', 1, 'not_attending', NULL, NULL, '2026-01-01', '2026-01-01');
+        INSERT INTO guests VALUES (3, 1, 'Cy', 2, 'no_response', NULL, NULL, '2026-01-01', '2026-01-01');
     """)
     con.commit()
     con.close()
@@ -326,6 +399,17 @@ def test_upgrade_adds_category_to_an_older_database(settings):
         (group,) = c.get("/api/admin/groups").json()
         assert group["guests"][0]["category"] == ""
         assert group["guests"][0]["location"] == ""
+        assert c.get("/api/letters").json()["letters"] == ["save_the_date"]  # from before the letters
+        # the one answer from before the tea ceremony had its own holds for both events
+        assert [(x["tea_rsvp"], x["reception_rsvp"]) for x in group["guests"]] == [
+            ("attending", "attending"), ("not_attending", "not_attending"), ("no_response", "no_response")]
+        g = c.post(f"/api/admin/groups/{group['id']}/guests", json={"name": "Di"}).json()
+        assert (g["guests"][3]["tea_rsvp"], g["guests"][3]["reception_rsvp"]) == ("no_response", "no_response")
+
+    with TestClient(create_app(settings)) as c:  # upgrading again changes nothing
+        sign_in(c, ROOT_PW)
+        (group,) = c.get("/api/admin/groups").json()
+        assert [x["tea_rsvp"] for x in group["guests"]] == ["attending", "not_attending", "no_response", "no_response"]
 
 
 def test_import_needs_a_name_heading(client):
@@ -360,6 +444,130 @@ def test_clear_list_then_import_fresh(client):
 def test_link_admin_cannot_clear(client):
     sign_in(client, LINK_PW)
     assert client.post("/api/admin/clear", json={"confirm": "delete"}).status_code == 403
+
+
+# ---------------------------------------------------------------- letters (save the date, invitation, RSVP, details)
+
+def letters(client: TestClient) -> list[tuple[str, bool, int]]:
+    r = client.get("/api/admin/letters")
+    assert r.status_code == 200, r.text
+    return [(x["kind"], x["active"], x["rank"]) for x in r.json()]
+
+
+def opener(client: TestClient) -> str:
+    (kind,) = [x["kind"] for x in client.get("/api/admin/letters").json() if x["opens_first"]]
+    return kind
+
+
+def test_only_the_save_the_date_is_active_at_first(client):
+    sign_in(client, ROOT_PW)
+    group = new_group(client, "The Lees", ["Grandma Lee"])
+    assert letters(client) == [("save_the_date", True, 1), ("invitation", False, 2), ("rsvp", False, 3), ("details", False, 4)]
+    assert opener(client) == "save_the_date"
+    client.post("/api/auth/logout")  # guests aren't signed in
+    r = client.get(f"/api/invite/{group['public_id']}").json()
+    assert (r["letters"], r["opens"]) == (["save_the_date"], "save_the_date")
+    assert client.get("/api/letters").json() == {"letters": ["save_the_date"], "opens": "save_the_date"}
+
+
+def test_active_letters_come_earliest_first(client):
+    sign_in(client, ROOT_PW)
+    group = new_group(client, "The Lees", ["Grandma Lee"])
+
+    def shown() -> list[str]:
+        return client.get(f"/api/invite/{group['public_id']}").json()["letters"]
+
+    r = client.patch("/api/admin/letters/invitation", json={"active": True})
+    assert r.status_code == 200, r.text
+    assert shown() == ["save_the_date", "invitation"]
+
+    # rank 2 is the invitation's, so the two swap
+    r = client.patch("/api/admin/letters/save_the_date", json={"rank": 2})
+    assert [(x["kind"], x["rank"]) for x in r.json()] == [("invitation", 1), ("save_the_date", 2), ("rsvp", 3), ("details", 4)]
+    assert shown() == ["invitation", "save_the_date"]
+    assert client.get("/api/letters").json()["letters"] == ["invitation", "save_the_date"]
+
+
+def test_the_admin_picks_the_letter_cards_open_on(client):
+    sign_in(client, ROOT_PW)
+    group = new_group(client, "The Lees", ["Grandma Lee"])
+
+    def card() -> tuple[list[str], str]:
+        r = client.get(f"/api/invite/{group['public_id']}").json()
+        return r["letters"], r["opens"]
+
+    # switching letters on leaves the card opening where it did
+    for kind in ("invitation", "rsvp", "details"):
+        assert client.patch(f"/api/admin/letters/{kind}", json={"active": True}).status_code == 200
+    assert card() == (["save_the_date", "invitation", "rsvp", "details"], "save_the_date")
+
+    # the invitation, though it isn't the newest
+    r = client.patch("/api/admin/letters/invitation", json={"opens_first": True})
+    assert r.status_code == 200, r.text
+    assert [x["kind"] for x in r.json() if x["opens_first"]] == ["invitation"]
+    assert card() == (["save_the_date", "invitation", "rsvp", "details"], "invitation")
+
+    # the letter cards open on can't be switched off until another opens first
+    r = client.patch("/api/admin/letters/invitation", json={"active": False})
+    assert r.status_code == 422 and "open" in r.json()["detail"]
+    assert client.patch("/api/admin/letters/save_the_date", json={"active": False}).status_code == 200
+    assert card() == (["invitation", "rsvp", "details"], "invitation")
+
+    # picking a letter that is off switches it on
+    r = client.patch("/api/admin/letters/save_the_date", json={"opens_first": True})
+    assert r.status_code == 200, r.text
+    assert card() == (["save_the_date", "invitation", "rsvp", "details"], "save_the_date")
+    assert client.patch("/api/admin/letters/invitation", json={"active": False}).status_code == 200
+
+    # it can't be unpicked, only replaced, and can't be picked while switching it off
+    assert client.patch("/api/admin/letters/rsvp", json={"opens_first": False}).status_code == 422
+    assert client.patch("/api/admin/letters/rsvp", json={"opens_first": True, "active": False}).status_code == 422
+    assert opener(client) == "save_the_date"
+
+
+def test_one_letter_must_stay_active(client):
+    sign_in(client, ROOT_PW)
+    r = client.patch("/api/admin/letters/save_the_date", json={"active": False})
+    assert r.status_code == 422 and "active" in r.json()["detail"]
+    # switching off a letter that is already off is fine
+    assert client.patch("/api/admin/letters/invitation", json={"active": False}).status_code == 200
+    assert client.get("/api/letters").json()["letters"] == ["save_the_date"]
+
+
+def test_letter_ranks_and_kinds_are_checked(client):
+    sign_in(client, ROOT_PW)
+    for body in ({"rank": 0}, {"rank": 5}, {"rank": "x"}, {"active": "maybe"}):
+        assert client.patch("/api/admin/letters/invitation", json=body).status_code == 422, body
+    assert client.patch("/api/admin/letters/thank_you", json={"active": True}).status_code == 422
+    # a refused change leaves everything as it was, even the parts that were fine
+    assert client.patch("/api/admin/letters/save_the_date", json={"rank": 2, "active": False}).status_code == 422
+    assert letters(client) == [("save_the_date", True, 1), ("invitation", False, 2), ("rsvp", False, 3), ("details", False, 4)]
+
+
+def test_only_root_can_change_letters(client):
+    assert client.get("/api/admin/letters").status_code == 401
+    assert client.patch("/api/admin/letters/invitation", json={"active": True}).status_code == 401
+    sign_in(client, LINK_PW)
+    assert client.get("/api/admin/letters").status_code == 403
+    assert client.patch("/api/admin/letters/invitation", json={"active": True}).status_code == 403
+
+
+def test_upgrade_adds_missing_letters_and_closes_rank_gaps(settings):
+    with TestClient(create_app(settings)):
+        pass
+    con = sqlite3.connect(settings.database_path)
+    # as if the card had only the save the date and the invitation, with the invitation switched on,
+    # from before the admin could pick the letter cards open on
+    con.execute("DELETE FROM letters WHERE kind IN ('rsvp', 'details')")
+    con.execute("UPDATE letters SET rank = 5, active = 1 WHERE kind = 'invitation'")
+    con.execute("UPDATE letters SET opens_first = 0")
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        # the new letters arrive switched off, ranked above the others as the newest; nothing guests see changes
+        assert letters(c) == [("save_the_date", True, 1), ("invitation", True, 2), ("rsvp", False, 3), ("details", False, 4)]
+        assert c.get("/api/letters").json() == {"letters": ["save_the_date", "invitation"], "opens": "invitation"}
 
 
 # ---------------------------------------------------------------- backups

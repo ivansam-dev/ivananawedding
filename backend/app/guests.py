@@ -65,7 +65,9 @@ HEADER_ALIASES = {
     "group": {"group", "group name", "household", "party", "family", "invite", "invitation"},
     "name": {"name", "guest", "guest name", "full name", "display name"},
     "rank": {"rank", "order", "position", "#", "no", "no.", "number"},
-    "rsvp": {"rsvp", "status", "response"},
+    "rsvp": {"rsvp", "status", "response"},  # both events, unless the file has a column for one of them
+    "tea_rsvp": {"tea ceremony rsvp", "tea rsvp", "tea ceremony", "tea"},
+    "reception_rsvp": {"reception rsvp", "reception"},
     "category": {"guest category", "category", "guest type", "side", "circle"},
     "location": {"guest location", "location", "city", "region", "country", "where"},
 }
@@ -87,7 +89,8 @@ class Row:
     group: str
     name: str
     rank: float | None
-    rsvp: str | None
+    tea_rsvp: str | None  # None when the file says nothing about it
+    reception_rsvp: str | None
     category: str | None  # None when the file has no category column
     location: str | None  # None when the file has no location column
 
@@ -136,13 +139,18 @@ def parse_guest_csv(text: str) -> tuple[list[Row], int]:
                 if "name" not in cols:
                     raise ImportProblem(
                         "The first row should be column headings with at least a 'name' column "
-                        "(and optionally 'group', 'rank', 'rsvp', 'guest category' and 'guest location')."
+                        "(and optionally 'group', 'rank', 'rsvp' (or 'tea ceremony rsvp' and 'reception rsvp'), "
+                        "'guest category' and 'guest location')."
                     )
                 continue
 
             def cell(key: str) -> str:
                 i = cols.get(key)
                 return record[i] if i is not None and i < len(record) else ""
+
+            def answer(event: str) -> str | None:  # the event's own column, or else the one for both
+                key = next((k for k in (f"{event}_rsvp", "rsvp") if k in cols), None)
+                return _rsvp(cell(key)) if key else None
 
             name = clean_text(cell("name"))[:GUEST_NAME_MAX]
             if not name:
@@ -156,7 +164,8 @@ def parse_guest_csv(text: str) -> tuple[list[Row], int]:
                     group=clean_text(cell("group"))[:GROUP_NAME_MAX],
                     name=name,
                     rank=_rank(cell("rank")),
-                    rsvp=_rsvp(cell("rsvp")) if "rsvp" in cols else None,
+                    tea_rsvp=answer("tea"),
+                    reception_rsvp=answer("reception"),
                     category=clean_text(cell("category"))[:CATEGORY_MAX] if "category" in cols else None,
                     location=clean_text(cell("location"))[:LOCATION_MAX] if "location" in cols else None,
                 )
@@ -219,7 +228,8 @@ def import_guests(db: Session, text: str) -> ImportOut:
                     skipped += 1
                 continue
             have.add(row.name.casefold())
-            db.add(Guest(group_id=group.id, name=row.name, rank=rank, rsvp=row.rsvp or "no_response",
+            db.add(Guest(group_id=group.id, name=row.name, rank=rank,
+                         tea_rsvp=row.tea_rsvp or "no_response", reception_rsvp=row.reception_rsvp or "no_response",
                          category=row.category or "", location=row.location or ""))
             rank += 1
             added += 1

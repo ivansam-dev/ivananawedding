@@ -67,6 +67,10 @@
 .adm-stat.is-attending strong{color:var(--yes)}
 .adm-stat.is-not_attending strong{color:var(--no)}
 .adm-stat.is-no_response strong{color:var(--wait)}
+.adm-stat-event{flex-basis:210px}
+.adm-stat .adm-stat-more{font-size:12.5px}
+.adm-stat-more .is-not_attending{color:var(--no)}
+.adm-stat-more .is-no_response{color:var(--wait)}
 .adm-lede{margin:0 0 20px;font-style:italic;color:var(--ink-soft)}
 
 /* ---- toolbar ---- */
@@ -125,7 +129,9 @@
 .adm-group-name{font-family:"Bodoni Moda",serif;font-size:19px;line-height:1.25;color:var(--cinnabar)}
 button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 .adm-group-who{font-size:14.5px;color:var(--ink-soft)}
-.adm-group-rsvp{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:2px;font-size:13px}
+.adm-group-rsvp{display:flex;flex-direction:column;gap:1px;margin-top:2px;font-size:13px}
+.adm-group-event{display:flex;flex-wrap:wrap;gap:2px 12px}
+.adm-group-event-name{min-width:88px;font-style:italic;color:var(--ink-soft)}
 .adm-dot{display:inline-flex;align-items:center;gap:5px}
 .adm-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .adm-dot.is-attending{color:var(--yes)}
@@ -168,10 +174,19 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
 .adm-group-body{padding:0 4px 20px 25px}
 .adm-warn{margin:0 0 8px;font-size:14px;font-style:italic;color:var(--gold-deep)}
 .adm-guests{list-style:none;margin:0;padding:0}
+/* the name, sent, "Move to" and × on one line; the answers beneath, then the dietary requirements */
 .adm-guest{
-  display:grid;grid-template-columns:auto minmax(120px, 1fr) auto auto minmax(0, 150px) auto;
+  display:grid;grid-template-columns:auto minmax(120px, 1fr) auto minmax(0, 150px) auto;
+  grid-template-areas:"order name sent move del" ". rsvp rsvp rsvp rsvp" ". diet diet diet diet";
   align-items:center;gap:8px 12px;padding:7px 0;border-bottom:1px dashed var(--line-soft);
 }
+.adm-order{grid-area:order}
+.adm-name{grid-area:name}
+.adm-guest > .adm-answers{grid-area:rsvp;justify-self:start}
+.adm-sent{grid-area:sent}
+.adm-move{grid-area:move}
+.adm-guest > .adm-danger{grid-area:del}
+.adm-diet{grid-area:diet}
 .adm-order{display:flex;align-items:center;gap:1px}
 .adm-rank{width:20px;margin-right:3px;text-align:right;font-family:"Bodoni Moda",serif;font-size:14px;color:var(--gold-deep);font-variant-numeric:lining-nums}
 .adm-icon{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:50%;background:none;font-size:15px;line-height:1;color:var(--ink-soft);cursor:pointer}
@@ -179,8 +194,16 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
 .adm-icon:disabled{opacity:.22;cursor:default}
 .adm-icon.adm-danger{font-size:21px}
 .adm-name{width:100%}
+.adm-diet{width:100%;font-size:14px;font-style:italic}
+.adm-row-diet{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:6px;font-size:13.5px;font-style:italic;color:var(--gold-deep)}
+.adm-row-diet::before{content:"Dietary: ";color:var(--ink-soft)}
 
-.adm-rsvp{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+/* a guest's answers: each event's name beside its attending / not attending / no response */
+.adm-answers{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:5px 10px}
+.adm-answer-name{font-size:13px;font-style:italic;color:var(--ink-soft);white-space:nowrap}
+.adm-guest .adm-answers{grid-template-columns:repeat(2, auto auto)}       /* in a group, side by side */
+.adm-guest .adm-answer-name ~ .adm-answer-name{margin-left:16px}
+.adm-rsvp{display:inline-flex;justify-self:start;border:1px solid var(--line);border-radius:3px;overflow:hidden}
 .adm-seg{font:inherit;font-size:13.5px;white-space:nowrap;padding:5px 10px;border:0;border-left:1px solid var(--line-soft);background:transparent;color:var(--ink-soft);cursor:pointer;transition:background .2s ease, color .2s ease}
 .adm-seg:first-child{border-left:0}
 .adm-seg:hover{background:rgba(168,130,60,.1)}
@@ -211,7 +234,7 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
 
 /* ---- one row per guest ---- */
 .adm-row{
-  display:grid;grid-template-columns:minmax(180px, 1fr) minmax(0, 180px) minmax(0, 160px) auto;
+  display:grid;grid-template-columns:minmax(200px, 1fr) minmax(0, 140px) minmax(0, 120px) auto;
   align-items:center;gap:8px 18px;padding:9px 4px;border-bottom:1px solid var(--line-soft);
 }
 .adm-row-name{min-width:0;overflow-wrap:anywhere;font-family:"Bodoni Moda",serif;font-size:17px;line-height:1.25}
@@ -240,10 +263,13 @@ button.adm-toggle:hover .adm-group-name{text-decoration:underline;text-decoratio
 
 /* ---- overview by guest category ---- */
 .adm-ov-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.adm-ov{width:100%;min-width:720px;border-collapse:collapse;font-variant-numeric:lining-nums tabular-nums}
+.adm-ov{width:100%;min-width:960px;border-collapse:collapse;font-variant-numeric:lining-nums tabular-nums}
 .adm-ov th,.adm-ov td{padding:10px 8px;text-align:right;vertical-align:middle;border-bottom:1px solid var(--line-soft);font-weight:400}
 .adm-ov thead th{font-size:13px;line-height:1.3;color:var(--ink-soft);border-bottom-color:var(--line);vertical-align:bottom}
-.adm-ov .adm-ov-cat{text-align:left;width:34%;min-width:170px}
+.adm-ov .adm-ov-cat{text-align:left;width:24%;min-width:170px}
+.adm-ov .adm-ov-start{border-left:1px solid var(--line-soft)}       /* where each event's answers begin, and after them */
+.adm-ov thead th.adm-ov-event{text-align:center;padding-bottom:4px;border-bottom-color:var(--line-soft);
+  font-family:"Bodoni Moda",serif;font-size:14.5px;letter-spacing:.03em;color:var(--cinnabar)}
 .adm-ov tbody th.adm-ov-cat,.adm-ov tfoot th.adm-ov-cat{font-family:"Bodoni Moda",serif;font-size:16.5px}
 .adm-ov tfoot th,.adm-ov tfoot td{border-top:1px solid var(--line);border-bottom:0;font-weight:500}
 .adm-ov tbody tr:hover{background:rgba(255,253,248,.7)}
@@ -256,7 +282,8 @@ td.is-not_attending .adm-ov-n{color:var(--no)}
 td.is-no_response .adm-ov-n{color:var(--wait)}
 .adm-ov-pct{display:block;font-size:12px;color:var(--ink-soft)}
 .adm-ov-pct.is-done{color:var(--yes)}
-.adm-ov-bar{display:flex;height:4px;max-width:220px;margin-top:6px;border-radius:2px;overflow:hidden;background:var(--line-soft)}
+.adm-ov-bars{display:flex;flex-direction:column;gap:2px;max-width:220px;margin-top:6px}   /* the tea ceremony, then the reception */
+.adm-ov-bar{display:flex;height:3px;border-radius:2px;overflow:hidden;background:var(--line-soft)}
 .adm-ov-bar .is-attending{background:var(--yes)}
 .adm-ov-bar .is-not_attending{background:var(--no)}
 .adm-ov-bar .is-no_response{background:var(--wait);opacity:.45}
@@ -266,22 +293,33 @@ td.is-no_response .adm-ov-n{color:var(--wait)}
 .adm-ov tbody tr.adm-ov-sub th.adm-ov-cat::before{content:"›";margin-right:7px;color:var(--gold-deep)}
 .adm-ov-sub .adm-ov-name{color:var(--ink)}
 .adm-ov-sub .adm-ov-n{font-size:14.5px}
-.adm-ov-sub .adm-ov-bar{height:3px;margin-left:15px;margin-top:4px}
+.adm-ov-sub .adm-ov-bars{margin-left:15px;margin-top:4px}
+.adm-ov-sub .adm-ov-bar{height:2px}
+
+/* ---- letters: which ones guests see, and in what order ---- */
+.adm-letter{display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding:16px 4px;border-bottom:1px solid var(--line-soft)}
+.adm-letter-about{flex:1 1 280px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.adm-letter-name{font-family:"Bodoni Moda",serif;font-size:19px;line-height:1.25;color:var(--cinnabar)}
+.adm-letter.is-off .adm-letter-name{color:var(--ink-soft)}
+.adm-letter-where{font-size:14.5px;color:var(--ink)}
+.adm-letter.is-off .adm-letter-where{font-style:italic;color:var(--ink-soft)}
+.adm-letter-note{font-size:13px;color:var(--ink-soft)}
+.adm-seg.is-on[aria-pressed="true"]{background:var(--yes);color:#fbf7ef}
+.adm-seg.is-off[aria-pressed="true"]{background:var(--wait-bg);color:var(--ink)}
+.adm-seg:disabled{cursor:default;opacity:.45}
+.adm-seg:disabled:hover{background:transparent}
+.adm-letter-opens{display:flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.02em;color:var(--ink-soft);cursor:pointer}
+.adm-letter-opens input{margin:0;accent-color:var(--cinnabar);cursor:pointer}
+.adm-letter-opens.is-on{color:var(--cinnabar)}
+.adm-letter-rank{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.02em;color:var(--ink-soft)}
+.adm-letter-rank .adm-filter{flex:none;width:52px}
+.adm-preview{display:inline-flex;align-items:center;gap:5px;text-decoration:none}
 
 .adm-offscreen{position:fixed;left:-9999px;top:0;opacity:0}
 
 /* ---- narrower screens: each guest wraps onto two or three lines ---- */
 @media (max-width:1000px){
-  .adm-guest{
-    grid-template-columns:auto minmax(0, 1fr) auto minmax(0, 150px) auto;
-    grid-template-areas:"order name sent move del" ". rsvp rsvp rsvp rsvp";
-  }
-  .adm-order{grid-area:order}
-  .adm-name{grid-area:name}
-  .adm-rsvp{grid-area:rsvp;justify-self:start}
-  .adm-sent{grid-area:sent}
-  .adm-move{grid-area:move}
-  .adm-guest > .adm-danger{grid-area:del}
+  .adm-guest{grid-template-columns:auto minmax(0, 1fr) auto minmax(0, 150px) auto}
   .adm-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
   .adm-row-who,.adm-row-name.adm-input{flex:1 1 220px}
   .adm-row-cat.adm-input{flex:0 1 180px}
@@ -297,6 +335,11 @@ td.is-no_response .adm-ov-n{color:var(--wait)}
   .adm-guest > .adm-danger{order:1}
   .adm-name{flex:1 1 140px;width:auto}
   .adm-move{flex:1 1 120px;width:auto}
+  .adm-guest > .adm-diet{order:3;flex:1 1 100%}
+  /* each event's name above its answers, one event after the other */
+  .adm-answers,.adm-guest .adm-answers{grid-template-columns:auto;row-gap:3px}
+  .adm-answer-name ~ .adm-answer-name,.adm-guest .adm-answer-name ~ .adm-answer-name{margin:6px 0 0}
+  .adm-guest > .adm-answers{flex:1 1 100%}
   .adm-seg{padding:5px 8px;font-size:13px}
   .adm-stat{flex-basis:96px;padding:9px 11px}
   .adm-stat strong{font-size:22px}
