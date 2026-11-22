@@ -19,12 +19,27 @@ window.inviteRequest = (() => {
     .catch(() => null);                                         // offline or unknown link: the plain card
 })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- 囍 needs its own request: text= subsets every family in a request to that one glyph -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600&text=%E5%9B%8D&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&family=Playfair+Display:ital,wght@0,400..600;1,400..600&family=Playfair+Display+SC:wght@400&family=Beau+Rivage&family=Noto+Serif+TC:wght@400;600&display=swap">
+<!-- Every face for every language, cut down to the characters the card draws (frontend/tools/subset_fonts.py,
+     ~180 KB in all). All of it is fetched straight away and the first screen waits for it, so nothing
+     re-flows or swaps font mid-animation. -->
+<link rel="preload" href="/fonts/bodoni-moda.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bodoni-moda-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair-sc.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/beau-rivage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/noto-serif-tc.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/noto-serif-sc-xi.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:"Bodoni Moda";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda.woff2) format("woff2")}
+@font-face{font-family:"Bodoni Moda";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda-italic.woff2) format("woff2")}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/playfair.woff2) format("woff2")}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/playfair-italic.woff2) format("woff2")}
+@font-face{font-family:"Playfair Display SC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/playfair-sc.woff2) format("woff2")}
+@font-face{font-family:"Beau Rivage";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/beau-rivage.woff2) format("woff2")}
+@font-face{font-family:"Noto Serif TC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/noto-serif-tc.woff2) format("woff2")}
+@font-face{font-family:"Noto Serif SC";font-style:normal;font-weight:600;font-display:block;src:url(/fonts/noto-serif-sc-xi.woff2) format("woff2")}
+
 /* ------------------------------------------------------------------
    Palette — cinnabar lacquer, gold leaf, Ru-ware celadon, ivory stock
    ------------------------------------------------------------------ */
@@ -1025,6 +1040,15 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   root.style.setProperty('--grain-gray',  noise(0.85, '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1'));
   root.style.setProperty('--grain-paper', noise(0.7,  '0 0 0 0 .30  0 0 0 0 .22  0 0 0 0 .14  .5 0 0 0 -.21'));
   root.style.setProperty('--grain-linen', noise(0.6,  '0 0 0 0 .22  0 0 0 0 .28  0 0 0 0 .24  .55 0 0 0 -.21'));
+  /* draw each texture once before anything moves, rather than the first time the card is painted */
+  const texturesReady = Promise.race([
+    Promise.all(['--grain-gray', '--grain-paper', '--grain-linen'].map((v) => {
+      const img = new Image();
+      img.src = root.style.getPropertyValue(v).slice(5, -2);           // url("…") → …
+      return img.decode ? img.decode().catch(() => {}) : null;
+    })),
+    wait(1000)
+  ]);
 
   /* the foil catches the light: its highlight eases toward the pointer */
   const foil = $('gFoilRed');
@@ -1079,11 +1103,16 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
       heartsLine: '您的光臨，將讓我們的這一天充滿愛'
     }
   };
-  const FONTS = {
-    en: ['italic 400 40px "Bodoni Moda"', '400 20px "Bodoni Moda"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"'],
-    vi: ['italic 400 40px "Playfair Display"', '400 20px "Playfair Display"', '500 20px "Playfair Display"', '400 30px "Playfair Display SC"'],
-    'zh-Hant': ['400 20px "Bodoni Moda"', 'italic 400 40px "Bodoni Moda"', '400 20px "Noto Serif TC"', '400 30px "Playfair Display SC"', 'italic 400 30px "Playfair Display"']
-  };
+  /* every face for every language, already on its way from the preloads in <head>. The first screen
+     waits for all of them once, so choosing a language never waits and no text changes font mid-animation */
+  const fontsReady = document.fonts
+    ? Promise.race([
+        Promise.all(['1em "Bodoni Moda"', 'italic 1em "Bodoni Moda"', '1em "Playfair Display"', 'italic 1em "Playfair Display"',
+                     '1em "Playfair Display SC"', '1em "Beau Rivage"', '1em "Noto Serif TC"', '600 1em "Noto Serif SC"']
+          .map((f) => document.fonts.load(f))).catch(() => {}),
+        wait(4000)                                                   // a very slow line: start anyway
+      ])
+    : Promise.resolve();
 
   /* guest names: a group's link (/<id>) asks the backend for them, in the order the admin ranked them.
      Links made before the guest list existed (?to=Name&to=Name) still work. */
@@ -1155,14 +1184,6 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     print.removeAttribute('id');
     letter.appendChild(print);
   }
-  const loadFonts = (code) => {
-    if (!document.fonts) return Promise.resolve();
-    const sample = Object.values(TEXT[code]).join('');
-    const jobs = FONTS[code].map((f) => document.fonts.load(f, sample));
-    jobs.push(document.fonts.load('600 40px "Noto Serif SC"', '囍'));
-    jobs.push(document.fonts.load('400 40px "Beau Rivage"', 'Ivan Sam & Ana Nguyen'));
-    return Promise.race([Promise.all(jobs).catch(() => {}), wait(2200)]);
-  };
 
   /* ---------- sizing ---------- */
   let L = {}, CARD_W = 122, CARD_H = 75;
@@ -1833,7 +1854,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
     picker.classList.remove('is-shown');
     applyLanguage(code);
     const cue = celebrate && !reduce ? wait(180).then(heartsBurst) : wait(T(700));
-    await Promise.all([loadFonts(code), cue]);
+    await Promise.all([fontsReady, cue]);
     requestAnimationFrame(() => requestAnimationFrame(land));
   }
   picker.addEventListener('click', (e) => {
@@ -1849,18 +1870,9 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
   applyLanguage('en');
   const asked = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
   const direct = { zh: 'zh-Hant', 'zh-hant': 'zh-Hant', vi: 'vi', en: 'en' }[asked];
-  if (direct) guestsReady.then(() => choose(direct));
-  else {
-    const pickerFonts = document.fonts
-      ? Promise.race([Promise.all([
-          document.fonts.load('italic 400 23px "Bodoni Moda"', 'English'),
-          document.fonts.load('italic 400 23px "Playfair Display"', 'Tiếng Việt'),
-          document.fonts.load('400 23px "Noto Serif TC"', '中文'),
-          document.fonts.load('600 30px "Noto Serif SC"', '囍')
-        ]).catch(() => {}), wait(1500)])
-      : Promise.resolve();
-    Promise.all([pickerFonts, guestsReady]).then(showPicker);
-  }
+  const ready = Promise.all([fontsReady, texturesReady, guestsReady]);
+  if (direct) ready.then(() => choose(direct));
+  else ready.then(showPicker);
 })();
 </script>
 </body>

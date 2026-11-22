@@ -6,7 +6,7 @@ STAMP   := $(shell date +%Y%m%d-%H%M%S)
 PORT    := $(or $(shell sed -nE 's/^WEB_PORT=([0-9]+).*/\1/p' .env 2>/dev/null),8080)
 
 .DEFAULT_GOAL := help
-.PHONY: help dev up down logs ps export-db restore-db set-password test
+.PHONY: help dev up down logs ps export-db restore-db set-password test fonts
 
 help: ## List the commands
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -56,3 +56,7 @@ set-password: ## Change an admin password: make set-password ROLE=root (or ROLE=
 test: ## Run the backend tests (in Docker)
 	docker build -q --target test -t wedding-api-test ./backend >/dev/null
 	docker run --rm wedding-api-test
+
+fonts: ## Rebuild the card's fonts after changing any Chinese or Vietnamese wording (in Docker)
+	docker run --rm -v "$(CURDIR)/frontend:/w" -w /w python:3.12-slim \
+		sh -c "pip install -q --root-user-action=ignore fonttools brotli && python tools/subset_fonts.py"
