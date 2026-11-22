@@ -1,7 +1,7 @@
-group,name,rank
-The Lees,Grandma Lee,1
-The Lees,Uncle David,2
-The Lees,Aunt Mei,3
-Tran household,Minh Tran,1
-Tran household,Linh Tran,2
-,Sarah Jones,
+group,name,rank,guest category,guest location
+The Lees,Grandma Lee,1,Bride's family,Kuala Lumpur
+The Lees,Uncle David,2,Bride's family,Kuala Lumpur
+The Lees,Aunt Mei,3,Bride's family,Singapore
+Tran household,Minh Tran,1,Groom's family,Ho Chi Minh City
+Tran household,Linh Tran,2,Groom's family,Ho Chi Minh City
+,Sarah Jones,,Friends,London

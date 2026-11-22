@@ -13,7 +13,8 @@ const KINDS = [
 ];
 const VIEWS = [
   { value: 'guests', label: 'Guests' },
-  { value: 'groups', label: 'Groups' }
+  { value: 'groups', label: 'Groups' },
+  { value: 'categories', label: 'Categories' }
 ];
 const FILTERS = {
   guests: [
@@ -29,7 +30,29 @@ const FILTERS = {
     { value: 'std_unsent', label: 'Save the date not sent' },
     { value: 'inv_unsent', label: 'Invitation not sent' },
     { value: 'awaiting', label: 'Waiting on an RSVP' }
-  ]
+  ],
+  categories: [{ value: 'all', label: 'All guests' }]  // the overview has no filter of its own
+};
+/* the overview's columns; each count opens the guests view filtered to it (filter: a FILTERS.guests value) */
+const OVERVIEW = [
+  { label: 'Guests', filter: 'all', count: () => true },
+  { label: 'Attending', filter: 'attending', cls: 'is-attending', count: (x) => x.rsvp === 'attending' },
+  { label: 'Not attending', filter: 'not_attending', cls: 'is-not_attending', count: (x) => x.rsvp === 'not_attending' },
+  { label: 'No response', filter: 'no_response', cls: 'is-no_response', count: (x) => x.rsvp === 'no_response' },
+  { label: 'Save the date sent', filter: 'std_unsent', sent: true, count: (x) => !!x.save_the_date_sent_at },
+  { label: 'Invitation sent', filter: 'inv_unsent', sent: true, count: (x) => !!x.invitation_sent_at }
+];
+const SORTS = [
+  { value: 'name', label: 'Sort by name' },
+  { value: 'category', label: 'Sort by category' },
+  { value: 'group', label: 'Sort by group' }
+];
+const NO_CATEGORY = ' none';  // the filter's "No category" choice; real categories never start with a space
+const NO_LOCATION = ' none';  // likewise for locations
+/* the two free-text labels a guest can have; the guests view shows both as tags */
+const TAGS = {
+  category: { key: 'cat', label: 'category', list: 'admCategories', none: 'No category' },
+  location: { key: 'loc', label: 'location', list: 'admLocations', none: 'No location' }
 };
 const ON_CARD = 10;            // the card has room for this many names (cleanNames in index.html)
 
@@ -137,7 +160,8 @@ function createPanel(me, { onExpired } = {}) {
   const linkFor = (g) => `${base}/${g.public_id}`;
   /* root admins start on one row per guest; link admins only ever see groups */
   const state = { groups: [], expanded: new Set(), query: '', filter: 'all', view: isRoot ? 'guests' : 'groups',
-                  editing: null };  // id of the guest being renamed in the guests view
+                  category: 'all', location: 'all', sort: 'name',
+                  editing: null };  // in the guests view, what's being edited: "name-<id>", "category-<id>" or "location-<id>"
   const byId = (id) => state.groups.find((g) => g.id === id);
   const nameOf = (x) => (typeof x === 'string' ? x : x.name);
   const findGuest = (id) => {
@@ -158,6 +182,36 @@ function createPanel(me, { onExpired } = {}) {
   function fillFilter() {
     filter.replaceChildren(...FILTERS[state.view].map((f) => h('option', { value: f.value }, f.label)));
     filter.value = state.filter;
+    filter.hidden = state.view === 'categories';
+  }
+  /* the guests view can also narrow to one guest category and location, and sort by category */
+  const catFilter = isRoot && h('select', { class: 'adm-filter adm-cat-filter', 'aria-label': 'Guest category' });
+  const locFilter = isRoot && h('select', { class: 'adm-filter adm-cat-filter', 'aria-label': 'Guest location' });
+  const sortBy = isRoot && h('select', { class: 'adm-filter adm-sort', 'aria-label': 'Sort by' },
+    SORTS.map((o) => h('option', { value: o.value }, o.label)));
+  const catList = isRoot && h('datalist', { id: 'admCategories' });  // suggestions when typing a category
+  const locList = isRoot && h('datalist', { id: 'admLocations' });   // ... or a location
+  const distinct = (values) => [...new Set(values.filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  const valuesOf = (field) => distinct(state.groups.flatMap((g) => g.guests.map((x) => x[field])));
+  const categories = () => valuesOf('category');
+  function fillCategories() {
+    if (!isRoot) return;
+    const show = state.view === 'guests';
+    const fill = (select, datalist, field, none, all) => {
+      const values = valuesOf(field);
+      if (state[field] !== 'all' && state[field] !== none && !values.includes(state[field])) state[field] = 'all';
+      select.replaceChildren(
+        h('option', { value: 'all' }, all),
+        ...values.map((c) => h('option', { value: c }, c)),
+        h('option', { value: none }, TAGS[field].none));
+      select.value = state[field];
+      datalist.replaceChildren(...values.map((c) => h('option', { value: c })));
+      select.hidden = !show || !values.length;
+    };
+    fill(catFilter, catList, 'category', NO_CATEGORY, 'All categories');
+    fill(locFilter, locList, 'location', NO_LOCATION, 'All locations');
+    sortBy.hidden = !show;
   }
   if (isRoot) fillFilter();
   const newName = isRoot && h('input', { type: 'text', class: 'adm-input', placeholder: 'New group, e.g. The Lees',
@@ -176,7 +230,9 @@ function createPanel(me, { onExpired } = {}) {
     h('div', { class: 'adm-file' }, importBtn, fileInput),
     h('p', { class: 'adm-hint' },
       'CSV columns: ', h('b', null, 'group'), ', ', h('b', null, 'name'), ' and optionally ', h('b', null, 'rank'),
-      '. Guests in the same group share one link; rank sets who is named first. Guests already listed are skipped.'),
+      ', ', h('b', null, 'rsvp'), ', ', h('b', null, 'guest category'), ' and ', h('b', null, 'guest location'),
+      '. Guests in the same group share one link; rank sets who is named first. Guests already listed are skipped, ',
+      'but get the file’s guest category and location if it has them.'),
     h('div', { class: 'adm-menu-sep' }),
     clearBtn);
   const menuWrap = isRoot && h('div', { class: 'adm-menu-wrap' }, menuBtn, menu);
@@ -198,7 +254,7 @@ function createPanel(me, { onExpired } = {}) {
           h('h1', null, title)),
         h('div', { class: 'adm-head-actions' }, signOutBtn, menuWrap, closeBtn)),
       isRoot ? stats : h('p', { class: 'adm-lede' }, 'Copy a group’s link and send it to them. The card greets them by name.'),
-      h('div', { class: 'adm-tools' }, views, search, filter),
+      h('div', { class: 'adm-tools' }, views, search, isRoot && h('div', { class: 'adm-break', 'aria-hidden': 'true' }), filter, catFilter, locFilter, sortBy, catList, locList),
       flash,
       list));
   document.body.append(panel);
@@ -225,6 +281,7 @@ function createPanel(me, { onExpired } = {}) {
   /* ----- data ----- */
   async function refresh() {
     state.groups = await api('GET', isRoot ? '/admin/groups' : '/admin/links');
+    fillCategories();
     renderStats();
     renderList();
   }
@@ -248,6 +305,7 @@ function createPanel(me, { onExpired } = {}) {
   function upsert(group) {
     const i = state.groups.findIndex((g) => g.id === group.id);
     if (i >= 0) state.groups[i] = group; else state.groups.push(group);
+    fillCategories();
     renderStats();
     if (state.view === 'guests') renderList(); else renderGroup(group.id);
   }
@@ -270,7 +328,9 @@ function createPanel(me, { onExpired } = {}) {
   }
 
   function guestMatches(x, g, q) {
-    if (q &&!fold(x.name).includes(q) && !fold(g.name).includes(q)) return false;
+    if (q && ![x.name, g.name, x.category, x.location].some((v) => fold(v).includes(q))) return false;
+    if (state.category === NO_CATEGORY ? x.category : state.category !== 'all' && x.category !== state.category) return false;
+    if (state.location === NO_LOCATION ? x.location : state.location !== 'all' && x.location !== state.location) return false;
     switch (state.filter) {
       case 'attending':
       case 'not_attending':
@@ -306,7 +366,7 @@ function createPanel(me, { onExpired } = {}) {
     const typed = key && a.tagName === 'INPUT' ? { value: a.value, start: a.selectionStart, end: a.selectionEnd } : null;
     render();
     if (!key) return;
-    const b = panel.querySelector(`[data-key="${key}"]`);
+    const b = panel.querySelector(`[data-key="${CSS.escape(key)}"]`);  // keys can hold category names
     if (!b || b.disabled) return;
     b.focus({ preventScroll: true });
     if (typed) {
@@ -319,21 +379,100 @@ function createPanel(me, { onExpired } = {}) {
       let shown;
       const q = fold(state.query.trim());
       if (state.view === 'guests') {
-        shown = state.groups
-          .flatMap((g) => g.guests.filter((x) => guestMatches(x, g, q)).map((x) => [fold(x.name), x, g]))
-          .sort(([a], [b]) => a.localeCompare(b))           // folded once each, not on every comparison
-          .map(([, x, g]) => guestRowEl(g, x));
+        shown = guestRows(q);
+      } else if (state.view === 'categories') {
+        shown = categoryOverview(q);
       } else {
         shown = state.groups.filter((g) => matches(g, q)).map(groupEl);
       }
       const hasGuests = state.groups.some((g) => g.guests.length);
-      const empty = !state.groups.length || (state.view === 'guests' && !hasGuests)
+      const empty = !state.groups.length || (state.view !== 'groups' && !hasGuests)
         ? (isRoot ? 'No guests yet. Add a group above, or import a CSV.' : 'No groups yet.')
         : 'Nothing matches.';
       list.classList.toggle('is-guests', state.view === 'guests');
       list.replaceChildren(...(shown.length ? shown : [h('p', { class: 'adm-empty' }, empty)]));
     });
   }
+  /* the guests view's rows, sorted; sorting by category adds a heading (with a count) above each one */
+  function guestRows(q) {
+    const rows = state.groups.flatMap((g) => g.guests.filter((x) => guestMatches(x, g, q))
+      .map((x) => ({ x, g, name: fold(x.name), cat: fold(x.category), loc: fold(x.location), group: fold(g.name) })));
+    const by = (k) => (a, b) => a[k].localeCompare(b[k]);
+    const byName = by('name');
+    const blankLast = (k) => (a, b) => (!a[k] - !b[k]) || by(k)(a, b);  // guests with no category (or location) go last
+    const cmp = state.sort === 'category' ? (a, b) => blankLast('cat')(a, b) || blankLast('loc')(a, b) || byName(a, b)
+      : state.sort === 'group' ? (a, b) => by('group')(a, b) || a.g.id - b.g.id || a.x.rank - b.x.rank
+      : byName;
+    rows.sort(cmp);
+    if (state.sort !== 'category') return rows.map((r) => guestRowEl(r.g, r.x));
+    const out = [];
+    for (let i = 0; i < rows.length;) {
+      let j = i;
+      while (j < rows.length && rows[j].cat === rows[i].cat) j++;   // "Family" and "family" share a heading
+      const att = rows.slice(i, j).filter((r) => r.x.rsvp === 'attending').length;
+      out.push(h('h2', { class: 'adm-cat-head' }, rows[i].x.category || 'No category',
+        h('span', null, `${plural(j - i, 'guest')}${att ? ` · ${att} attending` : ''}`)));
+      for (let k = i; k < j; k++) out.push(guestRowEl(rows[k].g, rows[k].x));
+      i = j;
+    }
+    return out;
+  }
+
+  /* one row per guest category (and "No category"), each broken down by guest location beneath it,
+     counting RSVPs and what's been sent, with a total */
+  function categoryOverview(q) {
+    const guests = state.groups.flatMap((g) => g.guests);
+    const withNone = (values, none, label) => [...values.map((c) => [c, c]), [none, label]];
+    const rows = [];
+    for (const [value, label] of withNone(categories(), NO_CATEGORY, 'No category')) {
+      const inCat = guests.filter((x) => (value === NO_CATEGORY ? !x.category : x.category === value));
+      if (!inCat.length) continue;
+      const catHit = !q || fold(label).includes(q);
+      /* only worth breaking down when someone in it has a location */
+      const subs = !inCat.some((x) => x.location) ? []
+        : withNone(distinct(inCat.map((x) => x.location)), NO_LOCATION, 'No location')
+          .map(([loc, locLabel]) => ({ value, loc, label: locLabel, full: `${label} › ${locLabel}`, sub: true,
+                                       guests: inCat.filter((x) => (loc === NO_LOCATION ? !x.location : x.location === loc)) }))
+          .filter((r) => r.guests.length && (catHit || fold(r.label).includes(q)));
+      if (!catHit && !subs.length) continue;
+      rows.push({ value, loc: 'all', label, guests: inCat }, ...subs);
+    }
+    if (!rows.length) return [];
+
+    const cell = (r, col) => {
+      const n = r.guests.filter(col.count).length, total = r.guests.length;
+      const pct = total ? Math.round((n / total) * 100) : 0;
+      /* "sent" columns link to the guests still waiting for it, which is what you'd act on */
+      const filter = col.sent ? (n < total ? col.filter : 'all') : col.filter;
+      const tip = col.sent ? (n < total ? `Show the ${total - n} not sent yet` : 'Sent to everyone') : `Show ${col.label.toLowerCase()}`;
+      return h('td', { class: col.cls || '' },
+        r.value == null ? h('span', { class: 'adm-ov-n' }, String(n))
+          : h('button', { type: 'button', class: 'adm-ov-n', 'data-cat': r.value, 'data-loc': r.loc, 'data-filter': filter, title: tip,
+                          'data-key': `ov-${r.value}-${r.loc}-${col.label}` }, String(n)),
+        col.sent && total > 0 && h('span', { class: `adm-ov-pct${n === total ? ' is-done' : ''}` }, `${pct}%`));
+    };
+    const bar = (list) => h('span', { class: 'adm-ov-bar', 'aria-hidden': 'true' },
+      RSVP.map((r) => {
+        const n = list.filter((x) => x.rsvp === r.value).length;
+        return n ? h('span', { class: `is-${r.value}`, style: `flex-grow:${n}` }) : null;
+      }));
+    const row = (r, tag = 'td') => h('tr', { class: r.sub ? 'adm-ov-sub' : '' },
+      h(tag, { class: 'adm-ov-cat', scope: 'row' },
+        r.value == null ? r.label
+          : h('button', { type: 'button', class: 'adm-ov-name', 'data-cat': r.value, 'data-loc': r.loc, 'data-filter': 'all',
+                          'data-key': `ov-${r.value}-${r.loc}`, title: `Show everyone in ${r.full || r.label}` }, r.label),
+        bar(r.guests)),
+      OVERVIEW.map((col) => cell(r, col)));
+
+    const table = h('table', { class: 'adm-ov' },
+      h('thead', null, h('tr', null, h('th', { scope: 'col' }, 'Guest category › location'),
+        OVERVIEW.map((col) => h('th', { scope: 'col', class: col.cls || '' }, col.label)))),
+      h('tbody', null, rows.map((r) => row(r, 'th'))),
+      !q && rows.filter((r) => !r.sub).length > 1 && h('tfoot', null, row({ value: null, label: 'Everyone', guests }, 'th')));
+    return [h('div', { class: 'adm-ov-wrap' }, table),
+      h('p', { class: 'adm-hint' }, 'Click a number to see those guests.')];
+  }
+
   function renderGroup(id) {
     const old = list.querySelector(`[data-group="${id}"]`);
     const g = byId(id);
@@ -425,22 +564,36 @@ function createPanel(me, { onExpired } = {}) {
                     'aria-label': `Remove ${x.name}`, title: 'Remove from the guest list' }, '×'));
   }
 
-  /* one row per guest: their name, with edit / copy link / open group on hover, and their RSVP */
+  /* one row per guest: their name, with edit / copy link / open group on hover; their category; their RSVP */
   function guestRowEl(g, x) {
-    const name = state.editing === x.id
+    const name = state.editing === `name-${x.id}`
       ? h('input', { type: 'text', class: 'adm-input adm-row-name', value: x.name, maxlength: 60, autocomplete: 'off',
                      'aria-label': `New name for ${x.name}`, 'data-edit': 'name', 'data-key': `name-${x.id}` })
       : h('div', { class: 'adm-row-who' },
           h('span', { class: 'adm-row-name' }, x.name),
           h('div', { class: 'adm-row-acts' },                // shown on hover
-            h('button', { type: 'button', class: 'adm-icon adm-edit', 'data-act': 'edit-name', 'data-key': `edit-${x.id}`,
+            h('button', { type: 'button', class: 'adm-icon adm-edit', 'data-act': 'edit', 'data-field': 'name', 'data-key': `edit-${x.id}`,
                           'aria-label': `Edit ${x.name}'s name`, title: 'Edit name' }, icon('edit')),
             h('button', { type: 'button', class: 'adm-icon', 'data-act': 'copy', 'data-key': `copy-guest-${x.id}`,
                           'aria-label': `Copy the link for ${g.name}`, title: `Copy link (${g.name})` }, icon('link')),
             h('button', { type: 'button', class: 'adm-icon', 'data-act': 'open-group', 'data-key': `open-${x.id}`,
                           'aria-label': `Open group: ${g.name}`, title: `Open group (${g.name})` }, icon('open'))));
+    const tag = (field) => {
+      const t = TAGS[field], value = x[field];
+      return state.editing === `${field}-${x.id}`
+        ? h('input', { type: 'text', class: 'adm-input adm-row-cat', value, maxlength: 60, autocomplete: 'off',
+                       list: t.list, placeholder: field === 'category' ? 'Category' : 'Location',
+                       'aria-label': `Guest ${t.label} for ${x.name}`, 'data-edit': field, 'data-key': `${t.key}-${x.id}` })
+        : h('button', { type: 'button', class: `adm-row-cat adm-tag${value ? '' : ' is-empty'}`, 'data-act': 'edit',
+                        'data-field': field, 'data-key': `edit-${t.key}-${x.id}`,
+                        title: value ? `Change guest ${t.label}` : `Add a guest ${t.label}`,
+                        'aria-label': value ? `Guest ${t.label}: ${value}. Change it` : `Add a guest ${t.label} for ${x.name}` },
+            value || `+ ${t.label}`);
+    };
     return h('div', { class: 'adm-row', 'data-group': g.id, 'data-guest': x.id },
       name,
+      tag('category'),
+      tag('location'),
       h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': `RSVP for ${x.name}` },
         RSVP.map((r) => h('button', { type: 'button', class: `adm-seg is-${r.value}`, 'data-act': 'rsvp', 'data-value': r.value,
                                       'aria-pressed': String(x.rsvp === r.value), 'data-key': `rsvp-${x.id}-${r.value}` }, r.label))));
@@ -453,9 +606,11 @@ function createPanel(me, { onExpired } = {}) {
     if (openGroup != null) {                              // jumping to a guest's group: make sure it's shown and open
       state.query = search.value = '';
       state.filter = 'all';
+      state.category = state.location = 'all';
       state.expanded.add(openGroup);
     }
     fillFilter();
+    fillCategories();
     renderList();
     if (openGroup != null) {
       const node = list.querySelector(`[data-group="${openGroup}"]`);
@@ -473,6 +628,16 @@ function createPanel(me, { onExpired } = {}) {
   }
 
   list.addEventListener('click', (e) => {
+    const jump = e.target.closest('[data-cat]');          // the overview: show that category's (and location's) guests
+    if (jump) {
+      state.query = search.value = '';
+      state.category = jump.dataset.cat;
+      state.location = jump.dataset.loc || 'all';
+      state.filter = jump.dataset.filter;
+      setView('guests');
+      list.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      return;
+    }
     const el = e.target.closest('[data-act]');
     if (!el || el.disabled) return;
     const { g, x } = context(el);
@@ -489,12 +654,13 @@ function createPanel(me, { onExpired } = {}) {
       case 'open-group':
         setView('groups', { openGroup: g.id });
         break;
-      case 'edit-name': {
+      case 'edit': {
         if (!x) break;
-        state.editing = x.id;
+        const field = el.dataset.field;
+        state.editing = `${field}-${x.id}`;
         const row = el.closest('.adm-row');
         row.replaceWith(guestRowEl(g, x));
-        const input = list.querySelector(`[data-key="name-${x.id}"]`);
+        const input = list.querySelector(`[data-key="${field === 'name' ? 'name' : TAGS[field].key}-${x.id}"]`);
         if (input) { input.focus(); input.select(); }
         break;
       }
@@ -557,22 +723,25 @@ function createPanel(me, { onExpired } = {}) {
   /* renaming in the guests view: Enter or clicking away saves, Escape cancels */
   list.addEventListener('keydown', (e) => {
     const el = e.target;
-    if (el.dataset.edit !== 'name') return;
+    if (!el.dataset.edit) return;
     if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
     else if (e.key === 'Escape') { e.preventDefault(); el.dataset.cancel = '1'; el.blur(); }
   });
   list.addEventListener('focusout', (e) => {
     const el = e.target;
-    if (el.dataset.edit !== 'name' || !el.isConnected || !list.contains(el)) return;  // a re-render took it, not the user
+    const field = el.dataset.edit;
+    if (!field || !el.isConnected || !list.contains(el)) return;  // a re-render took it, not the user
     const { g, x } = context(el);
     state.editing = null;
     if (!g || !x) { renderList(); return; }
-    const name = clean(el.value);
+    const value = clean(el.value);
     const row = el.closest('.adm-row');
     const back = guestRowEl(g, x);                         // only this row, so a click elsewhere still lands
     row.replaceWith(back);
-    if (el.dataset.cancel) back.querySelector('.adm-edit').focus();
-    else if (name && name !== x.name) mutate(() => api('PATCH', `/admin/guests/${x.id}`, { name }));
+    if (el.dataset.cancel) back.querySelector(`[data-act="edit"][data-field="${field}"]`).focus();
+    else if (value !== x[field] && (value || field !== 'name')) {  // a blank category or location clears it; a blank name doesn't
+      mutate(() => api('PATCH', `/admin/guests/${x.id}`, { [field]: value }));
+    }
   });
 
   async function moveGuest(x, target) {
@@ -626,6 +795,9 @@ function createPanel(me, { onExpired } = {}) {
   search.addEventListener('input', () => { state.query = search.value; renderList(); });
   if (isRoot) {
     filter.addEventListener('change', () => { state.filter = filter.value; renderList(); });
+    catFilter.addEventListener('change', () => { state.category = catFilter.value; renderList(); });
+    locFilter.addEventListener('change', () => { state.location = locFilter.value; renderList(); });
+    sortBy.addEventListener('change', () => { state.sort = sortBy.value; renderList(); });
     views.addEventListener('click', (e) => {
       const b = e.target.closest('[data-view]');
       if (b && b.dataset.view !== state.view) setView(b.dataset.view);
@@ -684,6 +856,7 @@ function createPanel(me, { onExpired } = {}) {
       let msg = `Added ${plural(r.guests_added, 'guest')}`;
       if (r.groups_created) msg += ` in ${plural(r.groups_created, 'new group')}`;
       msg += '.';
+      if (r.guests_updated) msg += ` Updated the guest category or location for ${plural(r.guests_updated, 'guest')} already on the list.`;
       if (r.guests_skipped) msg += ` Skipped ${r.guests_skipped} already on the list.`;
       if (r.rows_ignored) msg += ` Ignored ${plural(r.rows_ignored, 'row')} with no name.`;
       say(msg);

@@ -16,8 +16,8 @@ from sqlalchemy.orm import Session
 
 from .auth import set_password, sync_passwords_from_env
 from .config import PASSWORD_ENV, ROLES, Settings
-from .db import make_engine
-from .models import AdminCredential, Base
+from .db import make_engine, upgrade
+from .models import AdminCredential
 from .security import verify_password
 
 
@@ -37,7 +37,7 @@ def cmd_set_password(settings: Settings, role: str) -> None:
         _die("The password can't be blank.")
 
     engine = make_engine(settings.database_path)
-    Base.metadata.create_all(engine)
+    upgrade(engine)
     with Session(engine) as db:
         other = "link" if role == "root" else "root"
         other_cred = db.get(AdminCredential, other)
@@ -84,7 +84,7 @@ def cmd_restore(settings: Settings, source: str) -> None:
 
     # The copy brings its own admin passwords; the ones in .env still win, as they do at startup.
     engine = make_engine(settings.database_path)
-    Base.metadata.create_all(engine)
+    upgrade(engine)
     with Session(engine) as db:
         sync_passwords_from_env(db, settings)
     engine.dispose()

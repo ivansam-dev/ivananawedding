@@ -246,7 +246,7 @@ The Lees,,,
 def test_import_groups_ranks_and_is_repeatable(client):
     sign_in(client, ROOT_PW)
     r = client.post("/api/admin/import", json={"csv": CSV})
-    assert r.json() == {"groups_created": 3, "guests_added": 6, "guests_skipped": 0, "rows_ignored": 1}
+    assert r.json() == {"groups_created": 3, "guests_added": 6, "guests_skipped": 0, "guests_updated": 0, "rows_ignored": 1}
 
     groups = {g["name"]: g for g in client.get("/api/admin/groups").json()}
     assert list(groups) == ["Sarah Jones", "The Lees", "Tran household"]  # alphabetical
@@ -256,7 +256,7 @@ def test_import_groups_ranks_and_is_repeatable(client):
     assert groups["Tran household"]["guests"][1]["rsvp"] == "not_attending"
 
     again = client.post("/api/admin/import", json={"csv": CSV}).json()
-    assert again == {"groups_created": 0, "guests_added": 0, "guests_skipped": 6, "rows_ignored": 1}
+    assert again == {"groups_created": 0, "guests_added": 0, "guests_skipped": 6, "guests_updated": 0, "rows_ignored": 1}
 
 
 def test_import_adds_to_an_existing_group_after_its_guests(client):
@@ -265,6 +265,67 @@ def test_import_adds_to_an_existing_group_after_its_guests(client):
     client.post("/api/admin/import", json={"csv": "group;name\nThe Lees;Grandma Lee\n"})
     (lees,) = client.get("/api/admin/groups").json()
     assert [(x["name"], x["rank"]) for x in lees["guests"]] == [("Grandpa Lee", 0), ("Grandma Lee", 1)]
+
+
+def test_import_reads_guest_category_and_fills_it_in_on_reimport(client):
+    sign_in(client, ROOT_PW)
+    client.post("/api/admin/import", json={"csv": "group,name\nThe Lees,Grandma Lee\nThe Lees,Uncle David\n"})
+    r = client.post("/api/admin/import", json={"csv": (
+        "Group,Name,Guest Category\n"
+        "The Lees,Grandma Lee,  Bride's   family \n"
+        "The Lees,Uncle David,\n"
+        "Work,Sam Park,Friends\n")})
+    assert r.json() == {"groups_created": 1, "guests_added": 1, "guests_skipped": 1,
+                        "guests_updated": 1, "rows_ignored": 0}
+    groups = {g["name"]: g for g in client.get("/api/admin/groups").json()}
+    assert [x["category"] for x in groups["The Lees"]["guests"]] == ["Bride's family", ""]
+    assert groups["Work"]["guests"][0]["category"] == "Friends"
+
+    guest_id = groups["The Lees"]["guests"][1]["id"]
+    r = client.patch(f"/api/admin/guests/{guest_id}", json={"category": " Groom's family "})
+    assert r.json()["guests"][1]["category"] == "Groom's family"
+    r = client.patch(f"/api/admin/guests/{guest_id}", json={"category": ""})
+    assert r.json()["guests"][1]["category"] == ""
+    assert client.patch(f"/api/admin/guests/{guest_id}", json={"category": "x" * 61}).status_code == 422
+
+
+def test_import_reads_guest_location_and_fills_it_in_on_reimport(client):
+    sign_in(client, ROOT_PW)
+    client.post("/api/admin/import", json={"csv": "group,name,guest category\nThe Lees,Grandma Lee,Family\n"})
+    r = client.post("/api/admin/import", json={"csv": (
+        "Group,Name,Guest Location\n"
+        "The Lees,Grandma Lee,  Kuala   Lumpur \n"
+        "Work,Sam Park,Singapore\n")})
+    assert r.json() == {"groups_created": 1, "guests_added": 1, "guests_skipped": 0,
+                        "guests_updated": 1, "rows_ignored": 0}
+    groups = {g["name"]: g for g in client.get("/api/admin/groups").json()}
+    lee = groups["The Lees"]["guests"][0]
+    assert (lee["category"], lee["location"]) == ("Family", "Kuala Lumpur")  # category kept
+    assert groups["Work"]["guests"][0]["location"] == "Singapore"
+
+    r = client.patch(f"/api/admin/guests/{lee['id']}", json={"location": ""})
+    assert r.json()["guests"][0]["location"] == ""
+    assert client.patch(f"/api/admin/guests/{lee['id']}", json={"location": "x" * 61}).status_code == 422
+
+
+def test_upgrade_adds_category_to_an_older_database(settings):
+    con = sqlite3.connect(settings.database_path)
+    con.executescript("""
+        CREATE TABLE groups (id INTEGER PRIMARY KEY, public_id VARCHAR(32) UNIQUE, name VARCHAR(120),
+                             created_at DATETIME);
+        CREATE TABLE guests (id INTEGER PRIMARY KEY, group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE,
+                             name VARCHAR(60), rank INTEGER, rsvp VARCHAR(16), save_the_date_sent_at DATETIME,
+                             invitation_sent_at DATETIME, created_at DATETIME, updated_at DATETIME);
+        INSERT INTO groups VALUES (1, 'abc', 'Old', '2026-01-01');
+        INSERT INTO guests VALUES (1, 1, 'Ana', 0, 'attending', NULL, NULL, '2026-01-01', '2026-01-01');
+    """)
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        (group,) = c.get("/api/admin/groups").json()
+        assert group["guests"][0]["category"] == ""
+        assert group["guests"][0]["location"] == ""
 
 
 def test_import_needs_a_name_heading(client):

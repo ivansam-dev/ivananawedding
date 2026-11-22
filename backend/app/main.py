@@ -10,8 +10,8 @@ from sqlalchemy.orm import sessionmaker
 
 from .auth import sync_passwords_from_env
 from .config import PASSWORD_ENV, ROLES, Settings
-from .db import make_engine
-from .models import AdminCredential, Base
+from .db import make_engine, upgrade
+from .models import AdminCredential
 from .routes import admin, public, session
 from .security import LoginLimiter
 
@@ -25,7 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
-        Base.metadata.create_all(engine)
+        upgrade(engine)
         with Session() as db:
             sync_passwords_from_env(db, settings)
             missing = [role for role in ROLES if db.get(AdminCredential, role) is None]

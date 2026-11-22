@@ -44,6 +44,8 @@ class Guest(Base):
     name: Mapped[str] = mapped_column(String(60))
     rank: Mapped[int] = mapped_column(default=0)  # 0 is greeted first
     rsvp: Mapped[str] = mapped_column(String(16), default="no_response")
+    category: Mapped[str] = mapped_column(String(60), default="", server_default="")  # e.g. "Bride's family"
+    location: Mapped[str] = mapped_column(String(60), default="", server_default="")  # e.g. "Singapore"
     save_the_date_sent_at: Mapped[datetime | None]
     invitation_sent_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(default=utcnow)

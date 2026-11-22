@@ -125,6 +125,10 @@ def update_guest(guest_id: int, body: GuestUpdate, db: Session = Depends(get_db)
         guest.name = body.name
     if body.rsvp is not None:
         guest.rsvp = body.rsvp
+    if body.category is not None:
+        guest.category = body.category
+    if body.location is not None:
+        guest.location = body.location
     for kind in ("save_the_date", "invitation"):
         sent = getattr(body, f"{kind}_sent")
         if sent is not None:

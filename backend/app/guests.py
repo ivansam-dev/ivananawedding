@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from .models import Group, Guest
-from .schemas import GROUP_NAME_MAX, GUEST_NAME_MAX, ImportOut, clean_text
+from .schemas import CATEGORY_MAX, GROUP_NAME_MAX, GUEST_NAME_MAX, LOCATION_MAX, ImportOut, clean_text
 from .security import new_public_id
 
 
@@ -66,6 +66,8 @@ HEADER_ALIASES = {
     "name": {"name", "guest", "guest name", "full name", "display name"},
     "rank": {"rank", "order", "position", "#", "no", "no.", "number"},
     "rsvp": {"rsvp", "status", "response"},
+    "category": {"guest category", "category", "guest type", "side", "circle"},
+    "location": {"guest location", "location", "city", "region", "country", "where"},
 }
 RSVP_WORDS = {
     "attending": {"attending", "yes", "y", "accepted", "accept", "coming", "going"},
@@ -86,6 +88,8 @@ class Row:
     name: str
     rank: float | None
     rsvp: str | None
+    category: str | None  # None when the file has no category column
+    location: str | None  # None when the file has no location column
 
 
 def _header(cell: str) -> str:
@@ -132,7 +136,7 @@ def parse_guest_csv(text: str) -> tuple[list[Row], int]:
                 if "name" not in cols:
                     raise ImportProblem(
                         "The first row should be column headings with at least a 'name' column "
-                        "(and optionally 'group' and 'rank')."
+                        "(and optionally 'group', 'rank', 'rsvp', 'guest category' and 'guest location')."
                     )
                 continue
 
@@ -153,6 +157,8 @@ def parse_guest_csv(text: str) -> tuple[list[Row], int]:
                     name=name,
                     rank=_rank(cell("rank")),
                     rsvp=_rsvp(cell("rsvp")) if "rsvp" in cols else None,
+                    category=clean_text(cell("category"))[:CATEGORY_MAX] if "category" in cols else None,
+                    location=clean_text(cell("location"))[:LOCATION_MAX] if "location" in cols else None,
                 )
             )
     except csv.Error as exc:
@@ -164,7 +170,8 @@ def import_guests(db: Session, text: str) -> ImportOut:
     """Adds guests to groups matched by name (case-insensitive), creating groups as needed.
 
     A guest with no group gets a group of their own. A guest already in that group is skipped,
-    so importing the same file twice changes nothing.
+    so importing the same file twice changes nothing, except that a non-blank guest category or
+    location in the file replaces theirs (so an older list can be re-imported to fill them in).
     """
     rows, ignored = parse_guest_csv(text)
 
@@ -180,7 +187,7 @@ def import_guests(db: Session, text: str) -> ImportOut:
         buckets.setdefault(key, []).append(row)
         labels.setdefault(key, label)
 
-    created = added = skipped = 0
+    created = added = skipped = updated = 0
     for key, items in buckets.items():
         group = existing.get(key)
         if group is None:
@@ -188,23 +195,37 @@ def import_guests(db: Session, text: str) -> ImportOut:
             existing[key] = group
             created += 1
             have: set[str] = set()
+            current = {}
             rank = 0
         else:
             have = {g.name.casefold() for g in group.guests}
+            current = {g.name.casefold(): g for g in group.guests}
             rank = max((g.rank for g in group.guests), default=-1) + 1
 
         # ranked rows first, in rank order; then the rest in file order
         items.sort(key=lambda r: (r.rank is None, r.rank or 0, r.line))
         for row in items:
             if row.name.casefold() in have:
-                skipped += 1
+                guest = current.get(row.name.casefold())
+                changed = False
+                for field in ("category", "location"):
+                    value = getattr(row, field)
+                    if guest is not None and value and getattr(guest, field) != value:
+                        setattr(guest, field, value)
+                        changed = True
+                if changed:
+                    updated += 1
+                else:
+                    skipped += 1
                 continue
             have.add(row.name.casefold())
-            db.add(Guest(group_id=group.id, name=row.name, rank=rank, rsvp=row.rsvp or "no_response"))
+            db.add(Guest(group_id=group.id, name=row.name, rank=rank, rsvp=row.rsvp or "no_response",
+                         category=row.category or "", location=row.location or ""))
             rank += 1
             added += 1
 
     db.commit()
     return ImportOut(
-        groups_created=created, guests_added=added, guests_skipped=skipped, rows_ignored=ignored
+        groups_created=created, guests_added=added, guests_skipped=skipped,
+        guests_updated=updated, rows_ignored=ignored,
     )

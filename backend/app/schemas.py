@@ -10,6 +10,8 @@ Rsvp = Literal["no_response", "attending", "not_attending"]
 SentKind = Literal["save_the_date", "invitation"]
 
 GUEST_NAME_MAX = 60  # the card trims longer names (see cleanNames in index.html)
+CATEGORY_MAX = 60
+LOCATION_MAX = 60
 GROUP_NAME_MAX = 120
 
 
@@ -29,7 +31,19 @@ def _name(max_len: int):
     return AfterValidator(check)
 
 
+def _optional(max_len: int):
+    def check(value: str) -> str:
+        value = clean_text(value)
+        if len(value) > max_len:
+            raise ValueError(f"must be at most {max_len} characters")
+        return value
+
+    return AfterValidator(check)
+
+
 GuestName = Annotated[str, _name(GUEST_NAME_MAX)]
+Category = Annotated[str, _optional(CATEGORY_MAX)]  # blank clears it
+Location = Annotated[str, _optional(LOCATION_MAX)]  # blank clears it
 GroupName = Annotated[str, _name(GROUP_NAME_MAX)]
 
 
@@ -59,6 +73,8 @@ class GuestOut(BaseModel):
     name: str
     rank: int
     rsvp: Rsvp
+    category: str
+    location: str
     save_the_date_sent_at: datetime | None
     invitation_sent_at: datetime | None
 
@@ -101,6 +117,8 @@ class GuestCreate(BaseModel):
 class GuestUpdate(BaseModel):
     name: GuestName | None = None
     rsvp: Rsvp | None = None
+    category: Category | None = None
+    location: Location | None = None
     group_id: int | None = None
     save_the_date_sent: bool | None = None
     invitation_sent: bool | None = None
@@ -132,4 +150,5 @@ class ImportOut(BaseModel):
     groups_created: int
     guests_added: int
     guests_skipped: int  # already in that group
+    guests_updated: int  # already in that group, but given a new category or location
     rows_ignored: int  # no name

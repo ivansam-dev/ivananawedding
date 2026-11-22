@@ -88,6 +88,12 @@ The Lees,Uncle David,2
   give a guest a group of their own.
 - **rank** (optional) sets the order within a group, lowest first. Without it, the file's order is used.
 - **rsvp** (optional) accepts values like yes or no.
+- **guest category** (optional, or just **category**) is a wider grouping, like "Bride's family" or
+  "Work friends". The Guests view can filter and sort by it, and you can edit it there.
+  Re-importing a file with this column fills in the category for guests already on the list.
+- **guest location** (optional, or just **location** or **city**) is where a guest is coming from,
+  like "Singapore". The Categories view breaks each category down by location, and it can be
+  filtered and edited in the Guests view. Re-importing fills it in the same way as the category.
 - Guests are added to existing groups with the same name, and anyone already in that group is
   skipped. Importing the same file twice is safe.
 - **To start over**, click **Clear list** (root admin, next to Import CSV) and type `delete`, then
