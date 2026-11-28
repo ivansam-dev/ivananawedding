@@ -53,8 +53,10 @@ COPIED_COLUMNS = {
 
 
 def upgrade(engine: Engine) -> None:
-    """Creates missing tables, renames and adds any missing columns and gives each of the card's
-    letters a row. Safe to run on every start."""
+    """Creates missing tables, renames and adds any missing columns, gives each of the card's letters a
+    row and makes sure one version of the card's layout, and one of the envelope's look, is live. Safe to run on every start."""
+    from .layouts import seed_versions
+    from .letter_style import seed_style_versions
     from .letters import seed_letters
     from .models import Base
 
@@ -76,4 +78,6 @@ def upgrade(engine: Engine) -> None:
                     conn.execute(text(f"UPDATE {table} SET {column} = {source} WHERE {source} IS NOT NULL"))
     with Session(engine) as db:
         seed_letters(db)
+        seed_versions(db)
+        seed_style_versions(db)
         db.commit()

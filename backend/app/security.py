@@ -74,6 +74,9 @@ class LoginLimiter:
     reach `overall` (guessing spread over many addresses), each address gets only `under_attack`
     failures instead. An address with no recent failures can always try, so a flood of wrong
     guesses can't lock the admins out.
+
+    Tries still being checked count against an address's allowance too, so a burst of guesses sent
+    all at once can't slip past it before the first of them has failed.
     """
 
     def __init__(
@@ -82,13 +85,15 @@ class LoginLimiter:
         self.per_ip, self.overall, self.under_attack, self.window = per_ip, overall, under_attack, window_s
         self._by_ip: dict[str, deque[float]] = {}
         self._all: deque[float] = deque()
+        self._checking: dict[str, int] = {}  # tries begun and not yet ended, per address
         self._lock = threading.Lock()
 
     def _trim(self, q: deque[float], now: float) -> None:
         while q and q[0] <= now - self.window:
             q.popleft()
 
-    def blocked(self, ip: str) -> bool:
+    def begin(self, ip: str) -> bool:
+        """Whether the address may try a password now. Every True must be followed by end()."""
         now = time.monotonic()
         with self._lock:
             self._trim(self._all, now)
@@ -98,22 +103,29 @@ class LoginLimiter:
                 if not q:
                     del self._by_ip[ip]
                     q = None
-            if q is None:
-                return False
+            used = (len(q) if q else 0) + self._checking.get(ip, 0)
             limit = self.under_attack if len(self._all) >= self.overall else self.per_ip
-            return len(q) >= limit
+            if used >= limit:
+                return False
+            self._checking[ip] = self._checking.get(ip, 0) + 1
+            return True
 
-    def failed(self, ip: str) -> None:
+    def end(self, ip: str, *, failed: bool, forget: bool = False) -> None:
+        """Ends a try that begin() allowed, counting it if it failed. forget clears the address's failures:
+        only for root sign-ins, since if the link password cleared them, someone who knows it could keep
+        resetting their count while guessing root."""
         now = time.monotonic()
         with self._lock:
-            self._all.append(now)
-            self._by_ip.setdefault(ip, deque()).append(now)
-            if len(self._by_ip) > 5000:  # forget addresses whose failures have aged out
-                for key in [k for k, q in self._by_ip.items() if not q or q[-1] <= now - self.window]:
-                    del self._by_ip[key]
-
-    def succeeded(self, ip: str) -> None:
-        """Forgets an address's failures. Only for root sign-ins: if the link password cleared
-        them, someone who knows it could keep resetting their count while guessing root."""
-        with self._lock:
-            self._by_ip.pop(ip, None)
+            left = self._checking.get(ip, 0) - 1
+            if left > 0:
+                self._checking[ip] = left
+            else:
+                self._checking.pop(ip, None)
+            if forget:
+                self._by_ip.pop(ip, None)
+            elif failed:
+                self._all.append(now)
+                self._by_ip.setdefault(ip, deque()).append(now)
+                if len(self._by_ip) > 5000:  # forget addresses whose failures have aged out
+                    for key in [k for k, q in self._by_ip.items() if not q or q[-1] <= now - self.window]:
+                        del self._by_ip[key]

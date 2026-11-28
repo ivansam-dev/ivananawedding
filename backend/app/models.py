@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 RSVP_VALUES = ("no_response", "attending", "not_attending")
@@ -74,6 +74,46 @@ class Letter(Base):
     active: Mapped[bool] = mapped_column(default=False)
     rank: Mapped[int] = mapped_column(default=0)
     opens_first: Mapped[bool] = mapped_column(default=False)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class LayoutVersion(Base):
+    """A saved version of the card's layout (schemas.CardLayout, as JSON text): where the cover's and the
+    save the date's text sits and what it says. Exactly one is live, and guests see that one (layouts.py)."""
+
+    __tablename__ = "layout_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(60))
+    layout: Mapped[str] = mapped_column(Text)
+    live: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class StyleVersion(Base):
+    """A saved version of the envelope's look (schemas.LetterStyle, as JSON text). Exactly one is live, and
+    guests see that one (letter_style.py)."""
+
+    __tablename__ = "style_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(60))
+    style: Mapped[str] = mapped_column(Text)
+    live: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class Setting(Base):
+    """A choice the admin made for the whole card, stored as JSON text under its name. Nothing is kept here
+    now: the envelope's look and the card's layout moved to versions of their own, and upgrade() moves
+    any left from before into them."""
+
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 
 

@@ -1,2 +1,15 @@
+# Search engines stay out. The apps that draw a preview under a pasted link (Messenger, WhatsApp, ...)
+# may fetch the page, or the link shows up bare.
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: meta-externalagent
+User-agent: WhatsApp
+User-agent: Twitterbot
+User-agent: TelegramBot
+User-agent: Slackbot-LinkExpanding
+User-agent: Discordbot
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Disallow: /

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 
 import pytest
@@ -11,6 +12,16 @@ from app.config import Settings
 from app.main import create_app
 
 ROOT_PW, LINK_PW = "root-secret", "link-secret"
+# the envelope's look before the admin picks one: the original cinnabar lacquer
+ORIGINAL_STYLE = {"colour": "#83171c", "pattern": "foil", "finish": "tone", "strength": 1.0, "crease": "none", "seal": "red", "seal_size": 1.0}
+# the card's text where the stylesheet puts it, in its own words: the cover's ("Dear …") and the save the date's
+STD_PIECES = ("title", "lead", "names", "day", "place", "note")
+PLACE = {"x": 0.0, "y": 0.0, "size": 1.0, "bold": False, "italic": False}
+ORIGINAL_LAYOUT = {
+    "cover": {"xi": PLACE, "dear": {**PLACE, "text": {}}, "names": PLACE},
+    "save_the_date": {k: {**PLACE, "text": {}} for k in STD_PIECES},
+    "std_height": 1.0,
+}
 
 
 @pytest.fixture
@@ -98,6 +109,12 @@ def test_repeated_wrong_passwords_are_blocked(client):
 def login_from(client: TestClient, ip: str, password: str) -> int:
     return client.post("/api/auth/login", json={"password": password},
                        headers={"x-real-ip": ip}).status_code
+
+
+def test_guesses_sent_all_at_once_are_still_limited(client):
+    with ThreadPoolExecutor(30) as pool:
+        codes = list(pool.map(lambda _: login_from(client, "10.3.3.3", "guess"), range(30)))
+    assert codes.count(401) == 10 and codes.count(429) == 20
 
 
 def test_guessing_from_many_addresses_cannot_lock_the_admins_out(client):
@@ -208,6 +225,10 @@ def test_guests_reply_from_their_link(client):
     assert client.post(url, json={"replies": [{"guest_id": baby, "dietary": "Vegetarian"}]}).status_code == 422
     assert client.post(url, json={"replies": [{"guest_id": baby, "rsvp": "attending"}]}).status_code == 422  # the old shape
     assert client.post(url, json={"replies": [{"guest_id": baby, "reception_rsvp": "attending", "dietary": "x" * 301}]}).status_code == 422
+    for lone_surrogate in ('"reception_rsvp": "attending", "dietary": "\\ud800"', '"tea_rsvp": "\\ud800"'):
+        body = '{"replies": [{"guest_id": %d, %s}]}' % (baby, lone_surrogate)
+        r = client.post(url, content=body, headers={"content-type": "application/json"})
+        assert r.status_code == 422 and r.json()["detail"][0]["msg"], r.text
     assert client.post(url, json={"replies": []}).status_code == 422
     assert client.post("/api/invite/zzzzzzzz/rsvp", json={"replies": [{"guest_id": baby, "tea_rsvp": "attending"}]}).status_code == 404
 
@@ -467,7 +488,8 @@ def test_only_the_save_the_date_is_active_at_first(client):
     client.post("/api/auth/logout")  # guests aren't signed in
     r = client.get(f"/api/invite/{group['public_id']}").json()
     assert (r["letters"], r["opens"]) == (["save_the_date"], "save_the_date")
-    assert client.get("/api/letters").json() == {"letters": ["save_the_date"], "opens": "save_the_date"}
+    assert client.get("/api/letters").json() == {"letters": ["save_the_date"], "opens": "save_the_date", "style": ORIGINAL_STYLE,
+                                                "layout": ORIGINAL_LAYOUT}
 
 
 def test_active_letters_come_earliest_first(client):
@@ -552,6 +574,278 @@ def test_only_root_can_change_letters(client):
     assert client.patch("/api/admin/letters/invitation", json={"active": True}).status_code == 403
 
 
+# ---------------------------------------------------------------- the envelope's look
+
+def test_the_letter_style_starts_as_the_original_and_reaches_every_link(client):
+    assert client.get("/api/style").json() == ORIGINAL_STYLE
+    sign_in(client, ROOT_PW)
+    assert client.get("/api/admin/style").json() == ORIGINAL_STYLE
+    g = new_group(client, "The Lees", ["Grandma Lee"])
+
+    moss = {"colour": "#4A5A2C", "pattern": "corner", "finish": "gold", "strength": 0.8, "crease": "pearls", "seal": "gold", "seal_size": 1.3}
+    r = client.put("/api/admin/style", json=moss)
+    assert r.status_code == 200, r.text
+    saved = {**moss, "colour": "#4a5a2c"}
+    assert r.json() == saved
+    assert client.get("/api/admin/style").json() == saved
+    assert client.get(f"/api/invite/{g['public_id']}").json()["style"] == saved
+    assert client.get("/api/letters").json()["style"] == saved
+    assert client.get("/api/style").json() == saved
+
+    # anything left out goes back to the original's choice
+    assert client.put("/api/admin/style", json={"colour": "#4a5a2c"}).json() == {**ORIGINAL_STYLE, "colour": "#4a5a2c"}
+
+
+def test_the_letter_style_is_checked(client):
+    sign_in(client, ROOT_PW)
+    for bad in ({"colour": "green"}, {"colour": "#12345"}, {"pattern": "tartan"}, {"crease": "zigzag"},
+                {"seal": "blue"}, {"finish": "silver"}, {"strength": 0}, {"strength": 1.5}, {"seal_size": 0.5}, {"seal_size": 2}):
+        assert client.put("/api/admin/style", json=bad).status_code == 422, bad
+    assert client.get("/api/admin/style").json() == ORIGINAL_STYLE
+
+
+def test_a_saved_style_the_card_no_longer_draws_falls_back_to_the_original(client, settings):
+    sign_in(client, ROOT_PW)
+    client.put("/api/admin/style", json={"pattern": "lattice"})
+    con = sqlite3.connect(settings.database_path)
+    con.execute("UPDATE style_versions SET style = '{\"pattern\": \"tartan\"}' WHERE live = 1")
+    con.commit()
+    con.close()
+    assert client.get("/api/style").json() == ORIGINAL_STYLE
+
+
+def test_only_root_can_change_the_letter_style(client):
+    assert client.get("/api/admin/style").status_code == 401
+    assert client.put("/api/admin/style", json={"seal": "gold"}).status_code == 401
+    sign_in(client, LINK_PW)
+    assert client.get("/api/admin/style").status_code == 403
+    assert client.put("/api/admin/style", json={"seal": "gold"}).status_code == 403
+    assert client.get("/api/style").json()["seal"] == "red"
+
+
+# ---------------------------------------------------------------- the letter style, in versions
+
+def style_versions(client: TestClient) -> list[dict]:
+    r = client.get("/api/admin/style-versions")
+    assert r.status_code == 200
+    return r.json()
+
+
+def test_guests_see_the_live_style_version(client):
+    sign_in(client, ROOT_PW)
+    (original,) = style_versions(client)
+    assert (original["name"], original["live"], original["style"]) == ("Original", True, ORIGINAL_STYLE)
+    g = new_group(client, "The Lees", ["Ann"])
+
+    moss = {**ORIGINAL_STYLE, "colour": "#4a5a2c", "pattern": "lattice"}
+    r = client.post("/api/admin/style-versions", json={"name": " Moss  draft ", "style": moss})
+    assert r.status_code == 201
+    draft = r.json()
+    assert (draft["name"], draft["live"], draft["style"]) == ("Moss draft", False, moss)
+    # a new version starts as the original unless a style is given
+    assert client.post("/api/admin/style-versions", json={"name": "Blank"}).json()["style"] == ORIGINAL_STYLE
+    # nothing changes for guests until it's made live
+    assert client.get("/api/style").json() == ORIGINAL_STYLE
+
+    r = client.patch(f"/api/admin/style-versions/{draft['id']}", json={"live": True})
+    assert r.status_code == 200
+    assert [(v["name"], v["live"]) for v in r.json()] == [("Original", False), ("Moss draft", True), ("Blank", False)]
+    for seen in (client.get("/api/style").json(), client.get("/api/letters").json()["style"],
+                 client.get(f"/api/invite/{g['public_id']}").json()["style"], client.get("/api/admin/style").json()):
+        assert seen == moss
+    # the layout isn't touched
+    assert [v["live"] for v in versions(client)] == [True]
+
+    # saving to the live version changes what guests see; renaming doesn't touch the style
+    client.patch(f"/api/admin/style-versions/{draft['id']}", json={"style": {"seal": "gold"}, "name": "Gold"})
+    assert client.get("/api/style").json() == {**ORIGINAL_STYLE, "seal": "gold"}
+    assert [v["name"] for v in style_versions(client)] == ["Original", "Gold", "Blank"]
+    # PUT /admin/style saves to the live version
+    client.put("/api/admin/style", json={"crease": "pearls"})
+    assert next(v for v in style_versions(client) if v["live"])["style"] == {**ORIGINAL_STYLE, "crease": "pearls"}
+
+
+def test_the_live_style_version_cannot_be_deleted_and_bad_ones_are_refused(client):
+    sign_in(client, ROOT_PW)
+    (original,) = style_versions(client)
+    other = client.post("/api/admin/style-versions", json={"name": "Other"}).json()
+    assert client.delete(f"/api/admin/style-versions/{original['id']}").status_code == 422
+    for bad in ({"style": {"pattern": "tartan"}}, {"name": ""}, {"name": "x" * 61}, {"live": False}):
+        assert client.patch(f"/api/admin/style-versions/{other['id']}", json=bad).status_code == 422, bad
+    assert client.delete(f"/api/admin/style-versions/{other['id']}").status_code == 204
+    assert [v["name"] for v in style_versions(client)] == ["Original"]
+    assert client.delete(f"/api/admin/style-versions/{other['id']}").status_code == 404
+    assert client.patch(f"/api/admin/style-versions/{other['id']}", json={"live": True}).status_code == 404
+
+
+def test_only_root_can_see_or_change_style_versions(client):
+    assert client.get("/api/admin/style-versions").status_code == 401
+    sign_in(client, LINK_PW)
+    assert client.get("/api/admin/style-versions").status_code == 403
+    assert client.post("/api/admin/style-versions", json={"name": "X"}).status_code == 403
+    assert client.patch("/api/admin/style-versions/1", json={"live": True}).status_code == 403
+    assert client.delete("/api/admin/style-versions/1").status_code == 403
+
+
+def test_upgrade_turns_a_saved_style_into_the_live_version(settings):
+    with TestClient(create_app(settings)):
+        pass
+    con = sqlite3.connect(settings.database_path)
+    # as if the envelope's look had been chosen before there were versions
+    con.execute("DELETE FROM style_versions")
+    con.execute("INSERT INTO settings (key, value, updated_at) VALUES ('letter_style', ?, '2026-01-01')",
+                ('{"colour": "#4a5a2c", "seal": "gold"}',))
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        (v,) = style_versions(c)
+        assert (v["name"], v["live"], v["style"]) == ("Version 1", True, {**ORIGINAL_STYLE, "colour": "#4a5a2c", "seal": "gold"})
+        assert c.get("/api/style").json() == v["style"]
+    con = sqlite3.connect(settings.database_path)
+    assert con.execute("SELECT count(*) FROM settings WHERE key = 'letter_style'").fetchone() == (0,)
+    con.execute("UPDATE style_versions SET live = 0")
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        assert [v["live"] for v in style_versions(c)] == [True]
+
+
+# ---------------------------------------------------------------- the card's layout, in versions
+
+def versions(client: TestClient) -> list[dict]:
+    r = client.get("/api/admin/versions")
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_a_new_card_has_one_live_version_with_the_original_layout(client):
+    sign_in(client, ROOT_PW)
+    (v,) = versions(client)
+    assert (v["name"], v["live"], v["layout"]) == ("Original", True, ORIGINAL_LAYOUT)
+    assert client.get("/api/letters").json()["layout"] == ORIGINAL_LAYOUT
+
+
+def test_guests_see_the_live_version(client):
+    sign_in(client, ROOT_PW)
+    g = new_group(client, "The Lees", ["Grandma Lee"])
+    (original,) = versions(client)
+    moved = {
+        "cover": {"dear": {"y": -2, "text": {"en": "  Dearest ", "vi": "Kính gửi"}}, "xi": {"size": 1.4}},
+        "save_the_date": {"names": {"x": -3.5, "y": 6, "size": 1.25, "bold": True, "text": {"en": "Ivan\n\n  & Ana"}},
+                          "note": {"y": -2, "italic": True, "text": {"zh-Hant": ""}}},
+    }
+    r = client.post("/api/admin/versions", json={"name": " Moss  draft ", "layout": moved})
+    assert r.status_code == 201, r.text
+    draft = r.json()
+    saved = {
+        "cover": {**ORIGINAL_LAYOUT["cover"], "dear": {**PLACE, "y": -2.0, "text": {"en": "Dearest", "vi": "Kính gửi"}},
+                  "xi": {**PLACE, "size": 1.4}},
+        "save_the_date": {**ORIGINAL_LAYOUT["save_the_date"],
+                          "names": {"x": -3.5, "y": 6.0, "size": 1.25, "bold": True, "italic": False, "text": {"en": "Ivan\n& Ana"}},
+                          "note": {**PLACE, "y": -2.0, "italic": True, "text": {"zh-Hant": ""}}},
+        "std_height": 1.0,
+    }
+    assert (draft["name"], draft["live"], draft["layout"]) == ("Moss draft", False, saved)
+    # a new version changes nothing for guests until it's made live
+    assert client.get(f"/api/invite/{g['public_id']}").json()["layout"] == ORIGINAL_LAYOUT
+
+    r = client.patch(f"/api/admin/versions/{draft['id']}", json={"live": True})
+    assert r.status_code == 200, r.text
+    assert [(v["id"], v["live"]) for v in r.json()] == [(original["id"], False), (draft["id"], True)]
+    assert client.get(f"/api/invite/{g['public_id']}").json()["layout"] == saved
+    assert client.get("/api/letters").json()["layout"] == saved
+    # the envelope's look is a separate choice
+    assert client.get("/api/admin/style").json() == ORIGINAL_STYLE
+
+    # saving to the live version changes what guests see; renaming doesn't touch the layout
+    client.patch(f"/api/admin/versions/{draft['id']}", json={"layout": {}, "name": "Plain"})
+    assert client.get("/api/letters").json()["layout"] == ORIGINAL_LAYOUT
+    assert [v["name"] for v in versions(client)] == ["Original", "Plain"]
+
+
+def test_the_live_version_cannot_be_deleted(client):
+    sign_in(client, ROOT_PW)
+    (original,) = versions(client)
+    other = client.post("/api/admin/versions", json={"name": "Other"}).json()
+    assert other["layout"] == ORIGINAL_LAYOUT
+    assert client.delete(f"/api/admin/versions/{original['id']}").status_code == 422
+    assert client.delete(f"/api/admin/versions/{other['id']}").status_code == 204
+    assert [v["name"] for v in versions(client)] == ["Original"]
+    assert client.delete(f"/api/admin/versions/{other['id']}").status_code == 404
+    assert client.patch(f"/api/admin/versions/{other['id']}", json={"live": True}).status_code == 404
+
+
+def test_layouts_are_checked(client):
+    sign_in(client, ROOT_PW)
+    (v,) = versions(client)
+    std = lambda piece: {"layout": {"save_the_date": piece}}  # noqa: E731
+    for bad in (std({"names": {"x": 61}}), std({"names": {"y": -41}}), std({"title": {"size": 0.3}}), std({"title": {"size": 2.6}}),
+                std({"day": {"x": "left"}}), std({"day": {"bold": "very"}}), std({"day": {"text": {"fr": "Vendredi"}}}),
+                std({"day": {"text": {"en": "x" * 161}}}), std({"day": {"text": {"en": "a\nb\nc\nd\ne"}}}),
+                {"layout": {"std_height": 0.9}}, {"layout": {"std_height": 1.7}}, {"layout": {"std_height": "tall"}},
+                {"name": " "}, {"name": "x" * 61}, {"live": False}):
+        assert client.patch(f"/api/admin/versions/{v['id']}", json=bad).status_code == 422, bad
+    lone_surrogate = '{"layout": {"save_the_date": {"day": {"text": {"en": "\\ud800"}}}}}'
+    r = client.patch(f"/api/admin/versions/{v['id']}", content=lone_surrogate, headers={"content-type": "application/json"})
+    assert r.status_code == 422, r.text
+    assert client.post("/api/admin/versions", json={"name": ""}).status_code == 422
+    assert versions(client) == [v]
+
+
+def test_the_save_the_date_can_be_made_taller(client):
+    sign_in(client, ROOT_PW)
+    (v,) = versions(client)
+    r = client.patch(f"/api/admin/versions/{v['id']}", json={"layout": {"std_height": 1.35}})
+    assert r.status_code == 200, r.text
+    assert client.get("/api/letters").json()["layout"] == {**ORIGINAL_LAYOUT, "std_height": 1.35}
+
+
+def test_words_for_pieces_that_cannot_be_reworded_are_ignored(client):
+    sign_in(client, ROOT_PW)
+    r = client.post("/api/admin/versions", json={"name": "X", "layout": {"cover": {"names": {"x": 2, "text": {"en": "Bob"}}}}})
+    assert r.json()["layout"]["cover"]["names"] == {**PLACE, "x": 2.0}
+
+
+def test_only_root_can_change_the_layout(client):
+    assert client.get("/api/admin/versions").status_code == 401
+    assert client.post("/api/admin/versions", json={"name": "X"}).status_code == 401
+    sign_in(client, LINK_PW)
+    assert client.get("/api/admin/versions").status_code == 403
+    assert client.post("/api/admin/versions", json={"name": "X"}).status_code == 403
+    assert client.patch("/api/admin/versions/1", json={"live": True}).status_code == 403
+    assert client.delete("/api/admin/versions/1").status_code == 403
+
+
+def test_upgrade_turns_a_saved_layout_into_the_live_version(settings):
+    with TestClient(create_app(settings)):
+        pass
+    con = sqlite3.connect(settings.database_path)
+    # as if the save the date had been laid out before there were versions
+    con.execute("DELETE FROM layout_versions")
+    con.execute("INSERT INTO settings (key, value, updated_at) VALUES ('std_layout', ?, '2026-01-01')",
+                ('{"names": {"x": 4, "y": 0, "size": 1.2, "bold": false, "italic": true}}',))
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        (v,) = versions(c)
+        names = {**PLACE, "x": 4.0, "size": 1.2, "italic": True, "text": {}}
+        assert (v["name"], v["live"]) == ("Version 1", True)
+        assert v["layout"] == {**ORIGINAL_LAYOUT, "save_the_date": {**ORIGINAL_LAYOUT["save_the_date"], "names": names}}
+        assert c.get("/api/letters").json()["layout"] == v["layout"]
+    con = sqlite3.connect(settings.database_path)
+    assert con.execute("SELECT count(*) FROM settings WHERE key = 'std_layout'").fetchone() == (0,)
+    # and a database with no live version gets one again
+    con.execute("UPDATE layout_versions SET live = 0")
+    con.commit()
+    con.close()
+    with TestClient(create_app(settings)) as c:
+        sign_in(c, ROOT_PW)
+        assert [v["live"] for v in versions(c)] == [True]
+
+
 def test_upgrade_adds_missing_letters_and_closes_rank_gaps(settings):
     with TestClient(create_app(settings)):
         pass
@@ -567,7 +861,8 @@ def test_upgrade_adds_missing_letters_and_closes_rank_gaps(settings):
         sign_in(c, ROOT_PW)
         # the new letters arrive switched off, ranked above the others as the newest; nothing guests see changes
         assert letters(c) == [("save_the_date", True, 1), ("invitation", True, 2), ("rsvp", False, 3), ("details", False, 4)]
-        assert c.get("/api/letters").json() == {"letters": ["save_the_date", "invitation"], "opens": "invitation"}
+        assert c.get("/api/letters").json() == {"letters": ["save_the_date", "invitation"], "opens": "invitation", "style": ORIGINAL_STYLE,
+                                                    "layout": ORIGINAL_LAYOUT}
 
 
 # ---------------------------------------------------------------- backups

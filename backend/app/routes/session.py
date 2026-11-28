@@ -22,15 +22,16 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
     settings = request.app.state.settings
     limiter = request.app.state.limiter
     ip = client_ip(request)
-    if limiter.blocked(ip):
+    if not limiter.begin(ip):
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Too many attempts. Try again later.")
 
-    role = match_role(db, body.password)
+    role = None
+    try:
+        role = match_role(db, body.password)
+    finally:
+        limiter.end(ip, failed=role is None, forget=role == "root")
     if role is None:
-        limiter.failed(ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect password")
-    if role == "root":
-        limiter.succeeded(ip)
 
     now = utcnow()
     token = new_token()

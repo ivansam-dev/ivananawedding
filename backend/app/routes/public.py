@@ -9,9 +9,11 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..layouts import live_layout
+from ..letter_style import current_style
 from ..letters import opening_letter, shown_letters
 from ..models import Group
-from ..schemas import InviteGuestOut, InviteOut, LettersOut, RsvpIn, RsvpOut
+from ..schemas import InviteGuestOut, InviteOut, LettersOut, LetterStyle, RsvpIn, RsvpOut
 
 router = APIRouter()
 
@@ -47,7 +49,8 @@ def invite(public_id: str, db: Session = Depends(get_db)) -> InviteOut:
     group = _group(db, public_id)
     return InviteOut(
         names=[guest.name for guest in group.guests], guests=_guests(group),
-        letters=shown_letters(db), opens=opening_letter(db),
+        letters=shown_letters(db), opens=opening_letter(db), style=current_style(db),
+        layout=live_layout(db),
     )
 
 
@@ -74,5 +77,13 @@ def rsvp(public_id: str, body: RsvpIn, db: Session = Depends(get_db)) -> RsvpOut
 
 @router.get("/letters", response_model=LettersOut)
 def letters(db: Session = Depends(get_db)) -> LettersOut:
-    """Which letters to show, for links that carry the names themselves (?to=Name)."""
-    return LettersOut(letters=shown_letters(db), opens=opening_letter(db))
+    """Which letters to show, the envelope's look and the card's layout, for links that carry the names
+    themselves (?to=Name), and for a bare link (no group and no names), which takes the look and the layout."""
+    return LettersOut(letters=shown_letters(db), opens=opening_letter(db), style=current_style(db),
+                      layout=live_layout(db))
+
+
+@router.get("/style", response_model=LetterStyle)
+def style(db: Session = Depends(get_db)) -> LetterStyle:
+    """The envelope's look on its own."""
+    return current_style(db)

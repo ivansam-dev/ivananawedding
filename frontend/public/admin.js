@@ -22,7 +22,62 @@ const VIEWS = [
   { value: 'guests', label: 'Guests' },
   { value: 'groups', label: 'Groups' },
   { value: 'categories', label: 'Categories' },
-  { value: 'letters', label: 'Letters' }
+  { value: 'letters', label: 'Letters' },
+  { value: 'style', label: 'Letter style' },
+  { value: 'layout', label: 'Card layout' }
+];
+/* the Letter style view: the envelope's look. Each value is one the card draws (applyStyle in index.html) */
+const STYLE_CHOICES = {
+  pattern: [
+    { value: 'foil', label: 'Peony vines', note: 'The original foil' },
+    { value: 'none', label: 'Plain' },
+    { value: 'corner', label: 'Corner blossom', note: 'A spray in the top right' },
+    { value: 'corners', label: 'Two corners', note: 'Top right and bottom left' },
+    { value: 'blossoms', label: 'Scattered blossom' },
+    { value: 'lattice', label: 'Lattice', note: 'A window lattice' },
+    { value: 'clouds', label: 'Clouds', note: 'Auspicious clouds' },
+    { value: 'waves', label: 'Waves' }
+  ],
+  finish: [
+    { value: 'tone', label: 'Tone on tone' },
+    { value: 'gold', label: 'Gold' }
+  ],
+  crease: [
+    { value: 'none', label: 'None' },
+    { value: 'gold', label: 'Gold line' },
+    { value: 'double', label: 'Double rule' },
+    { value: 'stitch', label: 'Stitched' },
+    { value: 'pearls', label: 'Pearls' },
+    { value: 'laurel', label: 'Laurel' }
+  ],
+  seal: [
+    { value: 'red', label: 'Red' },
+    { value: 'gold', label: 'Gold' },
+    { value: 'tone', label: 'Matching' }
+  ]
+};
+/* shades to start from: the flap's lacquer (the rest of the envelope follows it) */
+const STYLE_SHADES = [
+  { name: 'Cinnabar', colour: '#83171c' },
+  { name: 'Deep moss', colour: '#3c4a24' },
+  { name: 'Dark moss', colour: '#4a5a2c' },
+  { name: 'Moss', colour: '#5a6b38' },
+  { name: 'Olive moss', colour: '#69692e' },
+  { name: 'Forest moss', colour: '#35503a' },
+  { name: 'Sage moss', colour: '#6f7d55' }
+];
+const DARK_MOSS = '#4a5a2c', MOSS = '#5a6b38';
+const STYLE_PRESETS = [
+  { name: 'Cinnabar lacquer', note: 'The original', style: { colour: '#83171c', pattern: 'foil', finish: 'tone', strength: 1, crease: 'none', seal: 'red' } },
+  { name: 'Moss lacquer', note: 'The original, in dark moss', style: { colour: DARK_MOSS, pattern: 'foil', finish: 'tone', strength: 1, crease: 'none', seal: 'tone' } },
+  { name: 'Plain moss', note: 'Dark moss, nothing else', style: { colour: DARK_MOSS, pattern: 'none', finish: 'tone', strength: 1, crease: 'none', seal: 'gold' } },
+  { name: 'Moss blossom', note: 'Blossom in the top right', style: { colour: MOSS, pattern: 'corner', finish: 'tone', strength: 1, crease: 'none', seal: 'gold' } },
+  { name: 'Gilded moss', note: 'A double gold rule', style: { colour: DARK_MOSS, pattern: 'none', finish: 'tone', strength: 1, crease: 'double', seal: 'gold' } },
+  { name: 'Moss & pearls', note: 'Gold blossom, pearls, red seal', style: { colour: DARK_MOSS, pattern: 'corners', finish: 'gold', strength: 0.85, crease: 'pearls', seal: 'red' } },
+  { name: 'Laurel', note: 'A gold laurel on the creases', style: { colour: '#3c4a24', pattern: 'none', finish: 'tone', strength: 1, crease: 'laurel', seal: 'gold' } },
+  { name: 'Lattice', note: 'A window lattice, stitched', style: { colour: MOSS, pattern: 'lattice', finish: 'tone', strength: 0.7, crease: 'stitch', seal: 'gold' } },
+  { name: 'Waves', note: 'Fine waves, a gold line', style: { colour: '#35503a', pattern: 'waves', finish: 'tone', strength: 0.8, crease: 'gold', seal: 'gold' } },
+  { name: 'Clouds', note: 'Gold clouds, red seal', style: { colour: DARK_MOSS, pattern: 'clouds', finish: 'gold', strength: 0.6, crease: 'none', seal: 'red' } }
 ];
 /* the card's letters (one template each in index.html) and what each holds. Guests see the ones that are
    "Active", earliest (rank 1) on the left; their cards open on the one the admin marks "Opens first" */
@@ -49,7 +104,9 @@ const FILTERS = {
     { value: 'awaiting', label: 'Waiting on an RSVP' }
   ],
   categories: [{ value: 'all', label: 'All guests' }],  // the overview has no filter of its own
-  letters: [{ value: 'all', label: 'All letters' }]     // nor do the letters
+  letters: [{ value: 'all', label: 'All letters' }],    // nor do the letters
+  style: [{ value: 'all', label: 'Letter style' }],      // nor the letter style
+  layout: [{ value: 'all', label: 'Card layout' }]   // nor the card's layout
 };
 /* the overview's columns; each count opens the guests view filtered to it (filter: a FILTERS.guests value).
    Each event has a column per answer, beneath the event's name */
@@ -175,7 +232,8 @@ export async function openAdmin(me, options = {}) {
 
 function createPanel(me, { onExpired } = {}) {
   const isRoot = me.role === 'root';
-  const base = (me.base_url || location.origin).replace(/\/+$/, '');
+  // PUBLIC_URL may be written without its scheme ("ivanheartsana.com"); links sent to guests need https://
+  const base = (me.base_url || location.origin).replace(/\/+$/, '').replace(/^(?!https?:\/\/)/i, 'https://');
   const linkFor = (g) => `${base}/${g.public_id}`;
   /* root admins start on one row per guest; link admins only ever see groups */
   const state = { groups: [], expanded: new Set(), query: '', filter: 'all', view: isRoot ? 'guests' : 'groups',
@@ -183,6 +241,8 @@ function createPanel(me, { onExpired } = {}) {
                   letters: null,    // [{ kind, active, rank, opens_first }], earliest first; loaded with the Letters view
 
                   editing: null };  // in the guests view, what's being edited: "name-<id>", "category-<id>" or "location-<id>"
+  let styleEditor = null;                                 // the Letter style view, made the first time it's shown
+  let layoutEditor = null;                                // likewise the Card layout view
   const byId = (id) => state.groups.find((g) => g.id === id);
   const nameOf = (x) => (typeof x === 'string' ? x : x.name);
   const findGuest = (id) => {
@@ -203,8 +263,8 @@ function createPanel(me, { onExpired } = {}) {
   function fillFilter() {
     filter.replaceChildren(...FILTERS[state.view].map((f) => h('option', { value: f.value }, f.label)));
     filter.value = state.filter;
-    filter.hidden = state.view === 'categories' || state.view === 'letters';
-    search.hidden = state.view === 'letters';
+    filter.hidden = ['categories', 'letters', 'style', 'layout'].includes(state.view);
+    search.hidden = ['letters', 'style', 'layout'].includes(state.view);
   }
   /* the guests view can also narrow to one guest category and location, and sort by category */
   const catFilter = isRoot && h('select', { class: 'adm-filter adm-cat-filter', 'aria-label': 'Guest category' });
@@ -423,6 +483,18 @@ function createPanel(me, { onExpired } = {}) {
       if (state.view === 'letters') {
         list.classList.remove('is-guests');
         list.replaceChildren(...letterRows());
+        return;
+      }
+      if (state.view === 'style') {                       // built once and kept, so a slider being dragged survives
+        list.classList.remove('is-guests');
+        styleEditor ||= createStyleEditor({ say, fail, close, copyUrl, base });
+        if (styleEditor.el.parentNode !== list) list.replaceChildren(styleEditor.el);
+        return;
+      }
+      if (state.view === 'layout') {                      // kept the same way, so a piece being dragged survives
+        list.classList.remove('is-guests');
+        layoutEditor ||= createLayoutEditor({ say, fail, close });
+        if (layoutEditor.el.parentNode !== list) list.replaceChildren(layoutEditor.el);
         return;
       }
       let shown;
@@ -729,6 +801,8 @@ function createPanel(me, { onExpired } = {}) {
     fillCategories();
     renderList();
     if (view === 'letters') loadLetters();                // fresh each time, in case they changed elsewhere
+    if (view === 'style') styleEditor.load();             // likewise what guests see
+    if (view === 'layout') layoutEditor.load();
     if (openGroup != null) {
       const node = list.querySelector(`[data-group="${openGroup}"]`);
       if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -906,8 +980,11 @@ function createPanel(me, { onExpired } = {}) {
     mutate(() => api('POST', `/admin/groups/${g.id}/guests`, { name }));
   });
 
-  async function copyLink(g, btn) {
-    const url = linkFor(g);
+  const copyLink = (g, btn) => copyUrl(linkFor(g), btn);
+  async function copyUrl(url, btn) {
+    if (btn.dataset.copying) return;                       // a second tap while it still says "Copied" would keep that as its label
+    btn.dataset.copying = '1';
+    const label = [...btn.childNodes];                     // text, or an icon in the guests view
     let ok = false;
     try {
       await navigator.clipboard.writeText(url);
@@ -920,11 +997,10 @@ function createPanel(me, { onExpired } = {}) {
       try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
       ta.remove();
     }
-    if (!ok) { window.prompt('Copy this link:', url); return; }
-    const label = [...btn.childNodes];                     // text, or an icon in the guests view
+    if (!ok) { delete btn.dataset.copying; window.prompt('Copy this link:', url); return; }
     btn.replaceChildren(btn.classList.contains('adm-icon') ? icon('check') : 'Copied');
     btn.classList.add('is-done');
-    setTimeout(() => { btn.replaceChildren(...label); btn.classList.remove('is-done'); }, 1600);
+    setTimeout(() => { btn.replaceChildren(...label); btn.classList.remove('is-done'); delete btn.dataset.copying; }, 1600);
   }
 
   /* ----- toolbar ----- */
@@ -1012,6 +1088,7 @@ function createPanel(me, { onExpired } = {}) {
     if (closed) return;
     closed = true;
     document.removeEventListener('keydown', onKey);
+    if (layoutEditor) layoutEditor.dispose();             // and its Compare versions, if it's open
     panel.classList.remove('is-open');
     setTimeout(() => panel.remove(), 400);
     if (current === handle) current = null;
@@ -1025,4 +1102,1225 @@ function createPanel(me, { onExpired } = {}) {
 
   refresh().catch(fail);
   return handle;
+}
+
+/* ---------- the Letter style view ----------
+   The envelope's look. The preview is a copy of the card's own envelope, drawn from the same colours and
+   patterns (window.cardStyle in index.html), so every change shows at once. It changes the card on this
+   device too, until the page is reloaded, so "See it on the card" can show it arrive. Like the card's layout,
+   the look is kept in versions: guests see the live one, and a version's changes reach them once it's saved
+   (or once it's made live). */
+const STYLE_KEYS = ['colour', 'pattern', 'finish', 'strength', 'crease', 'seal', 'seal_size'];
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs, ...children) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) if (v != null) el.setAttribute(k, String(v));
+  for (const c of children.flat(Infinity)) if (c) el.append(c);
+  return el;
+}
+/* ?look=… on a card link draws it in a style that isn't saved (LOOK in index.html) */
+const lookParam = (s) => [s.colour.slice(1), s.pattern, s.finish, Math.round(s.strength * 100), s.crease, s.seal, Math.round(s.seal_size * 100)].join('-');
+
+/* a copy of the card's envelope, without ids, its flap able to open */
+function envelopeCopy() {
+  const source = document.getElementById('env');
+  if (!source) return null;
+  const env = source.cloneNode(true);
+  for (const el of [env, ...env.querySelectorAll('[id]')]) el.removeAttribute('id');
+  env.querySelectorAll('defs').forEach((d) => d.remove());          // the seal's gradients: the card's own are used
+  for (const el of env.querySelectorAll('.letter, .flap, .flap-inner, .seal')) el.removeAttribute('style');   // left by the card's animations
+  env.classList.add('adm-env');
+  const flap = env.querySelector('.flap'), inner = env.querySelector('.flap-inner');
+  let timer = 0;
+  return {
+    el: env,
+    setOpen(open) {
+      clearTimeout(timer);
+      inner.style.transform = open ? 'rotateX(180deg)' : '';
+      /* once it's past upright it goes behind the paper, as on the card */
+      if (open) timer = setTimeout(() => { flap.style.zIndex = '0'; }, 430);
+      else flap.style.zIndex = '';
+    }
+  };
+}
+
+function createStyleEditor({ say, fail, close, copyUrl, base }) {
+  const card = window.cardStyle;
+  if (!card) return { el: h('p', { class: 'adm-empty' }, 'Reload the page to choose the letter’s style.'), load() {} };
+  const st = {
+    versions: null,                                       // every version, oldest first, as the backend has them
+    id: null,                                             // the one being edited...
+    trying: card.current(),                               // ... and its look as it is here, saved or not
+    open: false,
+    busy: false
+  };
+  const same = (a, b, keys = STYLE_KEYS) => !!a && !!b && keys.every((k) => String(a[k]) === String(b[k]));
+  const version = () => (st.versions || []).find((v) => v.id === st.id) || null;
+  const liveVersion = () => (st.versions || []).find((v) => v.live) || null;
+  const isDirty = () => !!version() && !same(st.trying, version().style);
+  const btn = (cls, act, label, attrs = {}) => h('button', { type: 'button', class: cls, 'data-style-act': act, ...attrs }, label);
+  const LOOK_KEYS = STYLE_KEYS.filter((k) => k !== 'seal_size');   // a preset is a look; it keeps the seal's size as it is
+  const isPreset = (p, t) => same(p.style, t, LOOK_KEYS);
+  const labelOf = (group, value) => (STYLE_CHOICES[group].find((c) => c.value === value) || { label: value }).label;
+
+  /* ----- the versions ----- */
+  const verList = h('div', { class: 'adm-ver-list', role: 'group', 'aria-label': 'Versions' });
+  const verState = h('p', { class: 'adm-ver-state' });
+  const liveBtn = btn('adm-btn', 'live', 'Make live', { title: 'Every guest sees this version from their next visit' });
+  const renameBtn = btn('adm-text-btn', 'rename', 'Rename');
+  const deleteBtn = btn('adm-text-btn adm-danger', 'delete', 'Delete');
+  const verSec = h('section', { class: 'adm-ver' },
+    h('div', { class: 'adm-ver-head' }, h('h3', { class: 'adm-style-h' }, 'Versions')),
+    verList,
+    h('div', { class: 'adm-ver-bar' }, verState, h('div', { class: 'adm-ver-acts' }, renameBtn, deleteBtn, liveBtn)));
+
+  /* ----- the preview ----- */
+  const copy = envelopeCopy();
+  const flapBtn = h('button', { type: 'button', class: 'adm-text-btn', 'data-style-act': 'flap' }, 'Open the flap');
+  const stage = h('div', { class: 'adm-env-stage', title: 'Click to open or close the flap' }, copy && copy.el);
+  const caption = h('p', { class: 'adm-style-caption' });
+  const previewCol = h('div', { class: 'adm-style-preview' }, stage, h('div', { class: 'adm-style-under' }, caption, flapBtn));
+
+  /* the patterns, drawn small from the card's own, through masks of their own */
+  const masks = svg('svg', { class: 'adm-defs', width: 0, height: 0, 'aria-hidden': 'true' }, svg('defs', null,
+    STYLE_CHOICES.pattern.map((p) => svg('mask', { id: `admMotif-${p.value}`, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 700, height: 500 },
+      svg('use', { href: `#motif-${p.value}` })))));
+  const patternArt = (value) => svg('svg', { class: 'adm-st-chip-art', viewBox: value === 'corners' ? '0 0 700 500' : '350 0 350 250',
+                                             preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true' },
+    svg('rect', { width: 700, height: 500, style: 'fill:var(--env-flap-a)' }),
+    svg('rect', { width: 700, height: 500, style: 'fill:var(--foil-a)', mask: `url(#admMotif-${value})` }));
+  /* a piece of the flap's edge with the trim along it */
+  const creaseArt = (value) => svg('svg', { class: 'adm-st-chip-art', viewBox: '96 66 132 88', 'aria-hidden': 'true' },
+    svg('rect', { width: 700, height: 500, style: 'fill:var(--env-side-l-b)' }),
+    svg('path', { d: 'M0 0 H700 L388 266 Q350 298 312 266 Z', style: 'fill:var(--env-flap-a)' }),
+    card.trim(value));
+  const sealArt = () => h('span', { class: 'adm-seal-dot', 'aria-hidden': 'true' });
+  /* a small envelope in a preset's colours */
+  function miniEnvelope(s) {
+    const c = (v) => card.shade(v, s.colour);
+    const [light, mid, dark] = card.sealShades(s.seal, s.colour);
+    return svg('svg', { class: 'adm-st-mini', viewBox: '0 0 70 50', 'aria-hidden': 'true' },
+      svg('rect', { width: 70, height: 50, fill: c('--env-side-r-b') }),
+      svg('path', { d: 'M0 0 L35 26 L0 50Z', fill: c('--env-side-l-a') }),
+      svg('path', { d: 'M0 50 L35 23 L70 50Z', fill: c('--env-bottom-b') }),
+      svg('path', { d: 'M0 0 H70 L35 28.5Z', fill: c('--env-flap-a') }),
+      s.crease !== 'none' && svg('path', { d: 'M2 1.2 L35 26.6 L68 1.2', fill: 'none', stroke: '#d9bd7a', 'stroke-width': 0.7 }),
+      svg('circle', { cx: 35, cy: 27, r: 6, fill: mid, stroke: dark, 'stroke-width': 0.8 }),
+      svg('circle', { cx: 33.6, cy: 25.6, r: 2.2, fill: light, opacity: 0.55 }));
+  }
+
+  /* ----- the controls ----- */
+  const section = (title, ...body) => h('section', { class: 'adm-style-sec' }, h('h3', { class: 'adm-style-h' }, title), ...body);
+  const GROUP_NAMES = { pattern: 'Pattern', finish: 'Pattern in', crease: 'Along the creases', seal: 'Seal' };
+  const chips = (group, art) => h('div', { class: 'adm-st-chips', role: 'group', 'aria-label': GROUP_NAMES[group] },
+    STYLE_CHOICES[group].map((c) => h('button', { type: 'button', class: 'adm-st-chip', 'data-style': group, 'data-value': c.value,
+                                                   'aria-pressed': 'false', title: c.note || null },
+      art && art(c.value), h('span', { class: 'adm-st-chip-label' }, c.label))));
+  const presets = STYLE_PRESETS.map((p, i) => h('button', { type: 'button', class: 'adm-preset', 'data-preset': i, 'aria-pressed': 'false' },
+    miniEnvelope(p.style),
+    h('span', { class: 'adm-preset-text' }, h('span', { class: 'adm-preset-name' }, p.name), h('span', { class: 'adm-preset-note' }, p.note))));
+  const swatches = STYLE_SHADES.map((s) => h('button', { type: 'button', class: 'adm-swatch', 'data-colour': s.colour, 'aria-pressed': 'false' },
+    h('span', { class: 'adm-swatch-dot', style: `background:${s.colour}`, 'aria-hidden': 'true' }), h('span', { class: 'adm-swatch-name' }, s.name)));
+  const range = (key, label, min, max) => {
+    const input = h('input', { type: 'range', class: 'adm-range', min, max, step: 1, 'data-range': key, 'aria-label': label });
+    const out = h('output', { class: 'adm-range-val', 'aria-hidden': 'true' });
+    return { input, out, row: h('label', { class: 'adm-range-row' }, h('span', { class: 'adm-range-label' }, label), input, out) };
+  };
+  const hue = range('h', 'Hue', 0, 359), rich = range('s', 'Richness', 0, 100), lightness = range('l', 'Lightness', 8, 60);
+  const strength = range('strength', 'Strength', 20, 100);
+  const sealSize = range('seal_size', 'Size', 60, 150);
+  const hexIn = h('input', { type: 'text', class: 'adm-input adm-hex', maxlength: 7, spellcheck: 'false', autocomplete: 'off',
+                             'aria-label': 'Colour as a hex code' });
+  const picker = h('input', { type: 'color', class: 'adm-picker', 'aria-label': 'Pick any colour', title: 'Pick any colour' });
+  const finish = chips('finish');
+  const sealChips = chips('seal', sealArt);
+
+  const status = h('p', { class: 'adm-style-status', role: 'status', 'aria-live': 'polite' });
+  const undoBtn = btn('adm-text-btn', 'undo', 'Discard changes');
+  const linkBtn = h('button', { type: 'button', class: 'adm-text-btn', 'data-style-act': 'link',
+                                title: 'A link to the card in this style, to send to each other. It doesn’t save anything.' }, 'Copy a preview link');
+  const seeBtn = h('button', { type: 'button', class: 'adm-btn adm-btn-quiet', 'data-style-act': 'see',
+                               title: 'Close this and choose a language to watch the envelope arrive' }, 'See it on the card');
+  const copyBtn = btn('adm-btn adm-btn-quiet', 'save-new', 'Save as new version', { title: 'Keep this as a version of its own' });
+  const saveBtn = btn('adm-btn', 'save', 'Save');
+
+  const controls = h('div', { class: 'adm-style-controls' },
+    section('Starting points', h('div', { class: 'adm-presets' }, presets)),
+    section('Colour',
+      h('div', { class: 'adm-swatches' }, swatches),
+      h('div', { class: 'adm-ranges' }, hue.row, rich.row, lightness.row),
+      h('div', { class: 'adm-hex-row' }, picker, hexIn, h('span', { class: 'adm-hint adm-hex-hint' }, 'The flap’s colour; the rest of the envelope follows it.'))),
+    section('Pattern', chips('pattern', patternArt),
+      h('div', { class: 'adm-style-sub' }, h('span', { class: 'adm-style-sublabel' }, 'In'), finish, strength.row)),
+    section('Along the creases', chips('crease', creaseArt)),
+    section('Seal', sealChips, h('div', { class: 'adm-style-sub adm-seal-size' }, sealSize.row)));
+  const foot = h('div', { class: 'adm-style-foot' }, status, h('div', { class: 'adm-style-actions' }, undoBtn, linkBtn, seeBtn, copyBtn, saveBtn));
+  const el = h('div', { class: 'adm-style' }, masks, verSec, previewCol, controls, foot);
+
+  /* ----- showing the style being tried ----- */
+  function paintRanges() {
+    const [H, S, L] = [+hue.input.value, +rich.input.value, +lightness.input.value];
+    hue.input.style.setProperty('--track', `linear-gradient(to right, ${[0, 60, 120, 180, 240, 300, 360].map((x) => `hsl(${x} ${S}% ${L}%)`).join(', ')})`);
+    rich.input.style.setProperty('--track', `linear-gradient(to right, hsl(${H} 0% ${L}%), hsl(${H} 100% ${L}%))`);
+    lightness.input.style.setProperty('--track', `linear-gradient(to right, hsl(${H} ${S}% 8%), hsl(${H} ${S}% 60%))`);
+    hue.out.textContent = `${H}°`;
+    rich.out.textContent = `${S}%`;
+    lightness.out.textContent = `${L}%`;
+  }
+  let versionsShown = '';
+  function renderVersions(dirty) {
+    const key = JSON.stringify([(st.versions || []).map((v) => [v.id, v.name, v.live]), st.id, dirty, st.busy]);
+    if (key === versionsShown) return;
+    versionsShown = key;
+    const focused = verList.contains(document.activeElement) ? document.activeElement.dataset.version : null;
+    verList.replaceChildren(...(st.versions || []).map((v) => h('button', {
+      type: 'button', class: `adm-ver-chip${v.live ? ' is-live' : ''}`, 'data-version': v.id, 'aria-pressed': String(v.id === st.id),
+      title: v.live ? 'Guests see this version' : null
+    }, h('span', { class: 'adm-ver-name' }, v.name),
+      v.live && h('span', { class: 'adm-live' }, 'Live'),
+      v.id === st.id && dirty && h('span', { class: 'adm-ver-dirty', title: 'Unsaved changes', 'aria-label': '(unsaved changes)' }, '•'))),
+    btn('adm-ver-chip adm-ver-new', 'new', '+ New version', { title: 'A version of its own, starting from the original envelope', disabled: st.busy }));
+    if (focused) { const b = verList.querySelector(`[data-version="${focused}"]`); if (b) b.focus({ preventScroll: true }); }
+  }
+  function sync({ fromRanges = false } = {}) {
+    const t = st.trying;
+    for (const b of el.querySelectorAll('[data-style]')) b.setAttribute('aria-pressed', String(String(t[b.dataset.style]) === b.dataset.value));
+    for (const b of presets) b.setAttribute('aria-pressed', String(isPreset(STYLE_PRESETS[b.dataset.preset], t)));
+    for (const b of swatches) b.setAttribute('aria-pressed', String(b.dataset.colour === t.colour));
+    if (!fromRanges) {
+      const [H, S, L] = card.toHsl(t.colour);
+      hue.input.value = Math.round(H);
+      rich.input.value = Math.round(S * 100);
+      lightness.input.value = Math.round(L * 100);
+    }
+    paintRanges();
+    if (document.activeElement !== hexIn) hexIn.value = t.colour;
+    picker.value = t.colour;
+    strength.input.value = Math.round(t.strength * 100);
+    strength.out.textContent = `${strength.input.value}%`;
+    sealSize.input.value = Math.round(t.seal_size * 100);
+    sealSize.out.textContent = `${sealSize.input.value}%`;
+    el.classList.toggle('is-plain', t.pattern === 'none');   // nothing to finish or strengthen
+    for (const b of sealChips.querySelectorAll('[data-value]')) {
+      const [light, mid, dark] = card.sealShades(b.dataset.value, t.colour);
+      b.querySelector('.adm-seal-dot').style.background = `radial-gradient(circle at 36% 32%, ${light}, ${mid} 48%, ${dark})`;
+    }
+    const preset = STYLE_PRESETS.find((p) => isPreset(p, t));
+    caption.textContent = [preset && preset.name, labelOf('pattern', t.pattern), t.crease !== 'none' && labelOf('crease', t.crease),
+                           `${labelOf('seal', t.seal).toLowerCase()} seal`].filter(Boolean).join(' · ');
+    el.classList.toggle('is-busy', st.busy);
+    const v = version(), live = liveVersion(), dirty = isDirty();
+    verSec.hidden = !v;
+    if (v) {
+      renderVersions(dirty);
+      verState.textContent = v.live ? `Guests see “${v.name}”.` : `Guests see “${live ? live.name : '…'}”, not this version.`;
+      liveBtn.hidden = v.live;
+      liveBtn.disabled = renameBtn.disabled = st.busy;
+      deleteBtn.disabled = st.busy || v.live;
+      deleteBtn.title = v.live ? 'Guests see this version: make another live before deleting it' : null;
+    }
+    status.textContent = !v ? '' : dirty
+      ? (v.live ? 'Unsaved changes, only on this screen: guests see this version as it was last saved.' : 'Unsaved changes.')
+      : v.live ? 'Guests see this envelope.' : 'All changes saved.';
+    status.classList.toggle('is-unsaved', dirty);
+    saveBtn.disabled = undoBtn.disabled = st.busy || !dirty;
+    copyBtn.disabled = st.busy || !v;
+  }
+  function tryStyle(patch, opts) {
+    st.trying = card.apply({ ...st.trying, ...patch });
+    sync(opts);
+  }
+  function setOpen(open) {
+    st.open = open;
+    stage.classList.toggle('is-open', open);
+    if (copy) copy.setOpen(open);
+    flapBtn.textContent = open ? 'Close the flap' : 'Open the flap';
+  }
+
+  /* ----- the versions: saving, switching, making live ----- */
+  /* opens a version: its saved look, or `trying` (its unsaved changes from before) */
+  function open(id, trying = null) {
+    st.id = id;
+    st.trying = card.apply(trying || version().style);
+    sync();
+  }
+  /* one request at a time; the buttons wait for it */
+  async function request(send) {
+    if (st.busy) return undefined;
+    st.busy = true;
+    sync();
+    try { return await send(); } catch (err) { fail(err); return undefined; } finally { st.busy = false; sync(); }
+  }
+  const leave = () => !isDirty() || window.confirm(`Discard your unsaved changes to “${version().name}”?`);
+  const askName = (message, suggestion) => clean(window.prompt(message, suggestion) || '').slice(0, VERSION_NAME_MAX);
+  async function makeLive() {
+    const v = version();
+    if (!v || v.live) return;
+    const withChanges = isDirty();
+    if (!window.confirm(withChanges ? `Save your changes to “${v.name}” and show it to every guest from their next visit?`
+      : `Every guest will see “${v.name}” from their next visit. Make it live?`)) return;
+    const list = await request(() => api('PATCH', `/admin/style-versions/${v.id}`, withChanges ? { style: st.trying, live: true } : { live: true }));
+    if (!list) return;
+    st.versions = list;
+    open(v.id);
+    say(`Guests now see “${v.name}”.`);
+  }
+  async function save() {
+    const v = version();
+    if (v.live && !window.confirm(`Guests see “${v.name}”. Save, so they see this envelope from their next visit?`)) return;
+    const list = await request(() => api('PATCH', `/admin/style-versions/${v.id}`, { style: st.trying }));
+    if (!list) return;
+    st.versions = list;
+    open(v.id);
+    say(v.live ? `Saved. Guests now see the changes to “${v.name}”.` : `Saved “${v.name}”.`);
+  }
+  async function saveAsNew() {
+    const v = version();
+    const name = askName('Name the new version. It starts as this one is now, with any unsaved changes.', `${v.name} (copy)`);
+    if (!name) return;
+    const made = await request(() => api('POST', '/admin/style-versions', { name, style: st.trying }));
+    if (!made) return;
+    st.versions = [...st.versions, made];
+    open(made.id);
+    const live = liveVersion();
+    say(`Saved as “${made.name}”.${live ? ` Guests still see “${live.name}”.` : ''}`);
+  }
+  async function newVersion() {
+    if (!leave()) return;
+    const name = askName('Name the new version. It starts from the original envelope.', `Version ${st.versions.length + 1}`);
+    if (!name) return;
+    const made = await request(() => api('POST', '/admin/style-versions', { name }));
+    if (!made) return;
+    st.versions = [...st.versions, made];
+    open(made.id);
+    say(`Made “${made.name}”. Guests won’t see it until it’s made live.`);
+  }
+  async function rename() {
+    const v = version();
+    const name = askName('A new name for this version:', v.name);
+    if (!name || name === v.name) return;
+    const list = await request(() => api('PATCH', `/admin/style-versions/${v.id}`, { name }));
+    if (!list) return;
+    st.versions = list;
+    sync();
+  }
+  async function remove() {
+    const v = version();
+    if (v.live || !window.confirm(`Delete “${v.name}”? This can’t be undone.`)) return;
+    const done = await request(() => api('DELETE', `/admin/style-versions/${v.id}`).then(() => true));
+    if (!done) return;
+    st.versions = st.versions.filter((x) => x.id !== v.id);
+    open((liveVersion() || st.versions[0]).id);
+    say(`Deleted “${v.name}”.`);
+  }
+
+  /* ----- what each control does ----- */
+  el.addEventListener('click', async (e) => {
+    const ver = e.target.closest('[data-version]');
+    if (ver) {
+      const id = Number(ver.dataset.version);
+      if (!st.busy && id !== st.id && leave()) open(id);
+      return;
+    }
+    const pick = e.target.closest('[data-style]');
+    if (pick) { tryStyle({ [pick.dataset.style]: pick.dataset.value }); return; }
+    const preset = e.target.closest('[data-preset]');
+    if (preset) { tryStyle(STYLE_PRESETS[preset.dataset.preset].style); return; }
+    const swatch = e.target.closest('[data-colour]');
+    if (swatch) { tryStyle({ colour: swatch.dataset.colour }); return; }
+    if (e.target.closest('.adm-env-stage')) { setOpen(!st.open); return; }
+    const act = e.target.closest('[data-style-act]');
+    if (!act || act.disabled) return;
+    switch (act.dataset.styleAct) {
+      case 'flap': setOpen(!st.open); break;
+      case 'undo': open(st.id); break;
+      case 'link': copyUrl(`${base}/?to=Guest&look=${lookParam(st.trying)}`, act); break;
+      case 'see': close(); break;
+      case 'save': save(); break;
+      case 'save-new': saveAsNew(); break;
+      case 'new': newVersion(); break;
+      case 'live': makeLive(); break;
+      case 'rename': rename(); break;
+      case 'delete': remove(); break;
+    }
+  });
+  el.addEventListener('input', (e) => {
+    const key = e.target.dataset && e.target.dataset.range;
+    if (key === 'strength') tryStyle({ strength: +e.target.value / 100 });
+    else if (key === 'seal_size') tryStyle({ seal_size: +e.target.value / 100 });
+    else if (key) tryStyle({ colour: card.toHex(+hue.input.value, +rich.input.value / 100, +lightness.input.value / 100) }, { fromRanges: true });
+    else if (e.target === picker) tryStyle({ colour: picker.value });
+  });
+  const typedHex = () => {
+    const v = hexIn.value.trim().replace(/^#?/, '#').toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(v)) tryStyle({ colour: v }); else hexIn.value = st.trying.colour;
+  };
+  hexIn.addEventListener('change', typedHex);
+  hexIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); typedHex(); hexIn.select(); } });
+
+  sync();
+  return {
+    el,
+    /* the versions, fresh each time the view is shown; a version with unsaved changes keeps them */
+    async load() {
+      let versions;
+      try {
+        versions = await api('GET', '/admin/style-versions');
+      } catch (err) { fail(err); return; }
+      const kept = isDirty() ? st.trying : null;
+      const wanted = st.id;
+      st.versions = versions;
+      const target = versions.find((v) => v.id === wanted) || versions.find((v) => v.live) || versions[0];
+      if (!target) return;
+      open(target.id, target.id === wanted ? kept : null);
+    }
+  };
+}
+
+/* ---------- the Card layout view ----------
+   Versions of the card's layout: where each piece of text on its cover (the "Dear …" side) and on the save the
+   date sits, how big it is, and what it says in each language. The preview is a copy of the card's own side,
+   drawn as the card draws itself (window.cardLayout in index.html): click a piece of text to pick it, then drag
+   it, nudge it with the arrow keys or use the sliders; double-click it (or type in Words) to change its words.
+   Clicking the card away from the text, or Escape, picks nothing, so the card shows without outlines.
+   Each version is kept in the database and guests see the live one. Like the Letter style view, the version
+   being edited shows on this device's card straight away, until the page is reloaded. */
+const SIDES = [
+  { value: 'cover', label: 'Dear guest' },
+  { value: 'save_the_date', label: 'Save the date' }
+];
+const LANG_NAMES = { en: 'English', vi: 'Tiếng Việt', 'zh-Hant': '中文' };
+const PIECE_NAMES = {
+  cover: { xi: '囍', dear: 'Dear', names: 'Guests’ names' },
+  save_the_date: { title: 'Save the date', lead: 'For the wedding of', names: 'Names', day: 'Date', place: 'Place', note: 'Invitation to follow' }
+};
+const SNAP = 0.8;                                         // card units from the centre line that snap onto it
+const LINES_MAX = 4;                                      // as the backend's PIECE_LINES_MAX
+const VERSION_NAME_MAX = 60;                              // and VERSION_NAME_MAX
+const SAMPLE_NAMES = 'Guest';                             // who the cover greets in the preview, until another is typed
+/* what the view was showing, kept while the page is open: closing the panel to see the card and coming back
+   finds the same version, side and unsaved changes */
+let layoutMemory = null;
+
+/* a piece's words as the backend keeps them: each line's spaces tidied, blank lines dropped */
+const tidyWords = (text, max) => String(text).split(/\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/)
+  .map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, LINES_MAX).join('\n').slice(0, max).trim();
+
+/* the characters the card's typefaces have (frontend/tools/subset_fonts.py); anything else is drawn in another
+   face. The script the couple's names are in has only their letters; the Chinese face, only the characters
+   index.html has, which is fetched the first time it's needed */
+const SCRIPT_CHARS = new Set('Ivan Sam&Ana Nguyen\u1ec5');   // ễ: Nguyễn, as the Vietnamese card writes it
+const LATIN = [[0x20, 0x7e], [0xa0, 0x17f], [0x1a0, 0x1a1], [0x1af, 0x1b0], [0x2bb, 0x2bc], [0x300, 0x301], [0x303, 0x304],
+  [0x308, 0x309], [0x323, 0x323], [0x329, 0x329], [0x1ea0, 0x1ef9], [0x2013, 0x2014], [0x2018, 0x2019], [0x201c, 0x201d],
+  [0x2022, 0x2022], [0x2026, 0x2026], [0x20ab, 0x20ab], [0x3000, 0x3011], [0xff01, 0xff01], [0xff08, 0xff09], [0xff0c, 0xff0c],
+  [0xff1a, 0xff1b], [0xff1f, 0xff1f]];
+const isCjk = (c) => (c >= 0x2e80 && c <= 0x9fff) || (c >= 0xf900 && c <= 0xfaff);
+let pageCjk = null;
+function loadPageCjk() {
+  pageCjk ||= fetch('/', { credentials: 'same-origin' }).then((r) => r.text())
+    .then((t) => new Set(t.match(/[\u2e80-\u9fff\uf900-\ufaff]/gu) || []))
+    .catch(() => null);
+  return pageCjk;
+}
+/* the characters in text that the piece's typeface doesn't have */
+function strangers(face, piece, text, cjk) {
+  const out = [];
+  for (const ch of new Set(text.replace(/\s/g, ''))) {
+    const c = ch.codePointAt(0);
+    const ok = face === 'save_the_date' && piece === 'names' ? SCRIPT_CHARS.has(ch)
+      : isCjk(c) ? !cjk || cjk.has(ch)
+      : LATIN.some(([a, b]) => c >= a && c <= b);
+    if (!ok) out.push(ch);
+  }
+  return out;
+}
+
+/* a copy of the card's save the date: its words where they settle, and the ducklings beside them, which can't
+   be reached or clicked */
+function saveTheDateCopy() {
+  const back = document.getElementById('backFace');
+  const std = back && back.querySelector('[data-letter="save_the_date"]');
+  if (!std) return [];
+  return [std, ...back.querySelectorAll('[data-on-letter~="save_the_date"]')].map((el) => {
+    const c = el.cloneNode(true);
+    c.hidden = false;
+    for (const n of [c, ...c.querySelectorAll('.rv, [id], a[href]')]) {
+      n.classList.remove('rv');
+      n.removeAttribute('id');
+      n.removeAttribute('href');
+    }
+    c.removeAttribute('data-letter');
+    c.removeAttribute('data-on-letter');
+    if (!c.matches('[data-face]')) { c.inert = true; c.classList.add('adm-std-context'); }
+    return c;
+  });
+}
+/* a copy of one side of the card, made from its own markup: the cover (greeted by card.greet) or the save the date */
+function faceCopy(face) {
+  if (face !== 'cover') return saveTheDateCopy();
+  const print = document.getElementById('coverPrint');
+  if (!print) return [];
+  const c = print.cloneNode(true);
+  for (const n of [c, ...c.querySelectorAll('[id]')]) n.removeAttribute('id');
+  c.querySelector('.cover-art').classList.remove('is-blank');
+  return [c];
+}
+/* a side drawn as the card draws itself (layout() in index.html): w pixels wide, card.across units across,
+   in its own proportions (the save the date's height is the layout's) */
+function sizeFace(card, sheet, w, face, opens, layout) {
+  sheet.style.setProperty('--wf', `${w}px`);
+  sheet.style.setProperty('--u', `${w / card.across}px`);
+  sheet.style.setProperty('--hh', `${w / card.shape(face, opens, layout)}px`);
+}
+/* one side in a layout and language, w pixels wide, to look at only */
+function faceSheet(card, face, layout, lang, w, opens, names) {
+  const sheet = h('div', { class: 'adm-std-sheet adm-face-sheet paper', lang }, faceCopy(face));
+  sheet.inert = true;
+  if (face === 'cover') card.greet(sheet, names, lang);
+  sizeFace(card, sheet, w, face, opens, layout);
+  card.paint(sheet, layout, lang);
+  return sheet;
+}
+
+function createLayoutEditor({ say, fail, close }) {
+  const card = window.cardLayout;
+  if (!card || !card.faces || !document.getElementById('backFace')) {
+    return { el: h('p', { class: 'adm-empty' }, 'Reload the page to lay out the card.'), load() {}, dispose() {} };
+  }
+  const LIMITS = card.limits;
+  const mem = layoutMemory || {};
+  const pageLang = document.documentElement.lang;
+  const st = {
+    versions: null,                                       // every version, oldest first, as the backend has them
+    id: null,                                             // the one being edited...
+    draft: null,                                          // ... and its layout as it is here, saved or not
+    face: mem.face || 'save_the_date',
+    lang: mem.lang || (card.langs.includes(pageLang) ? pageLang : 'en'),
+    selected: mem.selected !== undefined ? mem.selected : 'names',   // null: nothing picked, so no outlines
+    sample: mem.sample || SAMPLE_NAMES,
+    opens: null,                                          // the letter guests' cards open on: the cover takes its shape
+    cjk: null,
+    drag: null,
+    editing: null,                                        // the piece being typed into on the card...
+    before: null,                                         // ... and its words before, for Escape
+    busy: false
+  };
+  const json = (x) => JSON.stringify(x);
+  const round = (v, step) => Math.round(v / step) * step;
+  const version = () => (st.versions || []).find((v) => v.id === st.id) || null;
+  const liveVersion = () => (st.versions || []).find((v) => v.live) || null;
+  const savedLayout = () => (version() ? card.normal(version().layout) : null);
+  const isDirty = () => !!version() && !!st.draft && json(st.draft) !== json(savedLayout());
+  const isChanged = (p) => p.x !== 0 || p.y !== 0 || p.size !== 1 || p.bold || p.italic || (!!p.text && Object.keys(p.text).length > 0);
+  const nameOf = (key, face = st.face) => PIECE_NAMES[face][key] || key;
+  const sideName = (face) => SIDES.find((s) => s.value === face).label;
+  const sampleNames = () => {
+    const names = st.sample.split(/\s*(?:,|&|\band\b)\s*/).map((s) => s.trim()).filter(Boolean).slice(0, 10);
+    return names.length ? names : [SAMPLE_NAMES];
+  };
+  const btn = (cls, act, label, attrs = {}) => h('button', { type: 'button', class: cls, 'data-layout-act': act, ...attrs }, label);
+
+  /* ----- the versions ----- */
+  const verList = h('div', { class: 'adm-ver-list', role: 'group', 'aria-label': 'Versions' });
+  const verState = h('p', { class: 'adm-ver-state' });
+  const liveBtn = btn('adm-btn', 'live', 'Make live', { title: 'Every guest sees this version from their next visit' });
+  const renameBtn = btn('adm-text-btn', 'rename', 'Rename');
+  const deleteBtn = btn('adm-text-btn adm-danger', 'delete', 'Delete');
+  const compareBtn = btn('adm-btn adm-btn-quiet', 'compare', 'Compare versions', { title: 'Every version side by side, at full size' });
+  const verSec = h('section', { class: 'adm-ver' },
+    h('div', { class: 'adm-ver-head' }, h('h3', { class: 'adm-style-h' }, 'Versions'), compareBtn),
+    verList,
+    h('div', { class: 'adm-ver-bar' }, verState, h('div', { class: 'adm-ver-acts' }, renameBtn, deleteBtn, liveBtn)));
+
+  /* ----- which side, in which language ----- */
+  const sides = h('div', { class: 'adm-views adm-sides', role: 'group', 'aria-label': 'Side of the card' },
+    SIDES.map((s) => h('button', { type: 'button', class: 'adm-view', 'data-side': s.value, 'aria-pressed': 'false' }, s.label)));
+  const langs = h('div', { class: 'adm-rsvp adm-langs', role: 'group', 'aria-label': 'Language' },
+    card.langs.map((c) => h('button', { type: 'button', class: 'adm-seg is-pick', 'data-show-lang': c, lang: c, 'aria-pressed': 'false' },
+      LANG_NAMES[c] || c)));
+  const bar = h('div', { class: 'adm-face-bar' }, sides, langs);
+
+  /* ----- the preview ----- */
+  const sheet = h('div', { class: 'adm-std-sheet paper', role: 'group' });
+  const guide = h('i', { class: 'adm-std-guide', 'aria-hidden': 'true' });
+  const stage = h('div', { class: 'adm-std-stage' }, sheet);
+  const scaleNote = h('p', { class: 'adm-style-caption adm-std-scale' });
+  const hint = h('p', { class: 'adm-style-caption adm-std-hint' },
+    'Click a piece of text to pick it, then drag it or nudge it with the arrow keys (Shift for bigger steps, + and − for its size, ',
+    '⌘B / ⌘I for bold and italics). Double-click it, or press Enter, to change its words. ',
+    'Click the card away from the text, or press Esc, to see it without outlines.');
+  const deselectBtn = btn('adm-text-btn', 'deselect', 'Deselect', { title: 'See the card without outlines (Esc)' });
+  const previewCol = h('div', { class: 'adm-style-preview adm-std-preview' }, stage,
+    h('div', { class: 'adm-style-under' }, scaleNote, hint, deselectBtn));
+  const fullUnit = card.widest / card.across;             // pixels in one card unit, on a big screen
+  let unit = fullUnit;                                    // ... and in the preview
+  let sheetW = card.widest;                               // the preview's width in pixels
+  function fit() {
+    const room = stage.clientWidth || card.widest;
+    const w = Math.round(Math.max(240, Math.min(room, card.widest)));
+    unit = w / card.across;
+    sheetW = w;
+    sizeFace(card, sheet, w, st.face, st.opens, st.draft);
+    const pct = Math.round((w / card.widest) * 100);
+    scaleNote.textContent = pct >= 99 ? 'Actual size: as the card is on a computer screen.'
+      : `Shown at ${pct}% of its size on a computer screen; the text keeps the same size against the card.`;
+    if (st.draft) { paint(); sync(); }
+  }
+  const resize = new ResizeObserver(fit);
+  resize.observe(stage);
+  const pieceEl = (key) => sheet.querySelector(`.adm-piece[data-piece="${key}"]`);
+  /* fresh for each side and language: the cover greets its sample guests in the language shown */
+  function build() {
+    sheet.replaceChildren(...faceCopy(st.face), guide);
+    sheet.lang = st.lang;
+    sheet.setAttribute('aria-label', st.face === 'cover' ? 'The card’s cover' : 'The save the date');
+    if (st.face === 'cover') card.greet(sheet, sampleNames(), st.lang);
+    for (const n of sheet.querySelectorAll('[data-face] [data-piece]')) {
+      const words = card.rewordable(st.face, n.dataset.piece);
+      n.tabIndex = 0;
+      n.setAttribute('role', 'button');
+      n.setAttribute('aria-label', `${nameOf(n.dataset.piece)}: drag, or use the arrow keys, to move it${words ? '; press Enter to change its words' : ''}`);
+      n.classList.add('adm-piece');
+    }
+    pickers.replaceChildren(...card.faces[st.face].map((k) =>
+      h('button', { type: 'button', class: 'adm-st-chip adm-piece-chip', 'data-pick': k, 'aria-pressed': 'false' },
+        h('span', { class: 'adm-st-chip-label' }, nameOf(k)))));
+    fit();
+  }
+
+  /* ----- the picked piece ----- */
+  const section = (title, ...body) => h('section', { class: 'adm-style-sec' }, h('h3', { class: 'adm-style-h' }, title), ...body);
+  const pickers = h('div', { class: 'adm-st-chips adm-pieces', role: 'group', 'aria-label': 'Pieces of text' });
+  const pieceTitle = h('h3', { class: 'adm-style-h' });
+  const nonePicked = h('p', { class: 'adm-hint adm-piece-none' },
+    'Nothing is picked, so the card shows just as guests see it. Click a piece of text on it, or pick one on the left, ',
+    'to move it, size it or change its words.');
+  const wordsLabel = h('span', { class: 'adm-range-label' });
+  const wordsIn = h('textarea', { class: 'adm-input adm-words', rows: 2, maxlength: card.textMax, 'data-words': '1', autocomplete: 'off' });
+  const wordsNote = h('p', { class: 'adm-hint adm-words-note', 'aria-live': 'polite' });
+  const ownBtn = btn('adm-text-btn', 'own-words', 'Use the card’s own words');
+  const wordsRow = h('div', { class: 'adm-words-row' },
+    h('label', { class: 'adm-words-field' }, wordsLabel, wordsIn),
+    h('div', { class: 'adm-words-under' }, wordsNote, ownBtn));
+  const sampleIn = h('input', { type: 'text', class: 'adm-input', maxlength: 300, autocomplete: 'off', 'data-sample': '1',
+                                'aria-label': 'Names to greet in the preview' });
+  const sampleRow = h('div', { class: 'adm-words-row' },
+    h('label', { class: 'adm-words-field' }, h('span', { class: 'adm-range-label' }, 'Try with'), sampleIn),
+    h('p', { class: 'adm-hint' }, 'Each guest’s card has the names on their link here. Separate names with commas to try a longer ',
+      'greeting; this only changes the preview.'));
+  const range = (key, label, min, max, step) => {
+    const input = h('input', { type: 'range', class: 'adm-range', min, max, step, 'data-place': key, 'aria-label': label });
+    const out = h('output', { class: 'adm-range-val', 'aria-hidden': 'true' });
+    return { input, out, row: h('label', { class: 'adm-range-row' }, h('span', { class: 'adm-range-label' }, label), input, out) };
+  };
+  const across = range('x', 'Across', LIMITS.x[0], LIMITS.x[1], 0.5);
+  const down = range('y', 'Up / down', LIMITS.y[0], LIMITS.y[1], 0.5);
+  const size = range('size', 'Font size', LIMITS.size[0] * 100, LIMITS.size[1] * 100, 1);
+  size.out.classList.add('adm-range-wide');
+  const smaller = btn('adm-text-btn', 'smaller', 'A−', { title: 'One point smaller' });
+  const bigger = btn('adm-text-btn', 'bigger', 'A+', { title: 'One point bigger' });
+  /* a piece's font size in pixels on a big screen: its own size (from the stylesheet) times its size here */
+  const basePx = (key) => {
+    const n = pieceEl(key);
+    const t = n && (n.querySelector('.xi') || n);          // the 囍's emblem is sized by the character in it
+    return t ? (parseFloat(getComputedStyle(t).fontSize) / unit) * fullUnit : 0;
+  };
+  const centreBtn = btn('adm-text-btn', 'centre', 'Centre it');
+  const resetBtn = btn('adm-text-btn', 'reset', 'Put it back', { title: 'Where the card first put it, in its own words' });
+  const boldBtn = btn('adm-fmt adm-fmt-b', 'bold', 'B', { 'aria-pressed': 'false', title: 'Bold (⌘B / Ctrl+B)', 'aria-label': 'Bold' });
+  const italicBtn = btn('adm-fmt adm-fmt-i', 'italic', 'I', { 'aria-pressed': 'false', title: 'Italics (⌘I / Ctrl+I)', 'aria-label': 'Italics' });
+  const pieceBody = h('div', { class: 'adm-piece-body' }, wordsRow, sampleRow,
+    h('div', { class: 'adm-ranges' }, across.row, down.row, size.row),
+    h('div', { class: 'adm-style-sub' }, h('span', { class: 'adm-fmts', role: 'group', 'aria-label': 'Type' }, boldBtn, italicBtn),
+      smaller, bigger, centreBtn, resetBtn));
+  /* the save the date card's height (its cover's too, when guests' cards open on it); its width stays */
+  const HEIGHT = LIMITS.std_height;
+  const heightIn = h('input', { type: 'range', class: 'adm-range', min: HEIGHT[0] * 100, max: HEIGHT[1] * 100, step: 1,
+                                'data-card-height': '1', 'aria-label': 'Card height' });
+  const heightOut = h('output', { class: 'adm-range-val', 'aria-hidden': 'true' });
+  const heightBack = btn('adm-text-btn', 'height-back', 'Original height');
+  const heightNote = h('p', { class: 'adm-hint' });
+  const heightSec = section('Card height',
+    h('div', { class: 'adm-ranges' },
+      h('label', { class: 'adm-range-row' }, h('span', { class: 'adm-range-label' }, 'Height'), heightIn, heightOut)),
+    h('div', { class: 'adm-style-sub' }, heightBack),
+    heightNote);
+  const controls = h('div', { class: 'adm-style-controls' },
+    heightSec,
+    section('Pieces of text', pickers),
+    h('section', { class: 'adm-style-sec' }, pieceTitle, nonePicked, pieceBody));
+
+  /* ----- saving ----- */
+  const status = h('p', { class: 'adm-style-status', role: 'status', 'aria-live': 'polite' });
+  const allBtn = btn('adm-text-btn', 'all', 'Original layout', { title: 'Every piece on this side where the card first put it, in its own words' });
+  const undoBtn = btn('adm-text-btn', 'discard', 'Discard changes');
+  const seeBtn = btn('adm-btn adm-btn-quiet', 'see', 'See it on the card', { title: 'Close this and open the card to see it there' });
+  const copyBtn = btn('adm-btn adm-btn-quiet', 'save-new', 'Save as new version', { title: 'Keep this as a version of its own' });
+  const saveBtn = btn('adm-btn', 'save', 'Save');
+  const foot = h('div', { class: 'adm-style-foot' }, status, h('div', { class: 'adm-style-actions' }, allBtn, undoBtn, seeBtn, copyBtn, saveBtn));
+  const el = h('div', { class: 'adm-style adm-layout' }, verSec, bar, previewCol, controls, foot);
+
+  /* ----- showing the version being edited ----- */
+  function paint() {
+    sizeFace(card, sheet, sheetW, st.face, st.opens, st.draft);
+    card.paint(sheet, st.draft, st.lang);
+  }
+  function remember() {
+    layoutMemory = { id: st.id, draft: st.draft, face: st.face, lang: st.lang, selected: st.selected, sample: st.sample };
+  }
+  /* after any change: the card on this device, the copy here, the controls */
+  function show() {
+    st.draft = card.normal(st.draft);
+    card.apply(st.draft);
+    paint();
+    sync();
+    remember();
+  }
+  /* opens a version: its saved layout, or `draft` (its unsaved changes from before) */
+  function open(id, draft = null) {
+    stopEditing(true);
+    st.id = id;
+    st.draft = card.normal(draft || version().layout);
+    show();
+  }
+  let versionsShown = '';
+  function renderVersions(dirty) {
+    const key = json([(st.versions || []).map((v) => [v.id, v.name, v.live]), st.id, dirty, st.busy]);
+    if (key === versionsShown) return;
+    versionsShown = key;
+    const focused = verList.contains(document.activeElement) ? document.activeElement.dataset.version : null;
+    verList.replaceChildren(...(st.versions || []).map((v) => h('button', {
+      type: 'button', class: `adm-ver-chip${v.live ? ' is-live' : ''}`, 'data-version': v.id, 'aria-pressed': String(v.id === st.id),
+      title: v.live ? 'Guests see this version' : null
+    }, h('span', { class: 'adm-ver-name' }, v.name),
+      v.live && h('span', { class: 'adm-live' }, 'Live'),
+      v.id === st.id && dirty && h('span', { class: 'adm-ver-dirty', title: 'Unsaved changes', 'aria-label': '(unsaved changes)' }, '•'))),
+    btn('adm-ver-chip adm-ver-new', 'new', '+ New version', { title: 'A version of its own, starting from the card’s original layout', disabled: st.busy }));
+    if (focused) { const b = verList.querySelector(`[data-version="${focused}"]`); if (b) b.focus({ preventScroll: true }); }
+  }
+  function sync() {
+    const t = st.draft, v = version();
+    el.classList.toggle('is-busy', st.busy);
+    if (!t || !v) return;
+    const dirty = isDirty(), live = liveVersion();
+    renderVersions(dirty);
+    verState.textContent = v.live ? `Guests see “${v.name}”.` : `Guests see “${live ? live.name : '…'}”, not this version.`;
+    liveBtn.hidden = v.live;
+    liveBtn.disabled = renameBtn.disabled = st.busy;
+    deleteBtn.disabled = st.busy || v.live;
+    deleteBtn.title = v.live ? 'Guests see this version: make another live before deleting it' : null;
+    for (const b of sides.children) b.setAttribute('aria-pressed', String(b.dataset.side === st.face));
+    for (const b of langs.children) b.setAttribute('aria-pressed', String(b.dataset.showLang === st.lang));
+    for (const b of pickers.querySelectorAll('[data-pick]')) {
+      b.setAttribute('aria-pressed', String(b.dataset.pick === st.selected));
+      b.classList.toggle('is-moved', isChanged(t[st.face][b.dataset.pick]));
+    }
+    for (const n of sheet.querySelectorAll('.adm-piece')) n.classList.toggle('is-picked', n.dataset.piece === st.selected);
+    sheet.classList.toggle('has-pick', !!st.selected);
+
+    const key = st.selected, p = key ? t[st.face][key] : null;
+    pieceTitle.textContent = p ? nameOf(key) : 'Nothing picked';
+    nonePicked.hidden = !!p;
+    pieceBody.hidden = !p;
+    deselectBtn.disabled = !p;
+    if (p) {
+      const words = card.rewordable(st.face, key);
+      wordsRow.hidden = !words;
+      if (words) {
+        const own = card.ownWords(st.face, key, st.lang);
+        const value = typeof p.text[st.lang] === 'string' ? p.text[st.lang] : own;
+        if (document.activeElement !== wordsIn) wordsIn.value = value;
+        wordsLabel.textContent = words.same ? 'Words (the same in every language)' : `Words in ${LANG_NAMES[st.lang] || st.lang}`;
+        wordsIn.setAttribute('aria-label', wordsLabel.textContent);
+        ownBtn.disabled = !(words.same ? Object.keys(p.text).length : st.lang in p.text);
+        const odd = strangers(st.face, key, value, st.cjk);
+        wordsNote.textContent = !value ? 'Blank, so this piece is left off the card.'
+          : odd.length ? `Not in the card’s typeface, so drawn in another: ${odd.join(' ')}` : '';
+        wordsNote.classList.toggle('is-warn', !!value && odd.length > 0);
+      }
+      const isGuests = st.face === 'cover' && key === 'names';
+      sampleRow.hidden = !isGuests;
+      if (isGuests && document.activeElement !== sampleIn) sampleIn.value = st.sample;
+      across.input.value = p.x;
+      across.out.textContent = p.x > 0 ? `+${p.x}` : String(p.x);
+      down.input.value = p.y;
+      down.out.textContent = p.y > 0 ? `+${p.y}` : String(p.y);
+      size.input.value = Math.round(p.size * 100);
+      const px = basePx(key) * p.size;
+      size.out.textContent = px ? `${px.toFixed(1)} px` : `${size.input.value}%`;
+      size.out.title = `${size.input.value}% of its original size; in pixels as on a computer screen`;
+      boldBtn.setAttribute('aria-pressed', String(p.bold));
+      italicBtn.setAttribute('aria-pressed', String(p.italic));
+      smaller.disabled = p.size <= LIMITS.size[0];
+      bigger.disabled = p.size >= LIMITS.size[1];
+      centreBtn.disabled = p.x === 0;
+      resetBtn.disabled = !isChanged(p);
+    }
+    allBtn.disabled = !Object.values(t[st.face]).some(isChanged);
+    if (document.activeElement !== heightIn) heightIn.value = Math.round(t.std_height * 100);
+    heightOut.textContent = `${Math.round(t.std_height * 100)}%`;
+    heightBack.disabled = t.std_height === 1;
+    heightNote.textContent = st.face === 'cover' && card.shape('cover', st.opens, t) !== card.shape('save_the_date', st.opens, t)
+      ? 'Guests’ cards open on a folded letter, so this cover keeps its shape; the save the date itself is this tall.'
+      : 'The save the date and its cover grow taller together; the width stays the same, and the text keeps its place against the card.';
+
+    status.textContent = dirty ? (v.live ? 'Unsaved changes. Guests see this version as it was last saved.' : 'Unsaved changes.')
+      : 'All changes saved.';
+    status.classList.toggle('is-unsaved', dirty);
+    saveBtn.disabled = st.busy || !dirty;
+    undoBtn.disabled = st.busy || !dirty;
+    copyBtn.disabled = st.busy;
+  }
+
+  /* ----- changing the card's height ----- */
+  function setHeight(v) {
+    st.draft = { ...st.draft, std_height: Math.min(HEIGHT[1], Math.max(HEIGHT[0], Math.round(v * 100) / 100)) };
+    show();
+  }
+
+  /* ----- changing a piece ----- */
+  function place(patch, key = st.selected, face = st.face) {
+    if (!key) return;
+    const p = { ...st.draft[face][key], ...patch };
+    if (patch.x != null) p.x = round(p.x, 0.5);
+    if (patch.y != null) p.y = round(p.y, 0.5);
+    if (patch.size != null) p.size = round(p.size, 0.001);
+    st.draft = { ...st.draft, [face]: { ...st.draft[face], [key]: p } };
+    show();
+  }
+  /* new words for a piece, in the language shown (or every language, for the couple's names). The card's own
+     words aren't kept as a change */
+  function reword(key, text, face = st.face, lang = st.lang) {
+    const words = card.rewordable(face, key);
+    if (!words) return;
+    const next = { ...st.draft[face][key].text };
+    for (const c of words.same ? card.langs : [lang]) {
+      if (text === card.ownWords(face, key, c)) delete next[c]; else next[c] = text;
+    }
+    place({ text: next }, key, face);
+  }
+  function pick(key, focus = false) {
+    if (key != null && !card.faces[st.face].includes(key)) return;
+    if (st.editing && st.editing !== key) stopEditing(true);
+    st.selected = key;
+    sync();
+    remember();
+    if (key && focus) { const n = pieceEl(key); if (n) n.focus({ preventScroll: true }); }
+    if (!key && sheet.contains(document.activeElement)) document.activeElement.blur();
+  }
+  function setFace(face) {
+    if (face === st.face) return;
+    stopEditing(true);
+    st.face = face;
+    st.selected = null;                                   // a fresh look at the other side
+    build();
+    remember();
+  }
+  function setLang(code) {
+    if (code === st.lang) return;
+    stopEditing(true);
+    st.lang = code;
+    build();
+    remember();
+  }
+
+  /* ----- typing on the card ----- */
+  function startEditing(key) {
+    if (!card.rewordable(st.face, key) || st.editing === key) return;
+    stopEditing(true);
+    const n = pieceEl(key);
+    if (!n) return;
+    if (st.selected !== key) { st.selected = key; sync(); }
+    st.editing = key;
+    st.before = st.draft[st.face][key].text;
+    if (n.querySelector('.amp')) n.textContent = card.wordsOf(n);   // typed as plain words; the & turns gold again after
+    try { n.contentEditable = 'plaintext-only'; } catch (e) { /* not known to this browser */ }
+    if (n.contentEditable !== 'plaintext-only') n.contentEditable = 'true';
+    n.classList.add('is-editing');
+    n.focus({ preventScroll: true });
+    const all = document.createRange();
+    all.selectNodeContents(n);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(all);
+  }
+  /* keep: the words as typed (tidied); otherwise the words from before */
+  function stopEditing(keep) {
+    const key = st.editing;
+    if (!key) return;
+    st.editing = null;
+    const n = pieceEl(key);
+    const typed = n ? card.wordsOf(n) : '';
+    if (n) {
+      n.removeAttribute('contenteditable');
+      n.classList.remove('is-editing');
+      n.replaceChildren();                                // drawn afresh from the words, & and all
+    }
+    if (keep) reword(key, tidyWords(typed, card.textMax));
+    else place({ text: st.before }, key);
+  }
+
+  /* ----- dragging a piece ----- */
+  sheet.addEventListener('pointerdown', (e) => {
+    const n = e.target.closest('.adm-piece');
+    if (n && n.dataset.piece === st.editing) return;      // putting the cursor in the words being typed
+    if (e.button > 0) return;
+    if (!n) { pick(null); return; }                       // the card away from the text: nothing picked, no outlines
+    e.preventDefault();
+    stopEditing(true);
+    pick(n.dataset.piece);
+    n.focus({ preventScroll: true });
+    const p = st.draft[st.face][n.dataset.piece];
+    st.drag = { id: e.pointerId, key: n.dataset.piece, sx: e.clientX, sy: e.clientY, x: p.x, y: p.y };
+    n.setPointerCapture(e.pointerId);
+    sheet.classList.add('is-dragging');
+  });
+  sheet.addEventListener('pointermove', (e) => {
+    const d = st.drag;
+    if (!d || d.id !== e.pointerId) return;
+    let x = d.x + (e.clientX - d.sx) / unit;
+    const y = d.y + (e.clientY - d.sy) / unit;
+    const snapped = !e.altKey && Math.abs(x) < SNAP;      // Alt (Option) drags freely past the centre line
+    if (snapped) x = 0;
+    guide.classList.toggle('is-shown', snapped);
+    place({ x: Math.min(LIMITS.x[1], Math.max(LIMITS.x[0], x)), y: Math.min(LIMITS.y[1], Math.max(LIMITS.y[0], y)) }, d.key);
+  });
+  const endDrag = (e) => {
+    if (!st.drag || st.drag.id !== e.pointerId) return;
+    st.drag = null;
+    guide.classList.remove('is-shown');
+    sheet.classList.remove('is-dragging');
+  };
+  sheet.addEventListener('pointerup', endDrag);
+  sheet.addEventListener('pointercancel', endDrag);
+  sheet.addEventListener('dblclick', (e) => {
+    const n = e.target.closest('.adm-piece');
+    if (n) startEditing(n.dataset.piece);
+  });
+  sheet.addEventListener('input', (e) => {               // typing on the card: the words follow as they're typed
+    const n = e.target.closest && e.target.closest('.adm-piece');
+    if (n && n.dataset.piece === st.editing) reword(st.editing, card.wordsOf(n).slice(0, card.textMax));
+  });
+  sheet.addEventListener('paste', (e) => {               // words only, never formatting
+    if (!st.editing) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, (e.clipboardData && e.clipboardData.getData('text/plain')) || '');
+  });
+  sheet.addEventListener('focusout', (e) => {
+    const n = e.target.closest && e.target.closest('.adm-piece');
+    if (n && n.dataset.piece === st.editing) stopEditing(true);
+  });
+  sheet.addEventListener('keydown', (e) => {
+    const n = e.target.closest('.adm-piece');
+    if (!n) return;
+    const key = n.dataset.piece, mod = (e.metaKey || e.ctrlKey) && !e.altKey, letter = e.key.toLowerCase();
+    if (mod && ['b', 'i'].includes(letter)) {             // bold, italics: for the whole piece
+      e.preventDefault();
+      const what = letter === 'b' ? 'bold' : 'italic';
+      st.selected = key;
+      place({ [what]: !st.draft[st.face][key][what] }, key);
+      return;
+    }
+    if (st.editing === key) {
+      if (mod && letter === 'u') e.preventDefault();      // no underlining
+      else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); document.execCommand('insertLineBreak'); }
+      else if (e.key === 'Enter') { e.preventDefault(); stopEditing(true); n.focus({ preventScroll: true }); }
+      else if (e.key === 'Escape') { e.preventDefault(); stopEditing(false); n.focus({ preventScroll: true }); }
+      return;
+    }
+    if (e.key === 'Escape') { e.preventDefault(); pick(null); return; }
+    if (e.key === 'Enter' && card.rewordable(st.face, key)) { e.preventDefault(); startEditing(key); return; }
+    const step = e.shiftKey ? 2 : 0.5, p = st.draft[st.face][key];
+    const move = { ArrowLeft: { x: p.x - step }, ArrowRight: { x: p.x + step }, ArrowUp: { y: p.y - step }, ArrowDown: { y: p.y + step },
+                   '+': { size: p.size + 0.05 }, '=': { size: p.size + 0.05 }, '-': { size: p.size - 0.05 } }[e.key];
+    if (!move) return;
+    e.preventDefault();
+    for (const [k, v] of Object.entries(move)) move[k] = Math.min(LIMITS[k][1], Math.max(LIMITS[k][0], v));
+    st.selected = key;
+    place(move, key);
+  });
+  sheet.addEventListener('focusin', (e) => {
+    const n = e.target.closest('.adm-piece');
+    if (n && n.dataset.piece !== st.selected) pick(n.dataset.piece);
+  });
+
+  /* ----- the words and the sample names ----- */
+  let wordsFor = null;                                    // the piece the words box is for, while it's being typed in
+  wordsIn.addEventListener('focus', () => { wordsFor = st.selected && { key: st.selected, face: st.face, lang: st.lang }; });
+  wordsIn.addEventListener('input', () => {
+    if (wordsFor) reword(wordsFor.key, wordsIn.value, wordsFor.face, wordsFor.lang);
+  });
+  wordsIn.addEventListener('change', () => {
+    if (!wordsFor) return;
+    const text = tidyWords(wordsIn.value, card.textMax);
+    reword(wordsFor.key, text, wordsFor.face, wordsFor.lang);
+    if (document.activeElement === wordsIn) wordsIn.value = text;
+  });
+  wordsIn.addEventListener('blur', () => { wordsFor = null; sync(); });
+  sampleIn.addEventListener('input', () => {
+    st.sample = sampleIn.value;
+    if (st.face !== 'cover') return;
+    card.greet(sheet, sampleNames(), st.lang);
+    paint();
+    sync();
+    remember();
+  });
+
+  /* ----- the versions: saving, switching, making live ----- */
+  /* one request at a time; the buttons wait for it */
+  async function request(send) {
+    if (st.busy) return undefined;
+    st.busy = true;
+    sync();
+    try { return await send(); } catch (err) { fail(err); return undefined; } finally { st.busy = false; sync(); }
+  }
+  const leave = () => !isDirty() || window.confirm(`Discard your unsaved changes to “${version().name}”?`);
+  const askName = (message, suggestion) => clean(window.prompt(message, suggestion) || '').slice(0, VERSION_NAME_MAX);
+  function switchTo(id) {
+    if (id === st.id || !leave()) return false;
+    open(id);
+    return true;
+  }
+  async function makeLive(id) {
+    const v = st.versions.find((x) => x.id === id);
+    if (!v || v.live) return false;
+    const withChanges = id === st.id && isDirty();
+    if (!window.confirm(withChanges ? `Save your changes to “${v.name}” and show it to every guest from their next visit?`
+      : `Every guest will see “${v.name}” from their next visit. Make it live?`)) return false;
+    const list = await request(() => api('PATCH', `/admin/versions/${id}`, withChanges ? { layout: st.draft, live: true } : { live: true }));
+    if (!list) return false;
+    st.versions = list;
+    if (id === st.id) open(id); else sync();
+    say(`Guests now see “${v.name}”.`);
+    return true;
+  }
+  async function save() {
+    const v = version();
+    if (v.live && !window.confirm(`Guests see “${v.name}”. Save, so they see these changes from their next visit?`)) return;
+    const list = await request(() => api('PATCH', `/admin/versions/${v.id}`, { layout: st.draft }));
+    if (!list) return;
+    st.versions = list;
+    open(v.id);
+    say(v.live ? `Saved. Guests now see the changes to “${v.name}”.` : `Saved “${v.name}”.`);
+  }
+  async function saveAsNew() {
+    const v = version();
+    const name = askName('Name the new version. It starts as this one is now, with any unsaved changes.', `${v.name} (copy)`);
+    if (!name) return;
+    const made = await request(() => api('POST', '/admin/versions', { name, layout: st.draft }));
+    if (!made) return;
+    st.versions = [...st.versions, made];
+    open(made.id);
+    const live = liveVersion();
+    say(`Saved as “${made.name}”.${live ? ` Guests still see “${live.name}”.` : ''}`);
+  }
+  async function newVersion() {
+    if (!leave()) return;
+    const name = askName('Name the new version. It starts from the card’s original layout.', `Version ${st.versions.length + 1}`);
+    if (!name) return;
+    const made = await request(() => api('POST', '/admin/versions', { name }));
+    if (!made) return;
+    st.versions = [...st.versions, made];
+    open(made.id);
+    say(`Made “${made.name}”. Guests won’t see it until it’s made live.`);
+  }
+  async function rename() {
+    const v = version();
+    const name = askName('A new name for this version:', v.name);
+    if (!name || name === v.name) return;
+    const list = await request(() => api('PATCH', `/admin/versions/${v.id}`, { name }));
+    if (!list) return;
+    st.versions = list;
+    sync();
+    remember();
+  }
+  async function remove() {
+    const v = version();
+    if (v.live || !window.confirm(`Delete “${v.name}”? This can’t be undone.`)) return;
+    const done = await request(() => api('DELETE', `/admin/versions/${v.id}`).then(() => true));
+    if (!done) return;
+    st.versions = st.versions.filter((x) => x.id !== v.id);
+    st.id = null;
+    open((liveVersion() || st.versions[0]).id);
+    say(`Deleted “${v.name}”.`);
+  }
+
+  /* ----- what each control does ----- */
+  el.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-pick]');
+    if (chip) { pick(chip.dataset.pick, true); return; }
+    const side = e.target.closest('[data-side]');
+    if (side) { setFace(side.dataset.side); return; }
+    const lang = e.target.closest('[data-show-lang]');
+    if (lang) { setLang(lang.dataset.showLang); return; }
+    const ver = e.target.closest('[data-version]');
+    if (ver) { if (!st.busy) switchTo(Number(ver.dataset.version)); return; }
+    const act = e.target.closest('[data-layout-act]');
+    if (!act || act.disabled) return;
+    const p = st.selected && st.draft[st.face][st.selected];
+    switch (act.dataset.layoutAct) {
+      case 'deselect': pick(null); break;
+      case 'centre': place({ x: 0 }); break;
+      case 'smaller': case 'bigger': {                    // a pixel at a time, as on a computer screen
+        const base = basePx(st.selected);
+        if (!p || !base) break;
+        const px = Math.round(base * p.size) + (act.dataset.layoutAct === 'bigger' ? 1 : -1);
+        place({ size: Math.min(LIMITS.size[1], Math.max(LIMITS.size[0], px / base)) });
+        break;
+      }
+      case 'reset':
+        place({ x: 0, y: 0, size: 1, bold: false, italic: false, ...(card.rewordable(st.face, st.selected) ? { text: {} } : {}) });
+        break;
+      case 'bold': case 'italic': {
+        const what = act.dataset.layoutAct;
+        if (p) place({ [what]: !p[what] });
+        break;
+      }
+      case 'own-words': {
+        const words = card.rewordable(st.face, st.selected);
+        if (!p || !words) break;
+        const next = { ...p.text };
+        if (words.same) for (const c of card.langs) delete next[c]; else delete next[st.lang];
+        place({ text: next });
+        break;
+      }
+      case 'height-back': setHeight(1); break;
+      case 'all': stopEditing(true); st.draft = { ...st.draft, [st.face]: card.original()[st.face] }; show(); break;
+      case 'discard': open(st.id); break;
+      case 'see': close(); break;
+      case 'save': save(); break;
+      case 'save-new': saveAsNew(); break;
+      case 'new': newVersion(); break;
+      case 'live': makeLive(st.id); break;
+      case 'rename': rename(); break;
+      case 'delete': remove(); break;
+      case 'compare': openCompare(); break;
+    }
+  });
+  el.addEventListener('input', (e) => {
+    if (e.target === heightIn) { setHeight(+heightIn.value / 100); return; }
+    const key = e.target.dataset && e.target.dataset.place;
+    if (key) place({ [key]: key === 'size' ? +e.target.value / 100 : +e.target.value });
+  });
+
+  /* ----- every version side by side, each card at its real size ----- */
+  let compare = null;
+  function openCompare() {
+    stopEditing(true);
+    if (compare) return;
+    const cmp = { face: 'both', lang: st.lang, fit: false };
+    const showSides = [{ value: 'both', label: 'Both sides' }, ...SIDES];
+    const sideSeg = h('div', { class: 'adm-views', role: 'group', 'aria-label': 'Show' },
+      showSides.map((s) => h('button', { type: 'button', class: 'adm-view', 'data-cmp-side': s.value }, s.label)));
+    const langSeg = h('div', { class: 'adm-rsvp', role: 'group', 'aria-label': 'Language' },
+      card.langs.map((c) => h('button', { type: 'button', class: 'adm-seg is-pick', 'data-cmp-lang': c, lang: c }, LANG_NAMES[c] || c)));
+    const fitBtn = h('button', { type: 'button', class: 'adm-text-btn', 'data-cmp-act': 'fit', 'aria-pressed': 'false' }, 'Fit to screen');
+    const closeCmp = h('button', { type: 'button', class: 'adm-close', 'data-cmp-act': 'close', 'aria-label': 'Close' }, '×');
+    const note = h('p', { class: 'adm-cmp-note' });
+    const row = h('div', { class: 'adm-cmp-row' });
+    const overlay = h('div', { class: 'adm adm-cmp is-open', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Compare versions', tabindex: -1 },
+      h('header', { class: 'adm-cmp-head' },
+        h('div', { class: 'adm-title' }, h('span', { class: 'adm-xi', 'aria-hidden': 'true' }, '囍'), h('h1', null, 'Compare versions')),
+        h('div', { class: 'adm-cmp-tools' }, sideSeg, langSeg, fitBtn),
+        closeCmp),
+      note,
+      row);
+    const GAP = 40;
+    function render() {
+      for (const b of sideSeg.children) b.setAttribute('aria-pressed', String(b.dataset.cmpSide === cmp.face));
+      for (const b of langSeg.children) b.setAttribute('aria-pressed', String(b.dataset.cmpLang === cmp.lang));
+      fitBtn.setAttribute('aria-pressed', String(cmp.fit));
+      fitBtn.textContent = cmp.fit ? 'Actual size' : 'Fit to screen';
+      const faces = cmp.face === 'both' ? SIDES.map((s) => s.value) : [cmp.face];
+      const n = st.versions.length;
+      const pad = parseFloat(getComputedStyle(row).paddingLeft) * 2 || 0;
+      const room = (overlay.clientWidth - pad - (n - 1) * GAP) / n;
+      const w = Math.round(cmp.fit ? Math.max(150, Math.min(card.widest, room)) : card.widest);
+      const wider = n * (w + GAP) - GAP + pad > overlay.clientWidth;
+      note.textContent = (cmp.fit ? `Shrunk to ${Math.round((w / card.widest) * 100)}% of their real size.`
+        : 'Each card at its real size, as on a computer screen.') + (wider ? ' Scroll sideways to see them all.' : '');
+      const live = liveVersion();
+      row.replaceChildren(...st.versions.map((v) => {
+        const editing = v.id === st.id, unsaved = editing && isDirty();
+        const layout = editing ? st.draft : card.normal(v.layout);
+        return h('section', { class: `adm-cmp-col${v.live ? ' is-live' : ''}`, 'data-cmp-version': v.id, style: `width:${w}px` },
+          h('div', { class: 'adm-cmp-top' },
+            h('h2', { class: 'adm-cmp-name' }, v.name),
+            v.live && h('span', { class: 'adm-live', title: 'Guests see this version' }, 'Live'),
+            unsaved && h('span', { class: 'adm-cmp-unsaved' }, 'with your unsaved changes'),
+            h('span', { class: 'adm-cmp-acts' },
+              editing ? h('span', { class: 'adm-cmp-unsaved' }, 'Being edited')
+                : h('button', { type: 'button', class: 'adm-text-btn', 'data-cmp-act': 'edit', disabled: st.busy }, 'Edit'),
+              !v.live && h('button', { type: 'button', class: 'adm-btn adm-btn-quiet', 'data-cmp-act': 'live', disabled: st.busy,
+                                       title: live ? `Instead of “${live.name}”` : null }, 'Make live'))),
+          faces.map((f) => h('figure', { class: 'adm-cmp-face' },
+            faceSheet(card, f, layout, cmp.lang, w, st.opens, sampleNames()),
+            h('figcaption', null, sideName(f)))));
+      }));
+    }
+    overlay.addEventListener('click', async (e) => {
+      const side = e.target.closest('[data-cmp-side]');
+      if (side) { cmp.face = side.dataset.cmpSide; render(); return; }
+      const lang = e.target.closest('[data-cmp-lang]');
+      if (lang) { cmp.lang = lang.dataset.cmpLang; render(); return; }
+      const act = e.target.closest('[data-cmp-act]');
+      if (!act || act.disabled) return;
+      const col = act.closest('[data-cmp-version]'), id = col && Number(col.dataset.cmpVersion);
+      switch (act.dataset.cmpAct) {
+        case 'close': shut(); break;
+        case 'fit': cmp.fit = !cmp.fit; render(); break;
+        case 'edit': if (switchTo(id)) shut(); break;
+        case 'live': if (await makeLive(id)) render(); break;
+      }
+    });
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();                                // the panel beneath stays open
+      shut();
+    };
+    const refit = new ResizeObserver(() => { if (cmp.fit) render(); });
+    function shut() {
+      document.removeEventListener('keydown', onKey, true);
+      refit.disconnect();
+      overlay.remove();
+      compare = null;
+      if (compareBtn.isConnected) compareBtn.focus({ preventScroll: true });
+    }
+    document.addEventListener('keydown', onKey, true);
+    document.body.append(overlay);
+    refit.observe(overlay);
+    render();
+    overlay.focus({ preventScroll: true });
+    compare = { shut };
+  }
+
+  return {
+    el,
+    /* the versions, fresh each time the view is shown; a version with unsaved changes keeps them */
+    async load() {
+      stopEditing(true);
+      let versions, letters;
+      try {
+        [versions, letters] = await Promise.all([api('GET', '/admin/versions'), api('GET', '/admin/letters').catch(() => null)]);
+      } catch (err) { fail(err); return; }
+      const opener = letters && letters.find((l) => l.opens_first);
+      st.opens = opener ? opener.kind : null;
+      const first = st.id == null;                        // just made: back to what was being edited before, if anything
+      const wanted = first ? mem.id : st.id;
+      const kept = first ? mem.draft : isDirty() ? st.draft : null;
+      st.versions = versions;
+      const target = versions.find((v) => v.id === wanted) || versions.find((v) => v.live) || versions[0];
+      if (!target) return;
+      st.id = target.id;
+      st.draft = card.normal(target.id === wanted && kept ? kept : target.layout);
+      build();
+      show();
+      if (!st.cjk) loadPageCjk().then((set) => { st.cjk = set; sync(); });
+    },
+    dispose() {
+      if (compare) compare.shut();
+      resize.disconnect();
+    }
+  };
 }

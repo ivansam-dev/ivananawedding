@@ -63,6 +63,10 @@ Tap 囍 five times on the language screen, then enter a password. The password d
   - set each guest's RSVP to the tea ceremony and to the reception: attending, not attending or no response
   - mark the **save the date** and the **invitation** as sent, for a whole group at once or one guest at a time
   - choose which letters guests see and in what order (the **Letters** view; see below)
+  - choose the envelope's look, keep versions of it, and pick the one guests see (the **Letter style** view;
+    see below)
+  - lay out and reword the card's cover ("Dear …") and the save the date, keep versions of it, and pick the one
+    guests see (the **Card layout** view; see below)
   
   The totals at the top and the filter (e.g. "Save the date not sent") show who is left.
 - **link** sees each group and who is in it, with a **Copy link** button, and nothing else.
@@ -142,6 +146,76 @@ address opens, and `reply`: which of the guest's two answers, `tea_rsvp` or `rec
 asks for under that event's name) and `FAQS` (the details' questions and answers, which can be added to, removed or
 reordered). Before switching the details on, fill in the `[bracketed]` answers. After changing any
 wording, run `make fonts`, so any new Chinese or Vietnamese characters get the card's typefaces.
+
+## Letter style
+
+The admin's **Letter style** view sets the envelope's look: a copy of the envelope on the left (click it to
+open the flap and see the liner), the choices on the right.
+
+- **Starting points**: ready-made looks, from the original cinnabar lacquer to several in moss green.
+- **Colour**: a few shades of moss, then hue, richness and lightness sliders, or any colour by hex or the
+  picker. It sets the flap's lacquer; the pocket, liner, shadows and foil all follow it.
+- **Pattern**: the original peony vines, plain, blossom in the top right corner (or two corners),
+  scattered blossom, a window lattice, clouds or waves. Each can be tone on tone (a lighter shade of the
+  lacquer) or gold, at any strength.
+- **Along the creases**: a trim along the flap's edge and the bottom flap's: a gold line, a double rule,
+  stitching, pearls or a laurel.
+- **Seal**: red, gold, or matching the envelope, and its size (60% to 150% of the original).
+
+Trying a look changes nothing for guests. It shows on this screen only (and on the card behind the panel:
+**See it on the card** closes the panel, so you can pick a language and watch it arrive) until the page is
+reloaded. **Copy a preview link** gives a link to the card in that look, to send to each other; it saves
+nothing.
+
+**Versions.** As with the card's layout, each look is a version, kept in the database, and guests see the one
+marked **Live**. **Save** keeps the changes in the version shown (on the live version guests then see them
+from their next visit, so it asks first); **Discard changes** goes back to it as saved. **Save as new version**
+keeps what's on screen as a version of its own; **+ New version** starts one from the original cinnabar
+envelope. **Make live** switches guests to the version shown (saving it first, if it has changes); **Rename**
+and **Delete** do what they say, though the live version can't be deleted. A database from before versions
+starts with its saved look as the live "Version 1".
+
+A link with `?look=…` (as the preview link makes) draws the envelope in that look instead of the saved one.
+The printed cards inside keep their cinnabar ink whatever the envelope.
+
+## Card layout
+
+The admin's **Card layout** view sets where each piece of text sits, how big it is and what it says, on both
+sides guests see first: **Dear guest** (the cover, which greets them by name) and **Save the date**. Switch
+between them at the top of the view, beside the language (English, Tiếng Việt, 中文) the preview is in.
+
+- **Pieces**: on the cover, the 囍, "Dear" and the guests' names; on the save the date, the title, "for the
+  wedding of", the names, the date, the place and "Invitation to follow". Click one (on the card or in the list)
+  to pick it, then drag it. Dragging near the middle snaps it onto the centre line; hold Alt (Option) to drag
+  past it freely. The arrow keys nudge it (Shift for bigger steps), and `+` / `-` resize it. The **Across**,
+  **Up / down** and **Font size** sliders do the same; **A−** / **A+** change the font size a pixel at a time
+  (shown in pixels as on a computer screen; phones draw the same card smaller). **B** and **I** (or ⌘B / ⌘I,
+  Ctrl+B / Ctrl+I) set it in bold or italics. A dot marks pieces that have been changed.
+- **Words**: double-click a piece (or press Enter on it) and type, or use **Words** beside it. Enter finishes,
+  Shift+Enter starts a new line (up to 4), Escape puts the words back. Words are per language: changing the
+  English leaves the Vietnamese and Chinese as they were, except the couple's names, which are the same in
+  every language. Delete all the words to leave a piece off the card; **Use the card's own words** brings
+  them back. The guests' names on the cover come from each link, so they can be moved but not reworded;
+  **Try with** shows the preview with other names (only the preview). Words the card's typefaces don't have
+  (the names' script has only the letters in "Ivan Sam & Ana Nguyen", and Chinese only the characters already
+  in `index.html`) show in another face, and the view says which.
+- **Seeing it clean**: click the card away from the text, press Esc or **Deselect**, and nothing is outlined.
+- **Put it back** restores the picked piece (place, size and words); **Original layout** restores the whole
+  side.
+
+**Versions.** Each layout is a version, kept in the database. Guests see the one marked **Live**. Changes are
+only on this screen (and on the card behind the panel: **See it on the card**) until **Save**. Saving the live
+version changes what guests see from their next visit, so it asks first. **Save as new version** keeps what's
+on screen as a version of its own; **+ New version** starts one from the original layout. **Make live**
+switches guests to the version shown (saving it first, if it has changes); **Rename** and **Delete** do what
+they say, though the live version can't be deleted. **Compare versions** shows every version side by side, each
+card at its real size (scroll sideways, or **Fit to screen**), in any language, with **Edit** and **Make live**
+on each.
+
+The preview is drawn the way the card draws itself, at its real size when the screen has room (it says so
+beneath it), so the text sits and sizes exactly as guests see it. Positions are in card units, so a layout
+looks the same on every screen size. A database from before versions starts with its saved layout as the live
+"Version 1".
 
 ## Links
 

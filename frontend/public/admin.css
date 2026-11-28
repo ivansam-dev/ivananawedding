@@ -317,8 +317,234 @@ td.is-no_response .adm-ov-n{color:var(--wait)}
 
 .adm-offscreen{position:fixed;left:-9999px;top:0;opacity:0}
 
+/* ---- the Letter style view: its versions across the top, the envelope on the left (it stays in sight while
+   the choices scroll), the choices on the right, and saving across the bottom ---- */
+.adm-style{
+  display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1.08fr);grid-template-areas:"versions versions" "preview controls" "foot foot";
+  gap:8px 40px;padding-top:22px;
+}
+.adm-defs{position:absolute;width:0;height:0;overflow:hidden}
+.adm-style-preview{grid-area:preview;align-self:start;position:sticky;top:12px;display:flex;flex-direction:column;align-items:center}
+/* the copy of the card's envelope (index.html's .env and everything in it), sized here */
+.adm-env-stage{
+  --we:min(400px, calc(100vw - 96px));--he:calc(var(--we) / 1.4);--persp:calc(var(--we) * 3);
+  display:flex;justify-content:center;width:100%;padding:18px 0 30px;cursor:pointer;
+  transition:padding-top .9s cubic-bezier(.65,0,.35,1);
+}
+.adm-env-stage.is-open{padding-top:calc(var(--he) * .64 + 12px)}   /* room for the flap above it */
+.adm-env{flex:none}
+.adm-env .letter{left:4%;top:7%;width:92%;height:90%;transform:none;box-shadow:0 1px 3px rgba(40,5,5,.3)}
+.adm-env .flap-inner{transition:transform .9s cubic-bezier(.65,0,.35,1)}
+.adm-style-under{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.adm-style-caption{margin:0;font-style:italic;font-size:14.5px;color:var(--ink-soft)}
+
+.adm-style-controls{grid-area:controls;display:flex;flex-direction:column;gap:22px;min-width:0}
+.adm-style-sec{display:flex;flex-direction:column;gap:10px}
+.adm-style-h{margin:0;font-family:"Bodoni Moda",serif;font-style:italic;font-weight:400;font-size:19px;line-height:1.2;color:var(--cinnabar)}
+
+/* the starting points: a small envelope in each one's colours, its name and a word about it */
+.adm-presets{display:grid;grid-template-columns:repeat(auto-fill, minmax(178px, 1fr));gap:8px}
+.adm-preset{
+  display:flex;align-items:center;gap:10px;padding:7px 10px 7px 7px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;
+  background:transparent;border:1px solid var(--line-soft);border-radius:3px;transition:border-color .2s ease, background .2s ease;
+}
+.adm-preset:hover{border-color:var(--line);background:rgba(168,130,60,.06)}
+.adm-preset[aria-pressed="true"]{border-color:var(--gold-deep);background:rgba(168,130,60,.12)}
+.adm-st-mini{flex:none;width:44px;height:31.4px;box-shadow:0 1px 2px rgba(30,20,10,.25)}
+.adm-preset-text{display:flex;flex-direction:column;min-width:0}
+.adm-preset-name{font-size:14.5px;line-height:1.25}
+.adm-preset-note{font-size:12px;line-height:1.3;color:var(--ink-soft)}
+
+/* colour: shades to start from, then hue, richness and lightness, and any colour at all */
+.adm-swatches{display:flex;flex-wrap:wrap;gap:6px 4px}
+.adm-swatch{
+  display:flex;flex-direction:column;align-items:center;gap:5px;width:64px;padding:6px 2px 4px;font:inherit;cursor:pointer;
+  background:transparent;border:1px solid transparent;border-radius:3px;
+}
+.adm-swatch:hover{background:rgba(168,130,60,.07)}
+.adm-swatch[aria-pressed="true"]{border-color:var(--line)}
+.adm-swatch-dot{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), 0 1px 2px rgba(30,20,10,.25)}
+.adm-swatch[aria-pressed="true"] .adm-swatch-dot{box-shadow:0 0 0 2px var(--paper), 0 0 0 3px var(--gold-deep)}
+.adm-swatch-name{font-size:11.5px;line-height:1.2;text-align:center;color:var(--ink-soft)}
+.adm-swatch[aria-pressed="true"] .adm-swatch-name{color:var(--ink)}
+.adm-ranges{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.adm-range-row{display:grid;grid-template-columns:78px minmax(0, 1fr) 44px;align-items:center;gap:12px}
+.adm-range-label{font-size:13.5px;color:var(--ink-soft)}
+.adm-range-val{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.adm-range{
+  -webkit-appearance:none;appearance:none;width:100%;height:8px;margin:8px 0;border-radius:4px;cursor:pointer;
+  background:var(--track, var(--line));box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.adm-range::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--paper);border:1px solid var(--gold-deep);box-shadow:0 1px 3px rgba(30,20,10,.35);
+}
+.adm-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--paper);border:1px solid var(--gold-deep);box-shadow:0 1px 3px rgba(30,20,10,.35)}
+.adm-range:focus-visible{outline:2px solid rgba(138,26,31,.5);outline-offset:3px}
+.adm-hex-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.adm-picker{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:3px;background:none;cursor:pointer}
+.adm-hex.adm-input{flex:0 0 92px;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.adm-hex-hint{margin:0;flex:1 1 180px}
+
+/* the patterns, creases and seals: each a small sample over its name */
+.adm-st-chips{display:grid;grid-template-columns:repeat(auto-fill, minmax(86px, 1fr));gap:8px}
+.adm-st-chip{
+  display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:5px 5px 4px;font:inherit;color:var(--ink-soft);cursor:pointer;
+  background:transparent;border:1px solid var(--line-soft);border-radius:3px;transition:border-color .2s ease, background .2s ease, color .2s ease;
+}
+.adm-st-chip:hover{border-color:var(--line);color:var(--ink)}
+.adm-st-chip[aria-pressed="true"]{border-color:var(--gold-deep);background:rgba(168,130,60,.12);color:var(--ink)}
+.adm-st-chip-art{display:block;width:100%;height:auto;aspect-ratio:3 / 2;box-shadow:0 1px 2px rgba(30,20,10,.25)}
+.adm-st-chip-label{font-size:12px;line-height:1.2;text-align:center}
+.adm-style-sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:2px}
+.adm-style-sublabel{font-size:13.5px;color:var(--ink-soft)}
+.adm-style-sub .adm-st-chips{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.adm-style-sub .adm-st-chip{flex-direction:row;padding:5px 12px;border:0;border-left:1px solid var(--line-soft);border-radius:0}
+.adm-style-sub .adm-st-chip:first-child{border-left:0}
+.adm-style-sub .adm-st-chip-label{font-size:13.5px}
+.adm-style-sub .adm-range-row{flex:1 1 220px}
+.adm-style.is-plain .adm-style-sub:not(.adm-seal-size){opacity:.4;pointer-events:none}   /* no pattern: nothing to finish or strengthen */
+.adm-seal-size{margin-top:10px}
+.adm-st-chips[aria-label="Pattern"]{grid-template-columns:repeat(4, minmax(0, 1fr))}
+.adm-st-chips[aria-label="Along the creases"]{grid-template-columns:repeat(6, minmax(0, 1fr))}
+.adm-st-chips[aria-label="Seal"]{grid-template-columns:repeat(3, 86px)}
+.adm-seal-dot{display:block;width:32px;height:32px;margin:4px auto 2px;border-radius:50%;box-shadow:0 1px 2px rgba(30,20,10,.35)}
+
+/* saving, across the bottom */
+.adm-style-foot{
+  grid-area:foot;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--line-soft);
+}
+.adm-style-status{margin:0;font-style:italic;font-size:14.5px;color:var(--yes)}
+.adm-style-status.is-unsaved{color:var(--gold-deep)}
+.adm-style-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-left:auto}
+.adm-style-actions .adm-btn:disabled{opacity:.4;cursor:default}
+.adm-style-actions .adm-text-btn:disabled{opacity:.4;cursor:default;color:var(--ink-soft)}
+
+/* ---- the Card layout view: its versions across the top, then which side of the card and in which language,
+   the side itself (drawn from the card's own markup, at its real size when there's room), the pieces and the
+   picked one's controls beneath, and saving ---- */
+.adm-layout{grid-template-columns:minmax(0, 1fr);grid-template-areas:"versions" "bar" "preview" "controls" "foot"}
+.adm-ver{grid-area:versions;display:flex;flex-direction:column;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line-soft)}
+.adm-ver-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.adm-ver-list{display:flex;flex-wrap:wrap;gap:8px}
+.adm-ver-chip{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 13px;font:inherit;font-size:15px;line-height:1.3;color:var(--ink);cursor:pointer;
+  background:transparent;border:1px solid var(--line-soft);border-radius:3px;transition:border-color .2s ease, background .2s ease;
+}
+.adm-ver-chip:hover{border-color:var(--line);background:rgba(168,130,60,.06)}
+.adm-ver-chip[aria-pressed="true"]{border-color:var(--gold-deep);background:rgba(168,130,60,.14)}
+.adm-ver-chip:disabled{opacity:.5;cursor:default}
+.adm-ver-new{font-style:italic;color:var(--gold-deep);border-style:dashed}
+.adm-ver-dirty{font-size:22px;line-height:0;color:var(--gold-deep)}
+.adm-live{
+  flex:none;padding:2px 7px 1px;border-radius:2px;background:var(--yes);color:#fbf7ef;
+  font-size:10.5px;line-height:1.4;letter-spacing:.1em;text-transform:uppercase;font-style:normal;
+}
+.adm-ver-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.adm-ver-state{margin:0;font-style:italic;font-size:14.5px;color:var(--ink-soft)}
+.adm-ver-acts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-left:auto}
+.adm-ver-acts .adm-btn{padding:6px 16px}
+.adm-ver-acts .adm-btn[hidden]{display:none}
+.adm-ver-acts .adm-btn:disabled,.adm-ver-acts .adm-text-btn:disabled{opacity:.4;cursor:default}
+.adm-face-bar{grid-area:bar;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;padding-top:16px}
+.adm-seg.is-pick[aria-pressed="true"]{background:var(--cinnabar);color:#fbf7ef}
+.adm-std-hint{max-width:640px;font-size:13.5px}
+.adm-std-preview .adm-style-under .adm-text-btn:disabled{opacity:.4;cursor:default;color:var(--ink-soft)}
+.adm-layout .adm-style-preview{position:static}
+.adm-layout .adm-style-controls{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);gap:22px 40px}
+.adm-layout .adm-range-row{grid-template-columns:78px minmax(0, 1fr) 64px}
+.adm-std-scale{font-size:13px}
+.adm-std-stage{width:100%;padding:18px 0 14px;display:flex;justify-content:center}
+.adm-std-sheet{
+  position:relative;flex:none;width:var(--wf, 560px);height:var(--hh, 346px);overflow:hidden;text-align:center;
+  box-shadow:0 1px 3px rgba(40,5,5,.3), 0 22px 40px -24px rgba(30,42,34,.55);
+  -webkit-user-select:none;user-select:none;touch-action:none;
+}
+.adm-std-context{opacity:.45;pointer-events:none}
+.adm-std-sheet .adm-piece{cursor:grab;outline:1px dashed transparent;outline-offset:3px;transition:outline-color .2s ease}
+.adm-std-sheet.has-pick .adm-piece:hover{outline-color:rgba(168,130,60,.55)}   /* nothing picked: the card as guests see it */
+.adm-std-sheet .adm-piece.is-picked{outline:1px solid var(--cinnabar)}
+.adm-std-sheet .adm-piece:focus-visible{outline:2px solid rgba(138,26,31,.6)}
+.adm-std-sheet:not(.has-pick) .adm-piece:focus-visible{outline-color:transparent}   /* nothing picked: no outlines at all */
+/* a piece with its words taken away can still be found while it's picked */
+.adm-std-sheet .adm-piece.is-picked:empty,.adm-std-sheet .adm-piece.is-editing:empty{min-width:3em;min-height:1em}
+.adm-std-sheet .adm-piece.is-editing{outline:1px dashed var(--cinnabar);cursor:text;-webkit-user-select:text;user-select:text;caret-color:var(--cinnabar)}
+.adm-std-sheet.is-dragging,.adm-std-sheet.is-dragging .adm-piece{cursor:grabbing}
+.adm-std-guide{position:absolute;left:50%;top:0;bottom:0;width:0;border-left:1px dashed var(--cinnabar);opacity:0;pointer-events:none;transition:opacity .15s ease}
+.adm-std-guide.is-shown{opacity:.6}
+.adm-pieces{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr))}
+.adm-piece-chip{position:relative;padding:9px 8px;text-align:center}
+.adm-piece-chip.is-moved::after{   /* moved or resized from where the card first put it */
+  content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.adm-layout .adm-style-sub .adm-text-btn{padding-left:0}
+.adm-layout .adm-style-sub [data-layout-act="smaller"],.adm-layout .adm-style-sub [data-layout-act="bigger"]{min-width:30px;font-style:normal}
+.adm-layout .adm-style-sub [data-layout-act="centre"]{margin-left:auto}
+/* bold and italics: two toggles side by side, filled while on */
+.adm-fmts{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-right:6px}
+.adm-fmt{
+  width:34px;height:30px;padding:0;border:0;background:transparent;cursor:pointer;
+  font-family:"Bodoni Moda",serif;font-size:16px;line-height:1;color:var(--ink-soft);transition:background .2s ease, color .2s ease}
+.adm-fmt + .adm-fmt{border-left:1px solid var(--line-soft)}
+.adm-fmt-b{font-weight:700}
+.adm-fmt-i{font-style:italic}
+.adm-fmt:hover{background:rgba(138,26,31,.06);color:var(--ink)}
+.adm-fmt[aria-pressed="true"]{background:var(--cinnabar);color:var(--paper)}
+.adm-layout .adm-text-btn:disabled{opacity:.4;cursor:default;color:var(--ink-soft)}
+.adm-piece-none{margin:0}
+.adm-piece-body{display:flex;flex-direction:column;gap:10px}
+.adm-piece-body[hidden],.adm-words-row[hidden],.adm-piece-none[hidden]{display:none}
+/* a piece's words, and the names the cover greets in the preview */
+.adm-words-row{display:flex;flex-direction:column;gap:2px}
+.adm-words-field{display:grid;grid-template-columns:78px minmax(0, 1fr);align-items:start;gap:12px}
+.adm-words-field .adm-range-label{padding-top:6px}
+.adm-words{width:100%;min-height:48px;resize:vertical;font:inherit;line-height:1.35}
+.adm-words-under{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 12px;padding-left:90px}
+.adm-words-under .adm-text-btn{margin-left:auto;padding-right:0}
+.adm-words-note{margin:0;min-height:1.45em}
+.adm-words-note.is-warn{color:var(--gold-deep)}
+.adm-words-row > .adm-hint{margin:2px 0 0;padding-left:90px}
+.adm-style.is-busy,.adm-style.is-busy button{cursor:progress}
+
+/* ---- Compare versions: every version side by side over the panel, each card at its real size ---- */
+.adm-cmp{z-index:110;overflow:auto;background:rgba(36,48,40,.66)}
+.adm-cmp-head{
+  position:sticky;left:0;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;
+  padding:14px clamp(16px, 3vw, 36px);
+  background-color:var(--paper);background-image:var(--grain-paper);background-size:220px;
+  box-shadow:0 1px 0 var(--line), 0 12px 30px -22px rgba(30,40,32,.7);
+}
+.adm-cmp-head .adm-title h1{font-size:clamp(22px, 3vw, 28px)}
+.adm-cmp-head > .adm-close{position:absolute;top:10px;right:clamp(8px, 2vw, 24px)}
+.adm-cmp-head{padding-right:clamp(56px, 6vw, 80px)}
+.adm-cmp-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-right:auto}
+.adm-cmp-tools .adm-text-btn[aria-pressed="true"]{color:var(--cinnabar)}
+.adm-cmp-note{position:sticky;left:0;margin:0;padding:14px clamp(16px, 3vw, 36px) 0;font-style:italic;font-size:14px;color:rgba(251,247,239,.88)}
+.adm-cmp-row{display:flex;align-items:flex-start;gap:40px;width:max-content;min-width:100%;padding:14px clamp(16px, 3vw, 36px) 56px}
+.adm-cmp-col{flex:none;display:flex;flex-direction:column;gap:16px}
+.adm-cmp-top{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:54px;padding:9px 14px;
+  background-color:var(--paper);background-image:var(--grain-paper);background-size:220px;box-shadow:0 1px 3px rgba(20,30,24,.3);
+}
+.adm-cmp-col.is-live .adm-cmp-top{box-shadow:inset 0 0 0 1px var(--yes), 0 1px 3px rgba(20,30,24,.3)}
+.adm-cmp-name{margin:0;min-width:0;font-family:"Bodoni Moda",serif;font-style:italic;font-weight:400;font-size:20px;line-height:1.25;color:var(--cinnabar);overflow-wrap:anywhere}
+.adm-cmp-unsaved{font-style:italic;font-size:13.5px;color:var(--gold-deep)}
+.adm-cmp-acts{display:flex;align-items:center;gap:4px 8px;margin-left:auto}
+.adm-cmp-acts .adm-btn{padding:5px 14px}
+.adm-cmp-acts button:disabled{opacity:.45;cursor:default}
+.adm-cmp-face{margin:0;display:flex;flex-direction:column;gap:7px}
+.adm-cmp-face figcaption{font-style:italic;font-size:13.5px;color:rgba(251,247,239,.85)}
+.adm-face-sheet{box-shadow:0 1px 3px rgba(20,10,5,.35), 0 24px 44px -26px rgba(10,20,14,.8)}
+.adm-face-sheet .adm-std-context{opacity:1}   /* the ducklings as guests see them */
+
 /* ---- narrower screens: each guest wraps onto two or three lines ---- */
 @media (max-width:1000px){
+  /* the envelope above the choices, at the top while they scroll */
+  .adm-style{grid-template-columns:minmax(0, 1fr);grid-template-areas:"versions" "preview" "controls" "foot"}
+  .adm-layout{grid-template-areas:"versions" "bar" "preview" "controls" "foot"}
+  .adm-layout .adm-style-controls{grid-template-columns:minmax(0, 1fr)}
+  .adm-style-preview{position:static}
+  .adm-env-stage{--we:min(380px, calc(100vw - 84px))}
   .adm-guest{grid-template-columns:auto minmax(0, 1fr) auto minmax(0, 150px) auto}
   .adm-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
   .adm-row-who,.adm-row-name.adm-input{flex:1 1 220px}
@@ -346,8 +572,27 @@ td.is-no_response .adm-ov-n{color:var(--wait)}
   .adm-group-foot .adm-danger{margin-left:0}
   .adm-row{gap:8px 10px;padding:11px 0}
   .adm-row-who,.adm-row-name.adm-input{flex-basis:100%}
+  .adm-presets{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr))}
+  .adm-st-chips[aria-label="Along the creases"]{grid-template-columns:repeat(3, minmax(0, 1fr))}
+  .adm-swatch{width:58px}
+  .adm-style-actions{margin-left:0}
+  .adm-words-field{grid-template-columns:minmax(0, 1fr);gap:2px}
+  .adm-words-field .adm-range-label{padding-top:0}
+  .adm-words-under,.adm-words-row > .adm-hint{padding-left:0}
+}
+
+/* ---- phones: the views in two rows rather than off the edge ---- */
+@media (max-width:540px){
+  .adm-views{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));width:100%}
+  .adm-view{padding:7px 6px;font-size:14px;border-top:1px solid var(--line-soft);margin:-1px 0 0 -1px}
+  .adm-view:first-child{border-left:1px solid var(--line-soft)}
+  .adm-view:last-child{grid-column:span 2}
+  /* the Card layout's switches keep to one row */
+  .adm-sides,.adm-cmp-tools .adm-views{display:inline-flex;width:auto}
+  .adm-sides .adm-view,.adm-cmp-tools .adm-view{border-top:0;margin:0}
+  .adm-sides .adm-view:first-child,.adm-cmp-tools .adm-view:first-child{border-left:0}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .adm,.adm-sheet,.adm-caret{transition:none}
+  .adm,.adm-sheet,.adm-caret,.adm-env-stage,.adm-env .flap-inner{transition:none}
 }

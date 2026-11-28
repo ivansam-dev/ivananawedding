@@ -5,23 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#c8d3c9">
 <meta name="robots" content="noindex, nofollow">
-<title>Ivan and Ana&#39;s Wedding</title>
+<title>Reserve the date</title>
+<!-- The picture and words Messenger, WhatsApp, iMessage and the like show under a pasted link. Their crawlers
+     don't run scripts, so this is the same for every link. Facebook wants the image's full address: nginx
+     fills in the site's own in og:image (sub_filter in nginx.conf, which replaces only the first match, so
+     the placeholder must appear nowhere else in this file). preview.jpg is the live envelope, drawn by
+     frontend/tools/render_preview.js: run it again after changing the Letter style, and bump ?v= so apps that
+     cached the old picture fetch the new one. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ivan &amp; Ana">
+<meta property="og:title" content="Reserve the date">
+<meta property="og:image" content="__ORIGIN__/preview.jpg?v=e59d3428">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A green envelope with gold trim, sealed with a gold 囍 seal">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <script>
-/* A group's link (/<id>) asks for its names, and which letters to show, straight away. Up here,
-   before the font stylesheets, the request runs while they and the rest of the page load; further
-   down it would have to wait for them. A ?to=Name link only asks which letters to show.
-   The main script at the bottom picks the answer up from window.inviteRequest. */
+/* A group's link (/<id>) asks for its names, which letters to show and the envelope's look, straight
+   away. Up here, before the font stylesheets, the request runs while they and the rest of the page load;
+   further down it would have to wait for them. A ?to=Name link only asks which letters to show, the
+   look and the layout; a bare link takes only the look and the layout (for its cover). The main script at
+   the bottom picks the answer up from window.inviteRequest. */
 window.inviteRequest = (() => {
   const query = new URLSearchParams(location.search);
   const id = (location.pathname.split('/').filter(Boolean)[0] || query.get('g') || '').toLowerCase();
   const group = /^[a-z0-9]{4,32}$/.test(id);
-  if (!group && !query.has('to')) return null;                   // a bare link: the card stays closed
+  const bare = !group && !query.has('to');                       // the card stays closed, with a note
   return {
     group,
     id: group ? id : null,
     reply: fetch(group ? `/api/invite/${id}` : '/api/letters')
       .then((r) => r.json().then((d) => (r.ok ? d : null)))      // always read the body, so the request ends
+      .then((d) => (bare && d ? { style: d.style, layout: d.layout } : d))
       .catch(() => null)                                         // offline or unknown link: the plain card
   };
 })();
@@ -29,23 +46,25 @@ window.inviteRequest = (() => {
 <!-- Every face for every language, cut down to the characters the card draws (frontend/tools/subset_fonts.py,
      ~180 KB in all). All of it is fetched straight away and the first screen waits for it, so nothing
      re-flows or swaps font mid-animation. -->
-<link rel="preload" href="/fonts/bodoni-moda.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/bodoni-moda-italic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/playfair.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/playfair-italic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/playfair-sc.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/beau-rivage.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/noto-serif-tc.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/noto-serif-sc-xi.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bodoni-moda.woff2?v=5fd88c19" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bodoni-moda-italic.woff2?v=d5d1ad94" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair.woff2?v=d8c06b3e" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair-italic.woff2?v=9e8740cc" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/playfair-sc.woff2?v=f9fc8c86" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/pinyon-script.woff2?v=64e9c89b" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/tangerine.woff2?v=4ae06d0a" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/noto-serif-tc.woff2?v=d867cda2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/noto-serif-sc-xi.woff2?v=148dd0fb" as="font" type="font/woff2" crossorigin>
 <style>
-@font-face{font-family:"Bodoni Moda";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda.woff2) format("woff2")}
-@font-face{font-family:"Bodoni Moda";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda-italic.woff2) format("woff2")}
-@font-face{font-family:"Playfair Display";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/playfair.woff2) format("woff2")}
-@font-face{font-family:"Playfair Display";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/playfair-italic.woff2) format("woff2")}
-@font-face{font-family:"Playfair Display SC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/playfair-sc.woff2) format("woff2")}
-@font-face{font-family:"Beau Rivage";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/beau-rivage.woff2) format("woff2")}
-@font-face{font-family:"Noto Serif TC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/noto-serif-tc.woff2) format("woff2")}
-@font-face{font-family:"Noto Serif SC";font-style:normal;font-weight:600;font-display:block;src:url(/fonts/noto-serif-sc-xi.woff2) format("woff2")}
+@font-face{font-family:"Bodoni Moda";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda.woff2?v=5fd88c19) format("woff2")}
+@font-face{font-family:"Bodoni Moda";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/bodoni-moda-italic.woff2?v=d5d1ad94) format("woff2")}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:400 500;font-display:block;src:url(/fonts/playfair.woff2?v=d8c06b3e) format("woff2")}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:400 500;font-display:block;src:url(/fonts/playfair-italic.woff2?v=9e8740cc) format("woff2")}
+@font-face{font-family:"Playfair Display SC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/playfair-sc.woff2?v=f9fc8c86) format("woff2")}
+@font-face{font-family:"Pinyon Script";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/pinyon-script.woff2?v=64e9c89b) format("woff2")}
+@font-face{font-family:"Tangerine";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/tangerine.woff2?v=4ae06d0a) format("woff2")}
+@font-face{font-family:"Noto Serif TC";font-style:normal;font-weight:400;font-display:block;src:url(/fonts/noto-serif-tc.woff2?v=d867cda2) format("woff2")}
+@font-face{font-family:"Noto Serif SC";font-style:normal;font-weight:600;font-display:block;src:url(/fonts/noto-serif-sc-xi.woff2?v=148dd0fb) format("woff2")}
 
 /* ------------------------------------------------------------------
    Palette — cinnabar lacquer, gold leaf, Ru-ware celadon, ivory stock
@@ -55,11 +74,26 @@ window.inviteRequest = (() => {
   --wf:520px; --hh:364px;          /* card width / folded height      */
   --u:calc(var(--wf) / 100);       /* one card unit                   */
   --persp:calc(var(--we) * 3);
+  --diet-s:1;                      /* the dietary box's scale on phones (set by script) */
 
   --glaze-hi:#dfe6dd; --glaze:#c9d4ca; --glaze-lo:#a5b4a8;
   --lacquer:#6c1216; --lacquer-deep:#4a080c; --cinnabar:#8a1a1f;
   --gold:#b08a45; --gold-deep:#86652a; --gold-line:rgba(168,130,60,.72);
   --paper:#fbf7ef; --ink:#2e2420; --ink-soft:#67584f;
+
+  /* the envelope and its seal. These are the original cinnabar; the admin's Letter style (applyStyle)
+     recolours them all from one lacquer colour */
+  --env-flap-a:#83171c; --env-flap-b:#691115;
+  --env-side-l-a:#7a161b; --env-side-l-b:#671115; --env-side-r-a:#6b1216; --env-side-r-b:#5a0d11;
+  --env-bottom-a:#78161a; --env-bottom-b:#5e0f13;
+  --env-liner:#560b10; --env-deep:#4a080c;
+  --env-dark:#140002; --env-edge:#250104; --env-emboss:#160002; --env-fold:#1a0003;
+  --env-shine:#ffd8c6; --env-shine-flap:#ffb3a8;
+  --foil-a:#e5484f; --foil-b:#b8252c; --foil-c:#87151b; --foil-d:#55090e;
+  --seal-rim:#6c1216; --seal-ring:#4a070b; --seal-ink:#2e0306; --seal-shine:#ff9a9a;
+  --seal-a:#8e161c; --seal-b:#cf3a41; --seal-c:#f17378; --seal-d:#bd2930; --seal-e:#7a1217;
+  --seal-in-a:#7c1318; --seal-in-b:#a51f26; --seal-in-c:#6c0f14;
+  --seal-xi-a:#ef5d63; --seal-xi-b:#d0353c; --seal-xi-c:#9c1c22;
 
   --serif:"Bodoni Moda","Didot","Bodoni 72","Times New Roman",serif;
   --cjk:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
@@ -88,7 +122,7 @@ body::before{               /* faint glaze texture */
 /* per-language type: Vietnamese needs a face with its diacritics; Chinese is set upright */
 html[lang="vi"]{--serif:"Playfair Display","Bodoni Moda","Times New Roman",serif}
 html[lang="zh-Hant"]{--serif:"Bodoni Moda","Noto Serif TC","Songti TC","PMingLiU",serif}
-html[lang="zh-Hant"] [data-i18n]{font-style:normal;letter-spacing:.08em}
+html [data-i18n]:lang(zh-Hant){font-style:normal;letter-spacing:.08em}   /* :lang, so it holds in the admin's copies of the card too */
 html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
 
 /* language choice, shown before the envelope */
@@ -153,7 +187,7 @@ html[lang="zh-Hant"] .event h2{letter-spacing:.14em}
 /* personalised cover and the pause before the letter opens */
 .cover-dear{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 2.2);line-height:1.35;color:var(--ink-soft);margin-bottom:calc(var(--u) * 1.3);letter-spacing:.14em;padding-left:.14em}
 .cover-dear[hidden]{display:none}
-html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
+html .cover-dear:lang(zh-Hant){letter-spacing:.2em;padding-left:.2em}
 .cover-date{display:none}
 .cover-note{max-width:78%;margin-top:calc(var(--u) * 2.6);font-family:"Playfair Display SC","Noto Serif TC",serif;font-style:normal;font-size:calc(var(--u) * 2.2);line-height:1.5;color:var(--ink-soft);letter-spacing:.08em}
 .cover-note[hidden]{display:none}
@@ -195,7 +229,7 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 }
 .env{
   position:relative;width:var(--we);height:var(--he);
-  isolation:isolate;background:var(--lacquer-deep);
+  isolation:isolate;background:var(--env-deep);
   box-shadow:
     0 1px 1px rgba(40,30,25,.18),
     0 14px 24px -12px rgba(38,48,40,.45),
@@ -229,24 +263,20 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 /* red-foil round medallion with 囍 — doubles as the seal */
 .seal{
   position:absolute;left:50%;top:87%;
-  width:calc(var(--we) * .22);aspect-ratio:1;
+  width:calc(var(--we) * .22 * var(--seal-size, 1));aspect-ratio:1;   /* --seal-size: the Letter style's seal size */
   transform:translate(-50%,-50%) translateZ(2px);
   -webkit-backface-visibility:hidden;backface-visibility:hidden;
 }
 .medal{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(30,0,3,.45))}
 .seal.is-falling{position:fixed;z-index:30;pointer-events:none;will-change:transform}
 
-/* surface light: grain, glimmer, pointer glow — blended onto the lacquer */
+/* surface light: grain and glimmer — blended onto the lacquer */
 .env-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .env-fx i{position:absolute;inset:0;z-index:6;transition:opacity .6s ease}
 .fx-grain{background-image:var(--grain-gray);background-size:200px;mix-blend-mode:overlay;opacity:.2}
 .fx-light{
   background:linear-gradient(142deg, rgba(255,214,196,.22) 0%, rgba(255,214,196,0) 42%, rgba(0,0,0,0) 62%, rgba(20,0,0,.22) 100%);
   mix-blend-mode:soft-light;
-}
-.fx-glow{
-  background:radial-gradient(circle at var(--mx,50%) var(--my,35%), rgba(255,228,206,.5), rgba(255,228,206,0) 45%);
-  mix-blend-mode:soft-light;opacity:0;
 }
 .hint{
   position:absolute;left:50%;top:calc(100% + clamp(22px, 4.4vh, 40px));
@@ -268,7 +298,6 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
   }
   .is-ready:not(.is-opening) .env-hover:hover .flap{transform:perspective(var(--persp)) rotateX(17deg)}
   .is-ready:not(.is-opening) .env-hover:hover .flap-out{filter:drop-shadow(0 8px 8px rgba(35,0,4,.42))}
-  .is-ready:not(.is-busy) .env-hover:hover .fx-glow{opacity:1}
   .is-ready.hint-on:not(.is-busy) .env-hover:hover + .hint{opacity:1;color:#3d4c43;letter-spacing:.09em}
 }
 .is-ready:not(.is-opening) .env-hover:focus-visible{transform:translateY(-6px)}
@@ -296,7 +325,7 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .paper{
   background-color:var(--paper);
   background-image:var(--grain-paper), linear-gradient(172deg, #fefbf5 0%, #f9f4ea 60%, #f5efe3 100%);
-  background-size:220px, 100% 100%;
+  background-size:calc(220px / var(--grain-zoom, 1)), 100% 100%;   /* --grain-zoom: pinch-zoom, so the grain keeps its size on screen */
 }
 .fly{
   position:fixed;left:50%;top:50%;z-index:10;
@@ -341,14 +370,10 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .fold-inner{display:none}
 .is-unfolding .card3d{transform:none}
 .is-unfolding .face-front,.is-unfolding .fold-inner{top:50%;transform-origin:50% 0}
-.is-unfolding .fold-inner{display:block;overflow:hidden;background-size:220px, 100% 200%;box-shadow:none}   /* the paper lines up with the sheet's; no edge drawn at the fold */
-.fold-inner .frame{bottom:auto;height:calc(200% - var(--u) * 7.2)}
+.is-unfolding .fold-inner{display:block;overflow:hidden;background-size:calc(220px / var(--grain-zoom, 1)), 100% 200%;box-shadow:none}   /* the paper lines up with the sheet's; no edge drawn at the fold */
 .is-unfolding .face-back{transform:translateZ(-1px);clip-path:inset(calc(50% - 1px) 0 0 0)}   /* overlaps the flap by 1px: no seam */
 .is-unfolding .face-front .shade{background:linear-gradient(to top, rgba(36,30,26,.03), rgba(36,30,26,.2))}
 .fold-inner .shade{background:linear-gradient(to bottom, rgba(36,30,26,.03), rgba(36,30,26,.2))}
-
-/* engraved frame */
-.frame{position:absolute;inset:calc(var(--u) * 3.6);border:1px solid rgba(138,26,31,.72);pointer-events:none}
 
 /* cover */
 .cover-print{position:absolute;inset:0}
@@ -449,16 +474,21 @@ html[lang="zh-Hant"] .cover-dear{letter-spacing:.2em;padding-left:.2em}
 .std-row{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;transform:translateY(-50%)}
 .std-top{top:calc(var(--hh) * .2)}
 .std-mid{top:50%}
-.std-foot{top:calc(var(--hh) * .785)}
+.std-foot{top:calc(var(--hh) * .76)}   /* the date, the place, then a gap and the note; clear of the ducklings */
 .std-title{font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 3.7);line-height:1.2;color:var(--cinnabar);letter-spacing:.14em;padding-left:.14em}
 .std-lead{font-family:"Playfair Display SC","Noto Serif TC",serif}
 .std-lead{position:absolute;left:0;right:0;bottom:100%;margin-bottom:calc(var(--u) * 1.6);white-space:nowrap;font-size:calc(var(--u) * 2.2);color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
-.std-names{font-family:"Beau Rivage","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 9.3);line-height:1.15;color:var(--cinnabar);letter-spacing:0;white-space:nowrap}
-.std-names .amp{color:var(--gold);padding:0 .26em}
-.std-day,.std-place{font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;font-size:calc(var(--u) * 2.2);line-height:1.35;color:var(--ink);letter-spacing:.12em;padding-left:.12em}
+.std-names{font-family:"Pinyon Script","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 9.3);line-height:1.15;color:var(--cinnabar);letter-spacing:0;white-space:nowrap}
+.std-names .amp{font-family:"Tangerine","Pinyon Script",cursive;font-style:italic;color:var(--gold);padding:0 .26em}
+.std-day,.std-place{font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;font-size:calc(var(--u) * 2.2);line-height:1.35;color:var(--ink-soft);letter-spacing:.12em;padding-left:.12em}   /* the date, the place and the note in the same softer ink as the line above the names */
 .std-day,.std-place{text-transform:lowercase}   /* all small capitals, like the line above the names */
 .std-place{margin-top:calc(var(--u) * .9)}
-html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
+.std-note{margin-top:calc(var(--u) * 3.6)}   /* a gap after the place */
+html .std-title:lang(zh-Hant){letter-spacing:.2em}
+/* each piece of the cover's and the save the date's text moved and sized as the admin's Card layout view left
+   it (applyLayout): --dx and --dy in card units, --sz against its own size. translate and scale add to the
+   words' settling transform, and change nothing else's place */
+[data-face] [data-piece]{translate:calc(var(--u) * var(--dx, 0)) calc(var(--u) * var(--dy, 0));scale:var(--sz, 1)}
 /* a letter's block that isn't in front, and whatever lives on it (data-on-letter), here and in copies of the card */
 [data-letter][hidden],[data-on-letter][hidden]{display:none}
 
@@ -484,7 +514,7 @@ html[lang="zh-Hant"] .std-title{letter-spacing:.2em}
 .inv-lead,.inv-ask{color:var(--ink-soft);letter-spacing:.14em;padding-left:.14em}
 .inv-names{
   margin:calc(var(--u) * 3.4) 0 calc(var(--u) * 2.8);
-  font-family:"Beau Rivage","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 8.6);line-height:1.15;
+  font-family:"Pinyon Script","Playfair Display",cursive;font-weight:400;font-size:calc(var(--u) * 8.6);line-height:1.15;
   color:var(--cinnabar);letter-spacing:0;white-space:nowrap;
 }
 .inv-names .amp{color:var(--gold);padding:0 .26em}
@@ -516,9 +546,10 @@ html[lang="zh-Hant"] .inv-what{font-style:normal;letter-spacing:.14em}
 html[lang="zh-Hant"] .inv-sc{letter-spacing:.16em}
 .attire span{font-style:italic;font-size:calc(var(--u) * 3.5);color:var(--ink);letter-spacing:.02em}
 
-/* two ducklings standing on the card's bottom gold line */
+/* two ducklings standing along the bottom of the card, where the frame line used to run */
 .ducks{
-  position:absolute;left:calc(var(--u) * 3.6);right:calc(var(--u) * 3.6);bottom:calc(var(--u) * 3.6 + 1px);height:0;
+  --duck-inset:calc(var(--u) * 3.6);   /* how far in from the letter's edge the ducklings' row starts */
+  position:absolute;left:var(--duck-inset);right:var(--duck-inset);bottom:calc(var(--u) * 3.6 + 1px);height:0;
   z-index:2;pointer-events:none;--duck-w:calc(var(--u) * 8);--duck-gap:calc(var(--u) * 3);
 }
 .duck{position:absolute;bottom:0;width:var(--duck-w);height:var(--duck-w);pointer-events:auto;outline:none}
@@ -537,9 +568,9 @@ html[lang="zh-Hant"] .inv-sc{letter-spacing:.16em}
 .ducks:not(.paired) .duck.has-heart:not(.busy) .held{animation:beat 1.5s ease-in-out infinite}
 @keyframes beat{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}60%{transform:scale(.96)}}
 .duck.running .duck-bob{animation:waddle .1s ease-in-out infinite alternate}
-/* the left duckling waits outside the card and walks in from behind the gold frame line */
-.ducks.awaiting .duck-a,.ducks.entering .duck-a{clip-path:inset(-200% -200% -200% calc(var(--duck-gap) * -1))}
-.ducks.awaiting .duck-a .duck-face{transform:translateX(calc(var(--duck-gap) * -1 - var(--duck-w) * 1.15))}
+/* the left duckling waits just past the letter's edge and walks in from it, hidden only beyond the paper */
+.ducks.awaiting .duck-a,.ducks.entering .duck-a{clip-path:inset(-200% -200% -200% calc((var(--duck-gap) + var(--duck-inset)) * -1))}
+.ducks.awaiting .duck-a .duck-face{transform:translateX(calc((var(--duck-gap) + var(--duck-inset)) * -1 - var(--duck-w) * 1.15))}
 .ducks.awaiting .duck-a,.ducks.entering .duck-a{pointer-events:none}
 .duck.walking .duck-bob{animation:waddle .2s ease-in-out infinite alternate}
 .duck.walking .foot-back{animation:pedal .4s linear infinite}
@@ -614,19 +645,21 @@ html[lang="zh-Hant"] .inv-sc{letter-spacing:.16em}
 .ghost .face{box-shadow:0 1px 3px rgba(40,5,5,.3), 0 26px 50px -26px rgba(30,42,34,.55)}
 
 /* the RSVP card and the details: inside the frame, a title over what's beneath it, which alone scrolls,
-   fading at its edges */
+   fading at its edges. Every size is in card units (--u), so a phone shows an exact scaled-down copy of the
+   desktop card; the multiples are the sizes the largest card had when these had pixel minimums */
 .sheet{
   position:absolute;inset:calc(var(--u) * 3.6 + 1px);display:flex;flex-direction:column;align-items:center;text-align:center;
-  padding:max(calc(var(--u) * 3), 12px) max(calc(var(--u) * 5), 14px) max(calc(var(--u) * 2.4), 10px);
+  padding:calc(var(--u) * 3) calc(var(--u) * 5) calc(var(--u) * 2.4);
 }
 .sheet-head{flex:none;display:flex;flex-direction:column;align-items:center}
-.sheet-title{color:var(--cinnabar);font-size:max(calc(var(--u) * 2.4), 11px);letter-spacing:.14em;padding-left:.14em}
-.sheet-head::after{content:"";width:calc(var(--u) * 7);height:1px;margin-top:max(calc(var(--u) * 1.6), 7px);background:var(--gold-line)}
+.sheet-title{color:var(--cinnabar);font-size:calc(var(--u) * 2.4);letter-spacing:.14em;padding-left:.14em}
+.sheet-head::after{content:"";width:calc(var(--u) * 7);height:1px;margin-top:calc(var(--u) * 1.6);background:var(--gold-line)}
 .sheet-scroll{
+  --fade:calc(var(--u) * 1.43);
   flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;
-  margin:max(calc(var(--u) * 1.2), 6px) 0;scrollbar-width:thin;scrollbar-color:var(--gold-line) transparent;
-  -webkit-mask-image:linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
-          mask-image:linear-gradient(transparent, #000 8px, #000 calc(100% - 8px), transparent);
+  margin:calc(var(--u) * 1.2) 0;scrollbar-width:thin;scrollbar-color:var(--gold-line) transparent;
+  -webkit-mask-image:linear-gradient(transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+          mask-image:linear-gradient(transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
 }
 html[lang="zh-Hant"] .sheet-title{letter-spacing:.16em}
 
@@ -634,35 +667,36 @@ html[lang="zh-Hant"] .sheet-title{letter-spacing:.16em}
    don't, only the guests scroll (never taller than the room the other two leave), so the title and the
    Send button stay in sight. The details are laid out the same way, so both titles sit at the same height */
 .sheet[data-letter="rsvp"],.faq{justify-content:center}
-.reply-scroll,.faq .sheet-scroll{flex:0 1 auto;max-height:65%;margin:max(calc(var(--u) * 5), 20px) 0}   /* of the card's inside */
+.reply-scroll,.faq .sheet-scroll{flex:0 1 auto;max-height:65%;margin:calc(var(--u) * 5) 0}   /* of the card's inside */
+.faq .sheet-scroll{max-height:80%}   /* the details have more to read */
 /* the details have no Send button: the room it takes on the RSVP card (.reply-send) is left empty instead */
-.faq::after{content:"";flex:none;font-size:max(calc(var(--u) * 1.9), 11px);height:calc(2.8em + 2px)}
-.reply-guests{margin:0 auto;padding:8px 0;width:100%;max-width:calc(var(--u) * 90)}   /* the padding keeps the first and last guest clear of the fades */
+.faq::after{content:"";flex:none;font-size:calc(var(--u) * 1.96);height:calc(2.8em + 2px)}
+.reply-guests{margin:0 auto;padding:var(--fade) 0;width:100%;max-width:calc(var(--u) * 90)}   /* the padding keeps the first and last guest clear of the fades */
 /* a guest: their name; beneath it a line per event, the event's name on the left and its two choices on
    the right; then a line for their dietary requirements, its box where the choices are */
 .reply-guest{
-  display:flex;flex-direction:column;gap:max(calc(var(--u) * 1.6), 9px);
-  padding:max(calc(var(--u) * 2.8), 14px) 0;border-top:1px solid rgba(168,130,60,.28);
+  display:flex;flex-direction:column;gap:calc(var(--u) * 1.61);
+  padding:calc(var(--u) * 2.8) 0;border-top:1px solid rgba(168,130,60,.28);
 }
-.reply-events{display:flex;flex-direction:column;gap:max(calc(var(--u) * 1.2), 7px)}
+.reply-events{display:flex;flex-direction:column;gap:calc(var(--u) * 1.25)}
 /* the event's name takes whatever the choices leave (they're the same in every event, so they line up on
    the right). Where that would be under 7em, the choices go beneath the name instead, filling the line */
-.reply-event{display:flex;flex-wrap:wrap;align-items:center;gap:6px max(calc(var(--u) * 1.6), 8px)}
+.reply-event{display:flex;flex-wrap:wrap;align-items:center;gap:calc(var(--u) * 1.07) calc(var(--u) * 1.6)}
 .reply-event-name{
   flex:1000 1 7em;min-width:0;text-align:left;
-  font-family:"Playfair Display SC","Noto Serif TC",serif;text-transform:lowercase;font-size:max(calc(var(--u) * 1.75), 10.5px);
+  font-family:"Playfair Display SC","Noto Serif TC",serif;text-transform:lowercase;font-size:calc(var(--u) * 1.875);
   line-height:1.3;letter-spacing:.08em;color:var(--cinnabar);
 }
 html[lang="zh-Hant"] .reply-event-name{letter-spacing:.16em}
 .reply-guest:first-child{border-top:0}
 .reply-name{
-  font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:max(calc(var(--u) * 2.7), 13px);
+  font-family:"Playfair Display SC","Noto Serif TC",serif;font-size:calc(var(--u) * 2.7);
   line-height:1.3;color:var(--ink);letter-spacing:.06em;overflow-wrap:anywhere;text-align:left;
 }
-.reply-choices{flex:1 0 auto;display:flex;gap:max(calc(var(--u) * 1.2), 6px)}
+.reply-choices{flex:1 0 auto;display:flex;gap:calc(var(--u) * 1.2)}
 .reply-choice,.reply-send{
   font-family:"Playfair Display SC","Noto Serif TC",serif;font-variant-numeric:lining-nums;text-transform:lowercase;
-  font-size:max(calc(var(--u) * 1.9), 11px);line-height:1.2;letter-spacing:.1em;cursor:pointer;border-radius:0;
+  font-size:calc(var(--u) * 1.96);line-height:1.2;letter-spacing:.1em;cursor:pointer;border-radius:0;
   transition:background .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
 }
 .reply-choice{flex:1 1 auto;white-space:nowrap;padding:.65em .8em;color:var(--ink-soft);background:transparent;border:1px solid var(--gold-line)}
@@ -675,15 +709,24 @@ html[lang="zh-Hant"] .reply-event-name{letter-spacing:.16em}
 .reply-sizer{height:0;overflow:hidden;visibility:hidden}
 .reply-diet{
   width:100%;min-width:0;padding:.5em .8em;
-  font-family:"Playfair Display","Bodoni Moda","Noto Serif TC",serif;font-style:italic;font-size:max(calc(var(--u) * 2.1), 12px);line-height:1.2;
+  font-family:"Playfair Display","Bodoni Moda","Noto Serif TC",serif;font-style:italic;font-size:calc(var(--u) * 2.14);line-height:1.2;
   color:var(--ink);background:transparent;border:1px solid var(--gold-line);border-radius:0;outline:none;
   -webkit-user-select:text;user-select:text;transition:border-color .3s ease;
 }
 .reply-diet::placeholder{color:var(--ink-soft);opacity:.6}
 .reply-diet:focus{border-color:var(--cinnabar)}
-@media (hover:none){.reply-diet{font-size:16px}}   /* any smaller and phones zoom in on it */
-.reply-foot{flex:none;display:flex;flex-direction:column;align-items:center;gap:max(calc(var(--u) * .8), 4px)}
-.reply-msg{font-style:italic;font-size:max(calc(var(--u) * 2.1), 12px);line-height:1.4;color:var(--cinnabar)}
+/* phones zoom in on a box whose type is under 16px. So there it is set at 16px and drawn scaled down to
+   the card's size (--diet-s, set by layout()), looking just as it would at its own size */
+@media (hover:none){
+  .reply-diet-slot{position:relative;min-height:calc(var(--u) * 2.14 * 2.2 + 2px)}
+  .reply-diet{
+    position:absolute;left:0;bottom:0;font-size:16px;
+    width:calc(100% / var(--diet-s));height:calc(2.2em + 2px / var(--diet-s));border-width:calc(1px / var(--diet-s));
+    transform:scale(var(--diet-s));transform-origin:0 100%;
+  }
+}
+.reply-foot{flex:none;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u) * .8)}
+.reply-msg{font-style:italic;font-size:calc(var(--u) * 2.14);line-height:1.4;color:var(--cinnabar)}
 .reply-msg:empty{display:none}
 .reply-send{padding:.8em 2em;color:var(--paper);background:var(--cinnabar);border:1px solid var(--cinnabar)}
 .reply-send:hover,.reply-send:focus-visible{background:#6e1418;outline:none}
@@ -692,11 +735,11 @@ html[lang="zh-Hant"] .reply-choice,html[lang="zh-Hant"] .reply-send{letter-spaci
 
 /* the details: questions and answers one beneath the other, a short gold rule between them, all of it
    above the ducklings */
-.faq-list{margin:0;padding:8px 0;width:100%}   /* the padding keeps the first and last answer clear of the fades */
-.faq-item + .faq-item{margin-top:max(calc(var(--u) * 2.6), 12px)}
-.faq-item + .faq-item::before{content:"";display:block;width:calc(var(--u) * 4);height:1px;margin:0 auto max(calc(var(--u) * 2.6), 12px);background:var(--gold-line)}
-.faq-q{font-style:italic;font-size:max(calc(var(--u) * 3), 14px);line-height:1.25;color:var(--cinnabar)}
-.faq-a{margin-top:max(calc(var(--u) * .9), 5px);font-size:max(calc(var(--u) * 2.4), 12.5px);line-height:1.5;color:var(--ink-soft);white-space:pre-line}
+.faq-list{margin:0;padding:var(--fade) 0;width:100%}   /* the padding keeps the first and last answer clear of the fades */
+.faq-item + .faq-item{margin-top:calc(var(--u) * 2.6)}
+.faq-item + .faq-item::before{content:"";display:block;width:calc(var(--u) * 4);height:1px;margin:0 auto calc(var(--u) * 2.6);background:var(--gold-line)}
+.faq-q{font-style:italic;font-size:calc(var(--u) * 3);line-height:1.25;color:var(--cinnabar)}
+.faq-a{margin-top:calc(var(--u) * .9);font-size:calc(var(--u) * 2.4);line-height:1.5;color:var(--ink-soft);white-space:pre-line}
 html[lang="zh-Hant"] .faq-q{font-style:normal;letter-spacing:.1em}
 html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
 
@@ -710,21 +753,22 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
 
 <svg class="defs" aria-hidden="true" focusable="false">
   <defs>
+    <!-- every colour of the envelope is a custom property (--env-…, --foil-…, --seal-…; see :root) -->
     <linearGradient id="gFlap" x1="0" y1="0" x2=".3" y2="1">
-      <stop offset="0" stop-color="#83171c"/>
-      <stop offset="1" stop-color="#691115"/>
+      <stop offset="0" style="stop-color:var(--env-flap-a)"/>
+      <stop offset="1" style="stop-color:var(--env-flap-b)"/>
     </linearGradient>
     <linearGradient id="gSideL" x1="0" y1="0" x2="1" y2=".35">
-      <stop offset="0" stop-color="#7a161b"/>
-      <stop offset="1" stop-color="#671115"/>
+      <stop offset="0" style="stop-color:var(--env-side-l-a)"/>
+      <stop offset="1" style="stop-color:var(--env-side-l-b)"/>
     </linearGradient>
     <linearGradient id="gSideR" x1="1" y1="0" x2="0" y2=".35">
-      <stop offset="0" stop-color="#6b1216"/>
-      <stop offset="1" stop-color="#5a0d11"/>
+      <stop offset="0" style="stop-color:var(--env-side-r-a)"/>
+      <stop offset="1" style="stop-color:var(--env-side-r-b)"/>
     </linearGradient>
     <linearGradient id="gBottom" x1="0" y1="0" x2=".25" y2="1">
-      <stop offset="0" stop-color="#78161a"/>
-      <stop offset="1" stop-color="#5e0f13"/>
+      <stop offset="0" style="stop-color:var(--env-bottom-a)"/>
+      <stop offset="1" style="stop-color:var(--env-bottom-b)"/>
     </linearGradient>
     <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#9c7531"/>
@@ -733,30 +777,33 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       <stop offset=".8" stop-color="#e6cd8c"/>
       <stop offset="1" stop-color="#a27b35"/>
     </linearGradient>
+    <!-- the same gold across the whole envelope, for the crease trim, so its light runs on from one piece to the next -->
+    <linearGradient id="gGoldTrim" href="#gGold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="700" y2="180"/>
     <linearGradient id="gBackShade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#140002" stop-opacity=".55"/>
-      <stop offset=".5" stop-color="#140002" stop-opacity=".12"/>
-      <stop offset="1" stop-color="#140002" stop-opacity="0"/>
+      <stop offset="0" style="stop-color:var(--env-dark)" stop-opacity=".55"/>
+      <stop offset=".5" style="stop-color:var(--env-dark)" stop-opacity=".12"/>
+      <stop offset="1" style="stop-color:var(--env-dark)" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="gFlapInShade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#140002" stop-opacity=".45"/>
-      <stop offset="1" stop-color="#140002" stop-opacity="0"/>
+      <stop offset="0" style="stop-color:var(--env-dark)" stop-opacity=".45"/>
+      <stop offset="1" style="stop-color:var(--env-dark)" stop-opacity="0"/>
     </linearGradient>
-    <!-- liner: plain deep red -->
+    <!-- liner: plain, a shade deeper than the lacquer -->
     <pattern id="pLiner" width="28" height="28" patternUnits="userSpaceOnUse">
-      <rect width="28" height="28" fill="#560b10"/>
+      <rect width="28" height="28" style="fill:var(--env-liner)"/>
     </pattern>
     <filter id="fEdge" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="0" stdDeviation="2.6" flood-color="#250104" flood-opacity=".55"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="2.6" style="flood-color:var(--env-edge)" flood-opacity=".55"/>
     </filter>
 
-    <!-- tone-on-tone red foil: peonies, leaves, scrolling vines and 囍 roundels.
-         The motif is a mask; the foil itself is a gradient whose light follows the pointer. -->
+    <!-- the foil: a gradient whose light follows the pointer, shown through a mask (#mFoil) holding the
+         pattern the admin picked (#motif). In a lighter shade of the lacquer (the original: peonies, leaves,
+         scrolling vines and blossom), or in gold -->
     <radialGradient id="gFoilRed" gradientUnits="userSpaceOnUse" cx="210" cy="110" r="560">
-      <stop offset="0" stop-color="#e5484f"/>
-      <stop offset=".28" stop-color="#b8252c"/>
-      <stop offset=".6" stop-color="#87151b"/>
-      <stop offset="1" stop-color="#55090e"/>
+      <stop offset="0" style="stop-color:var(--foil-a)"/>
+      <stop offset=".28" style="stop-color:var(--foil-b)"/>
+      <stop offset=".6" style="stop-color:var(--foil-c)"/>
+      <stop offset="1" style="stop-color:var(--foil-d)"/>
     </radialGradient>
     <path id="fl-petal" d="M0 -2 C-11 -7 -15 -19 -9 -25 C-6 -28 -3 -25 0 -27.5 C3 -25 6 -28 9 -25 C15 -19 11 -7 0 -2Z"/>
     <path id="fl-petal-in" d="M0 -1 C-7 -4 -9 -12 -5 -16 C-2 -18 2 -18 5 -16 C9 -12 7 -4 0 -1Z"/>
@@ -857,12 +904,90 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       <use href="#fl-plum" transform="translate(129.7 212.4) rotate(64.1) scale(0.66)"/>
       <use href="#fl-plum" transform="translate(134.2 224.9) rotate(94.1) scale(0.50)"/>
     </pattern>
+    <!-- the other patterns, in the envelope's own units (700 × 500); white where the foil shows -->
+    <!-- an auspicious cloud: a curl, a second smaller one, and a wisp of wind beneath -->
+    <g id="fl-cloud" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 0 A2 2 0 0 0 -2 0 A4 4 0 0 0 6 0 A6 6 0 0 0 -6 0 A8 8 0 0 0 10 0 C10 -9 20 -13 27 -8 C31 -13 41 -12 42 -4 C42 2 36 5 32 2 C29 0 30 -4 33 -4"/>
+      <path d="M2 8 C12 9 26 9 40 9 C46 9 49 5 48 1"/>
+      <path d="M-14 16 L30 16 C36 16 38 20 35 23 C33 25 30 23 31 21"/>
+    </g>
+    <g id="fl-wave"><circle r="16"/><g fill="none" stroke="#fff" stroke-width=".85"><circle r="14.6"/><circle r="10.6"/><circle r="6.6"/><circle r="2.6"/></g></g>
+    <pattern id="pBlossom" width="150" height="130" patternUnits="userSpaceOnUse" patternTransform="rotate(-8) translate(12 4)">
+      <use href="#fl-plum" transform="translate(30 30) rotate(12) scale(.82)"/>
+      <use href="#fl-plum" transform="translate(106 94) rotate(40) scale(.66)"/>
+      <use href="#fl-dots" transform="translate(84 32) rotate(20) scale(.6)"/>
+      <use href="#fl-dots" transform="translate(30 104) rotate(70) scale(.5)"/>
+      <circle cx="128" cy="48" r="1.2" fill="#fff"/><circle cx="62" cy="72" r="1" fill="#fff"/>
+    </pattern>
+    <!-- a window lattice: double lines on the diagonal, a small ring where they cross -->
+    <pattern id="pLattice" width="30" height="30" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 13.6 H30 M0 16.4 H30 M13.6 0 V30 M16.4 0 V30" stroke="#fff" stroke-width=".6" fill="none"/>
+      <rect x="11.6" y="11.6" width="6.8" height="6.8" fill="#000"/>
+      <circle cx="15" cy="15" r="2.6" fill="none" stroke="#fff" stroke-width=".8"/>
+    </pattern>
+    <pattern id="pCloud" width="236" height="166" patternUnits="userSpaceOnUse" patternTransform="translate(14 10)">
+      <use href="#fl-cloud" transform="translate(36 40) scale(1.2)"/>
+      <use href="#fl-cloud" transform="translate(204 122) scale(-1 1)"/>
+      <circle cx="166" cy="36" r="1.4" fill="#fff"/><circle cx="56" cy="128" r="1.2" fill="#fff"/>
+    </pattern>
+    <!-- waves: rows of fans, each lower row over the one above it -->
+    <pattern id="pWave" width="32" height="16" patternUnits="userSpaceOnUse">
+      <use href="#fl-wave" x="-16" y="-8"/><use href="#fl-wave" x="16" y="-8"/><use href="#fl-wave" x="48" y="-8"/>
+      <use href="#fl-wave" x="0" y="0"/><use href="#fl-wave" x="32" y="0"/>
+      <use href="#fl-wave" x="-16" y="8"/><use href="#fl-wave" x="16" y="8"/><use href="#fl-wave" x="48" y="8"/>
+      <use href="#fl-wave" x="0" y="16"/><use href="#fl-wave" x="32" y="16"/>
+      <use href="#fl-wave" x="-16" y="24"/><use href="#fl-wave" x="16" y="24"/><use href="#fl-wave" x="48" y="24"/>
+    </pattern>
+    <!-- a spray of blossom reaching in from the top right corner -->
+    <g id="sprig">
+      <g fill="none" stroke="#fff" stroke-linecap="round">
+        <path d="M716 34 C690 40 662 38 636 30 C610 22 586 22 562 30 C540 37 522 38 504 32" stroke-width="2.2"/>
+        <path d="M636 30 C628 48 614 60 596 66" stroke-width="1.4"/>
+        <path d="M584 24 C576 12 562 6 546 6" stroke-width="1.3"/>
+        <path d="M676 38 C670 54 674 68 686 80" stroke-width="1.3"/>
+        <path d="M540 36 C530 50 516 58 500 60" stroke-width="1.2"/>
+      </g>
+      <use href="#fl-leaf" transform="translate(654 36) rotate(160) scale(.6)"/>
+      <use href="#fl-leaf" transform="translate(624 40) rotate(105) scale(.55)"/>
+      <use href="#fl-leaf" transform="translate(578 18) rotate(215) scale(.55)"/>
+      <use href="#fl-leaf" transform="translate(556 32) rotate(150) scale(.5)"/>
+      <use href="#fl-leaf" transform="translate(674 52) rotate(60) scale(.5)"/>
+      <use href="#fl-leaf" transform="translate(522 50) rotate(140) scale(.46)"/>
+      <use href="#fl-peony" transform="translate(608 24) rotate(14) scale(.74)"/>
+      <use href="#fl-plum" transform="translate(690 30) rotate(30) scale(.9)"/>
+      <use href="#fl-plum" transform="translate(596 68) rotate(8) scale(.85)"/>
+      <use href="#fl-plum" transform="translate(546 8) rotate(50) scale(.8)"/>
+      <use href="#fl-plum" transform="translate(688 82) rotate(22) scale(.78)"/>
+      <use href="#fl-plum" transform="translate(504 32) rotate(64) scale(.9)"/>
+      <use href="#fl-plum" transform="translate(498 61) rotate(40) scale(.68)"/>
+      <use href="#fl-dots" transform="translate(652 16) rotate(10) scale(.55)"/>
+      <use href="#fl-dots" transform="translate(572 50) rotate(80) scale(.5)"/>
+      <use href="#fl-dots" transform="translate(482 28) rotate(30) scale(.5)"/>
+      <use href="#fl-dots" transform="translate(700 96) rotate(50) scale(.5)"/>
+      <circle cx="530" cy="18" r="1.3" fill="#fff"/><circle cx="664" cy="64" r="1.2" fill="#fff"/>
+    </g>
+    <g id="motif-none"/>
+    <g id="motif-foil"><rect width="700" height="500" fill="url(#pFloral)"/></g>
+    <g id="sprig-lg"><use href="#sprig" transform="translate(700 0) scale(1.32) translate(-700 0)"/></g>
+    <g id="motif-corner"><use href="#sprig-lg"/></g>
+    <g id="motif-corners"><use href="#sprig-lg"/><use href="#sprig-lg" transform="rotate(180 350 250)"/></g>
+    <g id="motif-blossoms"><rect width="700" height="500" fill="url(#pBlossom)"/></g>
+    <g id="motif-lattice"><rect width="700" height="500" fill="url(#pLattice)"/></g>
+    <g id="motif-clouds"><rect width="700" height="500" fill="url(#pCloud)"/></g>
+    <g id="motif-waves"><rect width="700" height="500" fill="url(#pWave)"/></g>
     <mask id="mFoil" maskUnits="userSpaceOnUse" x="0" y="0" width="700" height="500">
-      <rect width="700" height="500" fill="url(#pFloral)"/>
+      <use id="motif" href="#motif-foil"/>
     </mask>
     <filter id="fFoil" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-      <feDropShadow dx=".5" dy=".8" stdDeviation=".45" flood-color="#160002" flood-opacity=".55"/>
+      <feDropShadow dx=".5" dy=".8" stdDeviation=".45" style="flood-color:var(--env-emboss)" flood-opacity=".55"/>
     </filter>
+    <!-- the crease trim: drawn by drawCrease a little inside the flap's edge (#creaseV) and the bottom
+         flap's (#creaseA), each clipped to its own flap -->
+    <path id="edgeV" d="M0 0 L312 266 Q350 298 388 266 L700 0" fill="none"/>
+    <path id="edgeA" d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none"/>
+    <g id="creaseV"/>
+    <g id="creaseA"/>
+    <clipPath id="cBottom"><path d="M0 500 L330 228 Q350 210 370 228 L700 500 Z"/></clipPath>
     <filter id="fSoft" x="-5%" y="-10%" width="110%" height="120%"><feGaussianBlur stdDeviation="1.4"/></filter>
     <clipPath id="cPocket">
       <path d="M0 0 L344 248 Q356 258 344 268 L0 500 Z"/>
@@ -900,11 +1025,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     </radialGradient>
     <filter id="fDuckWash" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="4" result="wob"/>
-      <feDisplacementMap in="SourceGraphic" in2="wob" scale=".9" xChannelSelector="R" yChannelSelector="G" result="wash"/>
-      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="9" result="grain"/>
-      <feColorMatrix in="grain" type="matrix" values="0 0 0 0 .72  0 0 0 0 .5  0 0 0 0 .18  0 0 0 -3.6 1.22" result="specks"/>
-      <feComposite in="specks" in2="wash" operator="in" result="granul"/>
-      <feMerge><feMergeNode in="wash"/><feMergeNode in="granul"/></feMerge>
+      <feDisplacementMap in="SourceGraphic" in2="wob" scale=".9" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </defs>
 </svg>
@@ -949,9 +1070,10 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
             <g filter="url(#fFoil)" clip-path="url(#cPocket)">
               <rect width="700" height="500" fill="url(#gFoilRed)" mask="url(#mFoil)"/>
             </g>
-            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" stroke="#1a0003" stroke-opacity=".4" stroke-width="3" filter="url(#fSoft)"/>
-            <path d="M0 0 L344 248" fill="none" stroke="#ffd8c6" stroke-opacity=".08" stroke-width="1"/>
-            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" stroke="#ffd8c6" stroke-opacity=".14" stroke-width="1"/>
+            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" style="stroke:var(--env-fold)" stroke-opacity=".4" stroke-width="3" filter="url(#fSoft)"/>
+            <path d="M0 0 L344 248" fill="none" style="stroke:var(--env-shine)" stroke-opacity=".08" stroke-width="1"/>
+            <path d="M0 500 L330 228 Q350 210 370 228 L700 500" fill="none" style="stroke:var(--env-shine)" stroke-opacity=".14" stroke-width="1"/>
+            <use href="#creaseA" clip-path="url(#cBottom)"/>
           </svg>
 
           <div class="flap" id="flap">
@@ -961,7 +1083,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
                 <g filter="url(#fFoil)" clip-path="url(#cF)">
                   <rect width="700" height="310" fill="url(#gFoilRed)" mask="url(#mFoil)"/>
                 </g>
-                <path d="M0 0 L312 266 Q350 298 388 266 L700 0" fill="none" stroke="#ffb3a8" stroke-opacity=".18" stroke-width="1.2"/>
+                <path d="M0 0 L312 266 Q350 298 388 266 L700 0" fill="none" style="stroke:var(--env-shine-flap)" stroke-opacity=".18" stroke-width="1.2"/>
+                <use href="#creaseV" clip-path="url(#cF)"/>
               </svg>
               <svg class="flap-face flap-in" viewBox="0 0 700 310" preserveAspectRatio="none" aria-hidden="true">
                 <g transform="matrix(1 0 0 -1 0 310)">
@@ -975,24 +1098,24 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
                   <defs>
                     <path id="qf" d="M175 0 A175 175 0 1 1 -175 0 A175 175 0 1 1 175 0Z"/>
                     <linearGradient id="gMedal" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#8e161c"/><stop offset=".34" stop-color="#cf3a41"/>
-                      <stop offset=".47" stop-color="#f17378"/><stop offset=".6" stop-color="#bd2930"/>
-                      <stop offset="1" stop-color="#7a1217"/>
+                      <stop offset="0" style="stop-color:var(--seal-a)"/><stop offset=".34" style="stop-color:var(--seal-b)"/>
+                      <stop offset=".47" style="stop-color:var(--seal-c)"/><stop offset=".6" style="stop-color:var(--seal-d)"/>
+                      <stop offset="1" style="stop-color:var(--seal-e)"/>
                     </linearGradient>
                     <linearGradient id="gMedalIn" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#7c1318"/><stop offset=".5" stop-color="#a51f26"/><stop offset="1" stop-color="#6c0f14"/>
+                      <stop offset="0" style="stop-color:var(--seal-in-a)"/><stop offset=".5" style="stop-color:var(--seal-in-b)"/><stop offset="1" style="stop-color:var(--seal-in-c)"/>
                     </linearGradient>
                     <linearGradient id="gMedalXi" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#ef5d63"/><stop offset=".45" stop-color="#d0353c"/><stop offset="1" stop-color="#9c1c22"/>
+                      <stop offset="0" style="stop-color:var(--seal-xi-a)"/><stop offset=".45" style="stop-color:var(--seal-xi-b)"/><stop offset="1" style="stop-color:var(--seal-xi-c)"/>
                     </linearGradient>
                   </defs>
-                  <use href="#qf" transform="scale(1.05)" fill="#6c1216"/>
+                  <use href="#qf" transform="scale(1.05)" style="fill:var(--seal-rim)"/>
                   <use href="#qf" fill="url(#gMedal)"/>
-                  <use href="#qf" transform="scale(.885)" fill="none" stroke="#4a070b" stroke-opacity=".65" stroke-width="4"/>
+                  <use href="#qf" transform="scale(.885)" fill="none" style="stroke:var(--seal-ring)" stroke-opacity=".65" stroke-width="4"/>
                   <use href="#qf" transform="scale(.83)" fill="url(#gMedalIn)"/>
                   <g font-family="'Noto Serif SC','Songti SC','STSong','SimSun',serif" font-weight="600" font-size="150" text-anchor="middle">
-                    <text x="4" y="58" fill="#2e0306" fill-opacity=".6">囍</text>
-                    <text x="-2" y="50" fill="#ff9a9a" fill-opacity=".4">囍</text>
+                    <text x="4" y="58" style="fill:var(--seal-ink)" fill-opacity=".6">囍</text>
+                    <text x="-2" y="50" style="fill:var(--seal-shine)" fill-opacity=".4">囍</text>
                     <text x="0" y="53" fill="url(#gMedalXi)">囍</text>
                   </g>
                 </svg>
@@ -1001,7 +1124,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
           </div>
 
           <div class="env-fx" aria-hidden="true">
-            <i class="fx-light"></i><i class="fx-grain"></i><i class="fx-glow"></i>
+            <i class="fx-light"></i><i class="fx-grain"></i>
           </div>
         </div>
       </div>
@@ -1016,11 +1139,10 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
 
           <div class="face face-front paper">
             <div class="cover-print" id="coverPrint">
-              <span class="frame"></span>
-              <div class="cover-art">
-                <div class="emblem"><span class="xi">囍</span></div>
-                <p class="cover-dear" hidden>Dear</p>
-                <p class="cover-names">Ivan<span class="amp">&amp;</span>Ana</p>
+              <div class="cover-art" data-face="cover">
+                <div class="emblem" data-piece="xi"><span class="xi">囍</span></div>
+                <p class="cover-dear" data-piece="dear" hidden>Dear</p>
+                <p class="cover-names" data-piece="names">Ivan<span class="amp">&amp;</span>Ana</p>
                 <p class="cover-date" data-i18n="coverDate">5 March 2027</p>
                 <p class="cover-note" hidden></p>
               </div>
@@ -1028,22 +1150,22 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
             <i class="shade" id="shadeFront"></i>
           </div>
 
-          <div class="face fold-inner paper" id="foldInner" aria-hidden="true"><span class="frame"></span><i class="shade" id="shadeInner"></i></div>
+          <div class="face fold-inner paper" id="foldInner" aria-hidden="true"><i class="shade" id="shadeInner"></i></div>
 
           <section class="face face-back paper" id="backFace" aria-label="Save the date">
-            <span class="frame"></span>
             <!-- one block per letter; only the one in front shows (showLetter) -->
-            <div class="std" data-letter="save_the_date">
+            <div class="std" data-letter="save_the_date" data-face="save_the_date">
               <div class="std-row std-top">
-                <p class="std-title rv" style="--i:0" data-i18n="stdTitle">Save the date</p>
+                <p class="std-title rv" style="--i:0" data-piece="title" data-i18n="stdTitle">Save the date</p>
               </div>
               <div class="std-row std-mid">
-                <p class="std-lead rv" style="--i:1" data-i18n="lead">for the wedding of</p>
-                <h1 class="std-names rv" style="--i:2">Ivan Sam<span class="amp">&amp;</span>Ana Nguyen</h1>
+                <p class="std-lead rv" style="--i:1" data-piece="lead" data-i18n="lead">for the wedding of</p>
+                <h1 class="std-names rv" style="--i:2" data-piece="names">Ivan Sam<span class="amp">&amp;</span>Ana Nguyen</h1>
               </div>
               <div class="std-row std-foot">
-                <p class="std-day rv" style="--i:3" data-i18n="day">Thursday 4 &amp; Friday 5 March 2027, Melbourne</p>
-                <p class="std-place rv" style="--i:4" data-i18n="note">Invitations to follow</p>
+                <p class="std-day rv" style="--i:3" data-piece="day" data-i18n="day">Friday 5 March, 2027</p>
+                <p class="std-place rv" style="--i:3" data-piece="place" data-i18n="place">Melbourne</p>
+                <p class="std-place std-note rv" style="--i:4" data-piece="note" data-i18n="note">Invitation to follow</p>
               </div>
             </div>
             <div class="inv" data-letter="invitation" hidden>
@@ -1068,15 +1190,14 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
               <div class="sheet-head rv" style="--i:0"><h2 class="inv-sc sheet-title" data-i18n="faqTitle">Details</h2></div>
               <div class="sheet-scroll rv" style="--i:1"><dl class="faq-list" id="faqList"></dl></div>
             </div>
-          <!-- the ducklings and their heart balloons live on the invitation, and keep their state while it's away -->
-          <div class="ducks rv awaiting" style="--i:6" data-on-letter="invitation">
+          <!-- the ducklings and their heart balloons live on the save the date and the invitation, and keep their state while they're away -->
+          <div class="ducks rv awaiting" style="--i:6" data-on-letter="save_the_date invitation">
             <div class="duck duck-a has-heart" id="duckA" role="button" tabindex="0" aria-label="Send a heart">
               <div class="duck-face"><div class="duck-bob">
                 <svg viewBox="0 0 60 60" aria-hidden="true">
                   <g class="foot foot-back"><g transform="translate(20.6 57.2) scale(0.9)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
                   <g filter="url(#fDuckWash)"><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckBody)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckShade)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="none" stroke="#d9a23e" stroke-opacity=".4" stroke-width="1.3" stroke-linejoin="round"/></g>
                   <path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" transform="translate(.3 -.2)" fill="none" stroke="#6d4a2b" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="22 1.8 19 1.4 24 2 15 1.2 30"/>
-                  <g fill="none" stroke="#c98d2a" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"><path d="M39.6 46 l1.1 -.3 M37 50.2 l1 -.6 M16.4 50.6 l-.9 -.7 M12.6 45.6 l-1 -.2 M28 31.8 l-.3 1"/></g>
                   <g fill="none" stroke="#6d4a2b" stroke-width=".5" stroke-linecap="round"><path d="M32.4 8.6 C31.6 5.9 33.4 4 35.4 4.7"/><path d="M33.9 8.6 C34.6 6.5 36.6 6.2 37.6 7.3"/><path d="M31.1 8.9 C29.6 7.2 29.8 5.4 31.2 4.8"/></g>
                   <ellipse cx="37.4" cy="22.4" rx="3.2" ry="2.1" fill="url(#gDuckBlush)"/>
                   <g class="blush"><ellipse cx="37.2" cy="22.6" rx="4.2" ry="2.7" fill="url(#gDuckBlushHot)"/><path d="M35.1 23.6 l1 -1.7 M36.8 23.8 l1 -1.7 M38.5 24 l1 -1.7" fill="none" stroke="#d6485a" stroke-opacity=".85" stroke-width=".45" stroke-linecap="round"/></g>
@@ -1096,7 +1217,6 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
                   <g class="foot foot-back"><g transform="translate(20.6 57.2) scale(0.9)"><path d="M-4.6 .6 C-4.4 -1.4 2.6 -2.2 5.2 -.3 C5.8 .6 4.8 1.5 3.4 1.3 C2 1.8 .4 1.8 -.8 1.4 C-2 1.9 -3.6 1.8 -4.6 .6Z" fill="url(#gDuckFoot)" stroke="#6d4a2b" stroke-width=".5" stroke-linejoin="round"/><path d="M.2 -.9 L1.8 1.1 M-1.6 -1 L-.9 1.3" fill="none" stroke="#6d4a2b" stroke-opacity=".45" stroke-width=".35" stroke-linecap="round"/></g></g>
                   <g filter="url(#fDuckWash)"><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckBody)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="url(#gDuckShade)"/><path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" fill="none" stroke="#d9a23e" stroke-opacity=".4" stroke-width="1.3" stroke-linejoin="round"/></g>
                   <path d="M31.84 8.56 C32.67 8.47 33.52 8.48 34.35 8.58 C35.17 8.68 35.99 8.88 36.77 9.17 C37.54 9.45 38.30 9.83 38.99 10.28 C39.69 10.73 40.35 11.27 40.93 11.88 C41.51 12.48 42.04 13.17 42.47 13.91 C42.90 14.64 43.27 15.45 43.53 16.31 C43.78 17.16 43.96 18.07 43.99 19.01 C44.02 19.96 43.98 20.94 43.72 21.97 C43.45 23.01 43.08 24.09 42.40 25.22 C41.71 26.34 40.16 27.86 39.61 28.72 C39.06 29.58 39.13 29.90 39.10 30.36 C39.08 30.81 39.29 31.11 39.46 31.47 C39.63 31.82 39.89 32.13 40.14 32.48 C40.39 32.83 40.70 33.17 40.96 33.54 C41.23 33.91 41.48 34.30 41.71 34.71 C41.94 35.12 42.16 35.55 42.34 36.00 C42.53 36.45 42.69 36.91 42.83 37.38 C42.96 37.86 43.07 38.35 43.14 38.85 C43.21 39.34 43.26 39.85 43.26 40.36 C43.27 40.87 43.25 41.38 43.19 41.89 C43.13 42.40 43.04 42.92 42.92 43.42 C42.79 43.93 42.63 44.43 42.45 44.92 C42.26 45.41 42.04 45.89 41.80 46.36 C41.55 46.83 41.27 47.29 40.98 47.73 C40.68 48.17 40.35 48.60 40.01 49.01 C39.66 49.42 39.29 49.81 38.90 50.19 C38.52 50.56 38.11 50.92 37.69 51.26 C37.26 51.60 36.82 51.92 36.37 52.22 C35.91 52.52 35.44 52.81 34.96 53.07 C34.48 53.33 33.98 53.58 33.48 53.80 C32.98 54.03 32.46 54.23 31.93 54.42 C31.41 54.60 30.88 54.76 30.33 54.91 C29.79 55.05 29.24 55.18 28.69 55.28 C28.13 55.38 27.57 55.46 27.00 55.52 C26.43 55.58 25.86 55.62 25.28 55.63 C24.71 55.65 24.12 55.64 23.54 55.61 C22.96 55.58 22.37 55.52 21.79 55.44 C21.21 55.36 20.62 55.26 20.04 55.13 C19.46 54.99 18.88 54.84 18.30 54.65 C17.73 54.46 17.16 54.25 16.60 54.01 C16.05 53.77 15.49 53.50 14.96 53.19 C14.43 52.89 13.90 52.56 13.40 52.20 C12.90 51.84 12.42 51.45 11.97 51.03 C11.51 50.62 11.08 50.17 10.68 49.69 C10.29 49.22 9.91 48.72 9.59 48.19 C9.26 47.67 8.97 47.12 8.72 46.55 C8.48 45.99 8.36 45.37 8.11 44.81 C7.86 44.25 7.93 43.63 7.22 43.20 C6.51 42.76 4.50 42.71 3.86 42.20 C3.21 41.70 3.16 40.88 3.34 40.17 C3.53 39.46 4.36 38.62 4.97 37.93 C5.57 37.23 6.33 36.59 6.98 36.00 C7.63 35.41 8.26 34.90 8.85 34.41 C9.43 33.93 9.96 33.49 10.48 33.09 C10.99 32.68 11.47 32.31 11.93 31.96 C12.40 31.62 12.84 31.30 13.27 31.00 C13.70 30.71 14.12 30.44 14.53 30.18 C14.94 29.93 15.34 29.70 15.72 29.49 C16.11 29.28 16.49 29.08 16.86 28.90 C17.24 28.72 17.60 28.56 17.96 28.41 C18.31 28.26 18.66 28.13 19.01 28.01 C19.35 27.88 19.69 27.78 20.01 27.68 C20.34 27.57 20.66 27.48 20.96 27.37 C21.25 27.26 21.54 27.15 21.80 26.99 C22.06 26.83 22.33 26.75 22.53 26.42 C22.74 26.10 23.07 26.45 23.00 25.02 C22.94 23.59 22.09 19.58 22.13 17.82 C22.16 16.07 22.74 15.45 23.21 14.49 C23.67 13.53 24.27 12.75 24.90 12.05 C25.54 11.35 26.26 10.77 27.00 10.28 C27.74 9.79 28.55 9.41 29.35 9.12 C30.16 8.84 31.01 8.65 31.84 8.56Z" transform="translate(.3 -.2)" fill="none" stroke="#6d4a2b" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="22 1.8 19 1.4 24 2 15 1.2 30"/>
-                  <g fill="none" stroke="#c98d2a" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"><path d="M39.6 46 l1.1 -.3 M37 50.2 l1 -.6 M16.4 50.6 l-.9 -.7 M12.6 45.6 l-1 -.2 M28 31.8 l-.3 1"/></g>
                   <ellipse cx="37.4" cy="22.4" rx="3.2" ry="2.1" fill="url(#gDuckBlush)"/>
                   <g class="blush"><ellipse cx="37.2" cy="22.6" rx="4.2" ry="2.7" fill="url(#gDuckBlushHot)"/><path d="M35.1 23.6 l1 -1.7 M36.8 23.8 l1 -1.7 M38.5 24 l1 -1.7" fill="none" stroke="#d6485a" stroke-opacity=".85" stroke-width=".45" stroke-linecap="round"/></g>
                   <g class="eyes-heart" fill="#c4313a"><path transform="translate(37.8 17) scale(.72)" d="M0 3C0 3 -3.4 .9 -3.4 -1.1C-3.4 -2.3 -2.4 -3 -1.5 -3C-.8 -3 -.2 -2.6 0 -2C.2 -2.6 .8 -3 1.5 -3C2.4 -3 3.4 -2.3 3.4 -1.1C3.4 .9 0 3 0 3Z"/></g>
@@ -1111,7 +1231,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
               </div></div>
             </div>
           </div>
-            <div class="balloons" id="balloons" aria-hidden="true" data-on-letter="invitation"></div>
+            <div class="balloons" id="balloons" aria-hidden="true" data-on-letter="save_the_date invitation"></div>
             <i class="shade" id="shadeBack"></i>
           </section>
 
@@ -1181,6 +1301,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(peak, t + a);
       g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+      g.gain.setValueAtTime(0, t + a + d + 0.005);         // true silence after, not a faint -80 dB tail
+      g.end = t + a + d + 0.01;
       g.connect(bus);
       return g;
     }
@@ -1194,7 +1316,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       const o = ctx.createOscillator(); o.type = type;
       o.frequency.setValueAtTime(path[0][1], t);
       path.slice(1).forEach(([dt, f]) => o.frequency.exponentialRampToValueAtTime(f, t + dt));
-      o.connect(g); o.start(t); o.stop(t + 2.6);
+      o.connect(g); o.start(t); o.stop(g.end);               // stop with its envelope so no tones linger and stack up
       return o;
     }
     function pop(t, size, gain) {                            // a heart bursting: a quick upward bloop and a click
@@ -1253,8 +1375,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
      the grain looks the same at 100%); it only shows once zoomed, where it keeps the paper crisp. */
   const FINE = 0.4, GAIN = 1 / Math.hypot(1 - FINE, FINE);
   const OPAQUE = '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1';
-  const noise = (freq, matrix, size = 240) => {
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='n' x='0' y='0' width='100%' height='100%'>`
+  const noise = (freq, matrix, size = 240, scale = 1) => {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size * scale}' height='${size * scale}' viewBox='0 0 ${size} ${size}'><filter id='n' x='0' y='0' width='100%' height='100%'>`
       + `<feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${OPAQUE}' result='a'/>`
       + `<feTurbulence type='fractalNoise' baseFrequency='3' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='matrix' values='${OPAQUE}' result='b'/>`
       + `<feComposite in='a' in2='b' operator='arithmetic' k2='${((1 - FINE) * GAIN).toFixed(3)}' k3='${(FINE * GAIN).toFixed(3)}' k4='${(0.5 * (1 - GAIN)).toFixed(3)}'/>`
@@ -1264,17 +1386,53 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   root.style.setProperty('--grain-gray',  noise(0.85, '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1'));
   root.style.setProperty('--grain-paper', noise(0.7,  '0 0 0 0 .30  0 0 0 0 .22  0 0 0 0 .14  .5 0 0 0 -.21'));
   root.style.setProperty('--grain-linen', noise(0.6,  '0 0 0 0 .22  0 0 0 0 .28  0 0 0 0 .24  .55 0 0 0 -.21'));
+  /* the letter's paper gets pinch-zoomed, and an SVG texture is drawn at 1x (Safari) and then stretched,
+     so the grain turns into soft spots. Instead it's drawn once, several times over, into a bitmap, which
+     keeps its detail when zoomed. If any of that fails, the SVG above stays in place */
+  const paperBitmap = new Promise((resolve) => {
+    const scale = Math.min(6, Math.max(3, Math.ceil((window.devicePixelRatio || 1) * 2))), px = 240 * scale;
+    const img = new Image();
+    img.onerror = () => resolve();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = c.height = px;
+        c.getContext('2d').drawImage(img, 0, 0, px, px);
+        c.toBlob((blob) => {
+          if (!blob) return resolve();
+          const url = URL.createObjectURL(blob), sharp = new Image();
+          sharp.src = url;
+          (sharp.decode ? sharp.decode() : Promise.resolve())
+            .then(() => root.style.setProperty('--grain-paper', `url("${url}")`))
+            .catch(() => {}).then(resolve);
+        });
+      } catch (e) { resolve(); }
+    };
+    img.src = noise(0.7, '0 0 0 0 .30  0 0 0 0 .22  0 0 0 0 .14  .5 0 0 0 -.21', 240, scale).slice(5, -2);
+  });
+  /* while pinch-zoomed, the grain tile shrinks by the same amount (--grain-zoom), so the paper looks as it
+     does at 100% instead of its specks growing into spots. Stepped, so the paper isn't redrawn every frame */
+  const vv = window.visualViewport;
+  if (vv) {
+    let zoomRaf = 0;
+    const trackZoom = () => {
+      zoomRaf = 0;
+      const z = Math.max(1, Math.round(vv.scale * 4) / 4);
+      if (root.style.getPropertyValue('--grain-zoom') !== String(z)) root.style.setProperty('--grain-zoom', z);
+    };
+    vv.addEventListener('resize', () => { if (!zoomRaf) zoomRaf = requestAnimationFrame(trackZoom); });
+  }
   /* draw each texture once before anything moves, rather than the first time the card is painted */
   const texturesReady = Promise.race([
-    Promise.all(['--grain-gray', '--grain-paper', '--grain-linen'].map((v) => {
+    Promise.all([paperBitmap, ...['--grain-gray', '--grain-linen'].map((v) => {
       const img = new Image();
       img.src = root.style.getPropertyValue(v).slice(5, -2);           // url("…") → …
       return img.decode ? img.decode().catch(() => {}) : null;
-    })),
-    wait(1000)
+    })]),
+    wait(1500)
   ]);
 
-  /* the foil catches the light: its highlight eases toward the pointer */
+  /* the foil catches the light: its highlight eases toward where it's aimed */
   const foil = $('gFoilRed');
   const LIGHT = { x: 210, y: 110 };
   let light = { ...LIGHT }, aimAt = { ...LIGHT }, lightRaf = 0;
@@ -1286,6 +1444,297 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     lightRaf = Math.abs(aimAt.x - light.x) + Math.abs(aimAt.y - light.y) > 0.6 ? requestAnimationFrame(stepLight) : 0;
   };
   const aimLight = (x, y) => { aimAt = { x, y }; if (!lightRaf) lightRaf = requestAnimationFrame(stepLight); };
+
+  /* ---------- the envelope's look: the admin's Letter style ----------
+     Every colour of the envelope and its seal is a custom property, and the stylesheet's are the original
+     cinnabar. Another lacquer colour moves each of them to the same place relative to it: the same hue
+     offset, saturation in proportion, and lightness stretched about it (so shadows stay dark and the
+     shine stays light). The pattern is a mask over the foil; the crease trim is drawn along the flap's
+     edge and the bottom flap's. The admin's preview shares all of it, so it follows every change */
+  const STYLE = { colour: '#83171c', pattern: 'foil', finish: 'tone', strength: 1, crease: 'none', seal: 'red', seal_size: 1 };
+  const CHOICES = {
+    pattern: ['foil', 'none', 'corner', 'corners', 'blossoms', 'lattice', 'clouds', 'waves'],
+    finish: ['tone', 'gold'],
+    crease: ['none', 'gold', 'double', 'stitch', 'pearls', 'laurel'],
+    seal: ['red', 'gold', 'tone']
+  };
+  const GOLD = '#a5813d';                                            // the gold a gold seal or gold foil is made from
+  const TONES = {
+    env: ['--env-flap-a', '--env-flap-b', '--env-side-l-a', '--env-side-l-b', '--env-side-r-a', '--env-side-r-b',
+          '--env-bottom-a', '--env-bottom-b', '--env-liner', '--env-deep', '--env-dark', '--env-edge', '--env-emboss',
+          '--env-fold', '--env-shine', '--env-shine-flap'],
+    foil: ['--foil-a', '--foil-b', '--foil-c', '--foil-d'],
+    seal: ['--seal-rim', '--seal-ring', '--seal-ink', '--seal-shine', '--seal-a', '--seal-b', '--seal-c', '--seal-d', '--seal-e',
+           '--seal-in-a', '--seal-in-b', '--seal-in-c', '--seal-xi-a', '--seal-xi-b', '--seal-xi-c']
+  };
+  const ORIGINAL = {};                                               // each property's cinnabar, from the stylesheet
+  { const css = getComputedStyle(root); for (const v of Object.values(TONES).flat()) ORIGINAL[v] = css.getPropertyValue(v).trim(); }
+  const toHsl = (hex) => {
+    const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+    if (!d) return [0, 0, l];
+    const h = max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [h * 60, d / (1 - Math.abs(2 * l - 1)), l];
+  };
+  const toHex = (h, s, l) => {
+    const a = s * Math.min(l, 1 - l);
+    const f = (n) => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+    return '#' + [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, '0')).join('');
+  };
+  const [H0, S0, L0] = toHsl(STYLE.colour);
+  function retint(original, base) {
+    if (base === STYLE.colour) return original;
+    const [h, s, l] = toHsl(base), [rh, rs, rl] = toHsl(original);
+    const light = rl <= L0 ? rl * l / L0 : l + (rl - L0) * (1 - l) / (1 - L0);
+    return toHex((h + rh - H0 + 360) % 360, Math.min(1, rs * s / S0), Math.min(1, Math.max(0, light)));
+  }
+
+  /* the crease trim, a little inside each flap's edge: a path offset from it, with gold dashes, dots or leaves */
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs) => {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  };
+  /* points along an edge, `inset` units inside its flap (side: -1 above the edge, 1 below), with the direction there */
+  function along(edge, inset, side, step = 3) {
+    const len = edge.getTotalLength(), out = [];
+    for (let d = 0; d <= len; d += step) {
+      const p = edge.getPointAtLength(d), q = edge.getPointAtLength(Math.min(len, d + 0.5)), o = edge.getPointAtLength(Math.max(0, d - 0.5));
+      const tx = q.x - o.x, ty = q.y - o.y, n = Math.hypot(tx, ty) || 1;
+      out.push({ x: p.x - side * (ty / n) * inset, y: p.y + side * (tx / n) * inset, a: Math.atan2(ty, tx) * 180 / Math.PI, d, len });
+    }
+    return out;
+  }
+  const line = (pts) => 'M' + pts.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L');
+  const LEAF = 'M0 0 C2.6 -2.9 7.4 -3.4 11 0 C7.4 3.4 2.6 2.9 0 0Z';
+  function trim(kind, edge, side) {
+    const gold = { fill: 'none', stroke: 'url(#gGoldTrim)' };
+    const at = (inset, width, more = {}) => svgEl('path', { d: line(along(edge, inset, side)), ...gold, 'stroke-width': width, ...more });
+    switch (kind) {
+      case 'gold': return [at(2.4, 1.5)];
+      case 'double': return [at(2.4, 1.5), at(10, 0.75)];
+      case 'stitch': return [at(9, 1.1, { 'stroke-dasharray': '6 4.5', 'stroke-linecap': 'round' })];
+      case 'pearls': return [at(9, 3, { 'stroke-dasharray': '0 8.5', 'stroke-linecap': 'round' }), at(2.4, 0.7, { 'stroke-opacity': 0.8 })];
+      case 'laurel': {
+        /* a fine stem with leaves on alternate sides, growing from each corner in toward the tip (under the seal) */
+        const out = [at(12, 0.6)];
+        along(edge, 12, side, 9).forEach((p, i) => {
+          if (p.d < 8 || p.len - p.d < 8) return;
+          const toTip = p.d < p.len / 2 ? 0 : 180, turn = i % 2 ? 42 : -42;
+          out.push(svgEl('path', { d: LEAF, fill: 'url(#gGoldTrim)',
+            transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(p.a + toTip + turn).toFixed(1)}) scale(.8)` }));
+        });
+        return out;
+      }
+      default: return [];
+    }
+  }
+  function drawCrease(kind) {
+    $('creaseV').replaceChildren(...trim(kind, $('edgeV'), -1));
+    $('creaseA').replaceChildren(...trim(kind, $('edgeA'), 1));
+  }
+
+  const sealBase = (seal, colour) => (seal === 'red' ? STYLE.colour : seal === 'gold' ? GOLD : colour);
+  let style = { ...STYLE };
+  /** Draws the envelope in a style ({ colour, pattern, finish, strength, crease, seal, seal_size }; anything missing or
+      unknown is the original's), and returns it as drawn. */
+  function applyStyle(next) {
+    const s = { ...STYLE };
+    if (next && /^#[0-9a-f]{6}$/i.test(next.colour)) s.colour = next.colour.toLowerCase();
+    for (const k of Object.keys(CHOICES)) if (next && CHOICES[k].includes(next[k])) s[k] = next[k];
+    if (next && Number.isFinite(+next.strength)) s.strength = Math.min(1, Math.max(0.2, +next.strength));
+    if (next && next.seal_size != null && Number.isFinite(+next.seal_size)) s.seal_size = Math.min(1.5, Math.max(0.6, +next.seal_size));
+    root.style.setProperty('--seal-size', String(s.seal_size));
+    const set = (names, base) => names.forEach((v) => root.style.setProperty(v, retint(ORIGINAL[v], base)));
+    set(TONES.env, s.colour);
+    set(TONES.foil, s.finish === 'gold' ? GOLD : s.colour);
+    set(TONES.seal, sealBase(s.seal, s.colour));
+    const motif = $('motif');
+    motif.setAttribute('href', '#motif-' + s.pattern);
+    motif.setAttribute('opacity', String(s.strength));
+    /* the foil's light rests where the pattern is: over a corner spray, it lights the spray */
+    Object.assign(LIGHT, { corner: { x: 590, y: 60 }, corners: { x: 350, y: 250 } }[s.pattern] || { x: 210, y: 110 });
+    aimLight(LIGHT.x, LIGHT.y);
+    if (s.crease !== style.crease || !$('creaseV').childElementCount) drawCrease(s.crease);
+    style = s;
+    return { ...s };
+  }
+  /* for the admin's Letter style view (admin.js), which previews a copy of this envelope and draws samples */
+  window.cardStyle = {
+    original: { ...STYLE },
+    choices: CHOICES,
+    current: () => ({ ...style }),
+    apply: applyStyle,
+    toHsl, toHex,
+    /* one of the envelope's colours (a custom property above) for a lacquer colour */
+    shade: (name, colour) => retint(ORIGINAL[name], colour),
+    /* the seal's light, middle and dark */
+    sealShades: (seal, colour) => ['--seal-c', '--seal-b', '--seal-e'].map((v) => retint(ORIGINAL[v], sealBase(seal, colour))),
+    trim: (kind) => trim(kind, $('edgeV'), -1),                      // a crease trim along the flap's edge
+    light: (x, y) => aimLight(x, y),                                 // in the envelope's units, 700 × 500
+    rest: () => aimLight(LIGHT.x, LIGHT.y)
+  };
+
+  /* ---------- the card's layout: its cover and its save the date ----------
+     Each piece of their text (a [data-piece] in a [data-face]) can sit somewhere other than where the stylesheet
+     puts it, at another size, in bold or italics, and most can say something else:
+       { cover: { xi: { x, y, size, bold, italic }, dear: { x, y, size, bold, italic, text: { en, vi, 'zh-Hant' } }, … },
+         save_the_date: { title: { … }, … } }
+     x and y are in card units. A language missing from text keeps the card's own words; '' leaves the piece
+     blank, and \n breaks its line. The admin's Card layout view (admin.js) tries layouts on the card here, as
+     the Letter style view tries envelopes, and draws copies of each face in other layouts and languages */
+  const LANGS = ['en', 'vi', 'zh-Hant'];
+  const TEXT_MAX = 160;                                              // as the backend's PIECE_TEXT_MAX
+  const STD_NAMES = wordsOf(document.querySelector('[data-face="save_the_date"] [data-piece="names"]'));   // "Ivan Sam & Ana Nguyen"
+  /* the couple's names as a language writes them: in Vietnamese, Nguyen has its accent (Nguyễn) */
+  const namesIn = (text, code) => (code === 'vi' ? text.replace(/\bNguyen\b/g, 'Nguy\u1ec5n') : text);
+  /* each face's pieces. words gives the card's own words in a language (pieces without can't be reworded: the
+     囍, and the guests' names, which come from their link); amp sets each & apart in gold; same: one set of
+     words in every language; spoken: how a language writes those words */
+  const FACES = {
+    cover: {
+      xi: {},
+      dear: { words: (code) => DEAR[code] },
+      names: {}
+    },
+    save_the_date: {
+      title: { words: (code) => TEXT[code].stdTitle },
+      lead: { words: (code) => TEXT[code].lead },
+      names: { words: () => STD_NAMES, amp: true, same: true, spoken: namesIn },
+      day: { words: (code) => TEXT[code].day },
+      place: { words: (code) => TEXT[code].place },
+      note: { words: (code) => TEXT[code].note }
+    }
+  };
+  /* the card is CARD_K × 100 units wide, and at most CARD_FULL × CARD_K pixels (layout()) */
+  const CARD_K = 1.22, CARD_FULL = 560;
+  const PLACE = { x: 0, y: 0, size: 1, bold: false, italic: false };
+  const LIMITS = { x: [-60, 60], y: [-40, 40], size: [0.4, 2.5],     // as the backend's Placement
+                   std_height: [1, 1.6] };                             // and CardLayout's
+  const clampTo = (k, v) => Math.min(LIMITS[k][1], Math.max(LIMITS[k][0], v));
+  /** A layout with every piece of every face, anything missing or unknown as the stylesheet has it. */
+  function normalLayout(next) {
+    let src = next && typeof next === 'object' ? next : {};
+    /* a layout from before the cover could be laid out was the save the date's alone */
+    if (!src.cover && !src.save_the_date && Object.keys(FACES.save_the_date).some((k) => src[k])) src = { save_the_date: src };
+    const out = {};
+    for (const [face, pieces] of Object.entries(FACES)) {
+      out[face] = {};
+      for (const [k, spec] of Object.entries(pieces)) {
+        const p = (src[face] && typeof src[face][k] === 'object' && src[face][k]) || {};
+        const q = Object.fromEntries(Object.keys(PLACE).map((d) => [d,
+          typeof PLACE[d] === 'boolean' ? (typeof p[d] === 'boolean' ? p[d] : PLACE[d])
+            : typeof p[d] === 'number' && Number.isFinite(p[d]) ? clampTo(d, p[d]) : PLACE[d]]));
+        if (spec.words) {
+          const t = p.text && typeof p.text === 'object' ? p.text : {};
+          q.text = Object.fromEntries(LANGS.filter((c) => typeof t[c] === 'string').map((c) => [c, t[c].slice(0, TEXT_MAX)]));
+        }
+        out[face][k] = q;
+      }
+    }
+    out.std_height = typeof src.std_height === 'number' && Number.isFinite(src.std_height) ? clampTo('std_height', src.std_height) : 1;
+    return out;
+  }
+  /* the words an element shows, its lines joined with \n: what setWords gave it, or what's been typed into it.
+     A gold & (which has room of its own around it) reads as " & " */
+  function wordsOf(el) {
+    let out = '';
+    (function walk(n) {
+      for (const c of n.childNodes) {
+        if (c.nodeType === 3) out += c.nodeValue;
+        else if (c.nodeName === 'BR') out += '\n';
+        else if (c.nodeType === 1 && c.classList.contains('amp')) out += c.textContent.replace(/\s*&\s*/g, ' & ');
+        else if (c.nodeType === 1) {
+          if ((c.nodeName === 'DIV' || c.nodeName === 'P') && out && !out.endsWith('\n')) out += '\n';   // a line typed in
+          walk(c);
+        }
+      }
+    })(el);
+    return out;
+  }
+  /* sets a piece's words (as text, never markup), each line break a <br> and, with amp, each & set apart in gold
+     (its own padding spaces it, so the spaces typed around it are dropped) */
+  function setWords(el, text, amp) {
+    if (wordsOf(el) === text) return;                    // as it is: left alone, in case it's being typed into
+    const nodes = [];
+    text.split('\n').forEach((line, i) => {
+      if (i) nodes.push(document.createElement('br'));
+      (amp ? line.split(/\s*&\s*/) : [line]).forEach((part, j) => {
+        if (j) {
+          const a = document.createElement('span');
+          a.className = 'amp';
+          a.textContent = '&';
+          nodes.push(a);
+        }
+        if (part) nodes.push(part);
+      });
+    });
+    el.replaceChildren(...nodes);
+  }
+  /** Places the text of each face in scope (the card, or a copy of a face) as `lay` (a normal layout) has it,
+      in the words of the language `code`. */
+  function paintLayout(scope, lay, code) {
+    const lang = LANGS.includes(code) ? code : 'en';
+    const faces = [...(scope.matches('[data-face]') ? [scope] : []), ...scope.querySelectorAll('[data-face]')];
+    for (const faceEl of faces) {
+      const face = faceEl.dataset.face;
+      if (!lay[face]) continue;
+      for (const el of faceEl.querySelectorAll('[data-piece]')) {
+        const p = lay[face][el.dataset.piece], spec = FACES[face][el.dataset.piece];
+        if (!p) continue;
+        el.style.setProperty('--dx', String(p.x));
+        el.style.setProperty('--dy', String(p.y));
+        el.style.setProperty('--sz', String(p.size));
+        el.style.fontWeight = p.bold ? '700' : '';           // faces without a bold or an italic are drawn slanted / heavier
+        el.style.fontStyle = p.italic ? 'italic' : '';
+        if (spec.words) {
+          const words = typeof p.text[lang] === 'string' ? p.text[lang] : spec.words(lang);
+          setWords(el, spec.spoken ? spec.spoken(words, lang) : words, !!spec.amp);
+        }
+      }
+    }
+  }
+  let placed = normalLayout(null);
+  /** Lays out the card on this device (and the copy of its cover in the envelope), and returns the layout as
+      placed. */
+  function applyLayout(next) {
+    const was = placed.std_height;
+    placed = normalLayout(next);
+    for (const scope of [fly, letter]) paintLayout(scope, placed, root.lang);
+    if (placed.std_height !== was && L.wf) {                         // a taller or shorter save the date
+      layout();
+      if (stage.classList.contains('has-tray')) renderTray();
+    }
+    return JSON.parse(JSON.stringify(placed));
+  }
+  window.cardLayout = {
+    faces: Object.fromEntries(Object.entries(FACES).map(([face, pieces]) => [face, Object.keys(pieces)])),
+    /* whether a piece's words can be changed (null if not), and if so whether they're one set for every language */
+    rewordable: (face, piece) => (FACES[face][piece].words ? { same: !!FACES[face][piece].same } : null),
+    ownWords: (face, piece, code) => FACES[face][piece].words(code),   // the card's own words for a piece
+    langs: LANGS,
+    textMax: TEXT_MAX,
+    limits: LIMITS,
+    normal: normalLayout,
+    original: () => normalLayout(null),
+    current: () => JSON.parse(JSON.stringify(placed)),
+    apply: applyLayout,
+    /* a copy of a face (made from the card's own markup) laid out and worded in another layout and language */
+    paint: (scope, next, code) => paintLayout(scope, normalLayout(next), code),
+    wordsOf,
+    /* the cover's greeting on a copy of it, to the guests named */
+    greet: (print, names, code) => fillCover(print, names, code, ''),
+    /* a face's proportions, width / height: the cover's are the card's folded, for the letter guests' cards open on */
+    shape: (face, opens, lay) => {
+      const std = FOLDED / (lay ? normalLayout(lay) : placed).std_height;   // the save the date's, in that layout
+      if (face !== 'cover') return std;
+      const key = LETTER_KEYS.includes(opens) ? opens : OPENS;
+      return FOLDS.has(key) ? foldedOf(key) : std;
+    },
+    across: CARD_K * 100,                                            // card units across the card (layout())
+    widest: CARD_FULL * CARD_K                                       // the card's width in pixels on a big screen
+  };
 
   /* ---------- languages ---------- */
   const touch = matchMedia('(hover: none)').matches;
@@ -1303,8 +1752,9 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       coverDate: '5 March 2027',
       lead: 'for the wedding of',
       stdTitle: 'Save the date',
-      day: 'Thursday 4 & Friday 5 March 2027, Melbourne',
-      note: 'Invitations to follow',
+      day: 'Friday 5 March, 2027',
+      place: 'Melbourne',
+      note: 'Invitation to follow',
       invLead: 'Together with their families',
       invAsk: 'invite you to celebrate their wedding day',
       invReply: 'Kindly RSVP by 15 December',
@@ -1327,7 +1777,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       coverDate: 'Ngày 5 tháng 3 năm 2027',
       lead: 'cho hôn lễ của',
       stdTitle: 'Lưu lại ngày vui',
-      day: 'Thứ Năm 4 & Thứ Sáu 5 tháng 3 năm 2027, Melbourne',
+      day: 'Thứ Sáu, ngày 5 tháng 3 năm 2027',
+      place: 'Melbourne',
       note: 'Thiệp mời sẽ được gửi sau',
       invLead: 'Cùng gia đình hai bên',
       invAsk: 'trân trọng kính mời quý khách đến dự lễ thành hôn',
@@ -1351,7 +1802,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
       coverDate: '二〇二七年三月五日',
       lead: '誠邀您共賀',
       stdTitle: '敬請預留日期',
-      day: '二〇二七年三月四日（星期四）及五日（星期五）　墨爾本',
+      day: '二〇二七年三月五日（星期五）',
+      place: '墨爾本',
       note: '請柬隨後奉上',
       invLead: '誠摯邀請您蒞臨',
       invAsk: '之婚禮，共證良緣',
@@ -1418,7 +1870,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   const fontsReady = document.fonts
     ? Promise.race([
         Promise.all(['1em "Bodoni Moda"', 'italic 1em "Bodoni Moda"', '1em "Playfair Display"', 'italic 1em "Playfair Display"',
-                     '1em "Playfair Display SC"', '1em "Beau Rivage"', '1em "Noto Serif TC"', '600 1em "Noto Serif SC"']
+                     '1em "Playfair Display SC"', '1em "Pinyon Script"', '1em "Tangerine"', '1em "Noto Serif TC"', '600 1em "Noto Serif SC"']
           .map((f) => document.fonts.load(f))).catch(() => {}),
         wait(4000)                                                   // a very slow line: start anyway
       ])
@@ -1448,6 +1900,14 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   };
   let LETTERS = withPreview(['save_the_date']);
   let OPENS = PREVIEW || 'save_the_date';
+  /* ?look=4a5a2c-corner-gold-80-pearls-gold-120 (colour, pattern, finish, strength in %, crease, seal, seal size in %) draws the
+     envelope in a style that hasn't been saved: the admin's Letter style view copies these links to share */
+  const LOOK = (() => {
+    const [colour, pattern, finish, strength, crease, seal, size] = (query.get('look') || '').split('-');
+    return /^[0-9a-f]{6}$/i.test(colour || '') ? { colour: '#' + colour, pattern, finish, strength: strength / 100, crease, seal,
+                                                     seal_size: size ? size / 100 : undefined } : null;
+  })();
+  if (LOOK) applyStyle(LOOK);
   let timedOut = false;                                              // a reply after the card has started changes nothing
   const guestsReady = (request
     ? Promise.race([
@@ -1462,6 +1922,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
             if (shown.length) LETTERS = withPreview(shown);
             if (!PREVIEW && d && LETTERS.includes(d.opens)) OPENS = d.opens;
             else if (!PREVIEW) OPENS = LETTERS[LETTERS.length - 1];
+            if (d && d.style && !LOOK) applyStyle(d.style);
+            if (d && d.layout) applyLayout(d.layout);
           }),
         wait(4000).then(() => { timedOut = true; })
       ])
@@ -1504,25 +1966,29 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     return list.length < 2 ? (list[0] || '') : list.slice(0, -1).join(sep) + and + list[list.length - 1];
   };
 
+  /* the cover's greeting (a copy of it, print): Dear, then the guests' names (who) in the language code, and
+     beneath them note (on a bare link, which has no names) */
+  function fillCover(print, who, code, note) {
+    const dear = print.querySelector('.cover-dear');
+    dear.hidden = false;
+    dear.textContent = DEAR[code];
+    const names = print.querySelector('.cover-names');
+    const esc = (n) => n.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const joined = joinNames(who.map(esc), code);
+    names.innerHTML = code === 'en' ? joined.replace(/ &amp; (?=[^&]*$)/, '<span class="amp">&amp;</span>') : joined;
+    names.classList.add('is-guests');
+    const L = names.textContent.length;
+    names.style.fontSize = `calc(var(--u) * ${L <= 18 ? 5 : L <= 30 ? 4.1 : L <= 46 ? 3.4 : 2.9})`;
+    const n = print.querySelector('.cover-note');
+    n.hidden = !note;
+    n.textContent = note || '';
+  }
+
   function applyLanguage(code) {
     const t = TEXT[code];
     $('coverPrint').querySelector('.cover-art').classList.toggle('is-blank', !GUESTS.length && !LOCKED);   // no guest name: just the 囍
     if (GUESTS.length || LOCKED) {
-      const who = LOCKED ? NO_LINK[code].who : GUESTS;
-      const art = $('coverPrint');
-      const dear = art.querySelector('.cover-dear');
-      dear.hidden = false;
-      dear.textContent = DEAR[code];
-      const names = art.querySelector('.cover-names');
-      const esc = (n) => n.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const joined = joinNames(who.map(esc), code);
-      names.innerHTML = code === 'en' ? joined.replace(/ &amp; (?=[^&]*$)/, '<span class="amp">&amp;</span>') : joined;
-      names.classList.add('is-guests');
-      const L = names.textContent.length;
-      names.style.fontSize = `calc(var(--u) * ${L <= 18 ? 5 : L <= 30 ? 4.1 : L <= 46 ? 3.4 : 2.9})`;
-      const note = art.querySelector('.cover-note');
-      note.hidden = !LOCKED;
-      note.textContent = LOCKED ? NO_LINK[code].note : '';
+      fillCover($('coverPrint'), LOCKED ? NO_LINK[code].who : GUESTS, code, LOCKED ? NO_LINK[code].note : '');
     }
     $('cardHint').textContent = t.hint;
     root.lang = code;
@@ -1535,6 +2001,8 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     $('duckA').setAttribute('aria-label', DUCK_LABEL[code]);
     $('duckB').setAttribute('aria-label', DUCK_LABEL[code]);
     document.querySelectorAll('#fly [data-i18n]').forEach((el) => { el.innerHTML = t[el.dataset.i18n]; });
+    paintLayout(fly, placed, code);                     // the admin's words, where it has changed them
+    setWords(fly.querySelector('.inv-names'), namesIn(STD_NAMES, code), true);
     renderEvents(code);
     renderFaq(code);
     renderReply(code);
@@ -1583,16 +2051,18 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   const FOLDED = 1.618;
   const SHAPE = { save_the_date: FOLDED, invitation: 0.74, rsvp: 0.74, details: 0.74 };   // a little longer than two golden halves
   const FOLDS = new Set(['invitation', 'rsvp', 'details']);
-  const shapeOf = (key) => SHAPE[key] || FOLDED;
-  const foldedOf = (key) => (FOLDS.has(key) ? shapeOf(key) * 2 : FOLDED);   // a folding letter is half its sheet until it opens
+  /* the save the date can be made taller in the admin's Card layout view (std_height): its width stays */
+  const shapeOf = (key) => (key === 'save_the_date' ? FOLDED / placed.std_height : SHAPE[key] || FOLDED);
+  const foldedOf = (key) => (FOLDS.has(key) ? shapeOf(key) * 2 : shapeOf(key));   // a folding letter is half its sheet until it opens
   let cardOpen = false;                                  // false while the card still shows its cover
   let front = OPENS;
+  const livesOn = (el, key) => el.dataset.onLetter.split(' ').includes(key);   // data-on-letter: the letters it lives on
   function showLetter(key) {
     const reshape = key !== front;
     front = key;
     if (reshape && L.wf) layout();
     backFace.querySelectorAll('[data-letter]').forEach((el) => { el.hidden = el.dataset.letter !== key; });
-    backFace.querySelectorAll('[data-on-letter]').forEach((el) => { el.hidden = el.dataset.onLetter !== key; });
+    backFace.querySelectorAll('[data-on-letter]').forEach((el) => { el.hidden = !livesOn(el, key); });
     backFace.setAttribute('aria-label', TEXT[root.lang].letters[key]);
   }
 
@@ -1605,11 +2075,11 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     const he = we / 1.4;
     /* the card is wider than it is tall; type keeps its size, so the extra width is white space.
        k is fixed so the phone renders an exact scaled-down copy of the desktop card */
-    const k = 1.22;
+    const k = CARD_K;
     /* the width is shared by every letter, so type keeps its size when they swap; the tallest
        letter this guest has must still fit the screen with room for the tray */
     const tallest = Math.min(...LETTERS.map(shapeOf));
-    const wf = Math.round(Math.min(560 * k, vw * 0.92, ((vh * 0.9) / 1.4) * k, vh * 0.74 * tallest));
+    const wf = Math.round(Math.min(CARD_FULL * k, vw * 0.92, ((vh * 0.9) / 1.4) * k, vh * 0.74 * tallest));
     const u = wf / k / 100;
     const hh = wf / (cardOpen ? shapeOf(front) : foldedOf(front));
     /* inside the envelope the card sits 92% as wide as it, or smaller if it is too tall to hide */
@@ -1620,6 +2090,7 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     root.style.setProperty('--wf', wf + 'px');
     root.style.setProperty('--hh', hh + 'px');
     root.style.setProperty('--u', u + 'px');
+    root.style.setProperty('--diet-s', String(Math.min(1, (u * 2.14) / 16)));   // see .reply-diet
     CARD_W = wf / u; CARD_H = hh / u;
     if (state === 'idle' || state === 'ready') letter.style.transform = letterT(0);
     sizeTray();
@@ -2244,9 +2715,9 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   }
   window.addEventListener('resize', renderBalloons);
 
-  /* the left duckling walks in from behind the gold frame line, then hops; only while their letter is in front */
+  /* the left duckling walks in from the letter's edge, then hops; only while their letter is in front */
   async function duckEnter() {
-    if (front !== ducks.dataset.onLetter || !ducks.classList.contains('awaiting')) return;
+    if (!livesOn(ducks, front) || !ducks.classList.contains('awaiting')) return;
     const my = run, face = part(duckA, '.duck-face');
     const from = getComputedStyle(face).transform;
     duckBusy = true;
@@ -2315,9 +2786,9 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
     const print = document.createElement('span');
     print.className = 'tray-print';
     print.style.setProperty('--hh', `${L.wf / shapeOf(key)}px`);   // drawn at its own letter's height
-    const parts = [backFace.querySelector(`[data-letter="${key}"]`), ...backFace.querySelectorAll(`[data-on-letter="${key}"]`)]
+    const parts = [backFace.querySelector(`[data-letter="${key}"]`), ...backFace.querySelectorAll(`[data-on-letter~="${key}"]`)]
       .map((el) => Object.assign(el.cloneNode(true), { hidden: false }));
-    print.append(backFace.querySelector('.frame').cloneNode(true), ...parts);   // the letter, and the ducklings as they are now
+    print.append(...parts);   // the letter, and the ducklings as they are now
     return still(print);
   }
   /* as big as the room under the card allows, up to 150px wide */
@@ -2483,14 +2954,6 @@ html[lang="zh-Hant"] .faq-a{letter-spacing:.06em}
   envBtn.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
-  envBtn.addEventListener('pointermove', (e) => {
-    const r = env.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-    env.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
-    env.style.setProperty('--my', (py * 100).toFixed(1) + '%');
-    if (e.pointerType === 'mouse' && state === 'ready') aimLight(px * 700, py * 500);
-  });
-  envBtn.addEventListener('pointerleave', () => aimLight(LIGHT.x, LIGHT.y));
   /* hovering turns the medallion's sheen a little, as if it caught the light */
   const sheenGrads = ['gMedal', 'gMedalIn', 'gMedalXi'].map($);
   let sheen = 0, sheenTo = 0, sheenRaf = 0;

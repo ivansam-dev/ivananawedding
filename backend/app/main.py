@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import sessionmaker
 
 from .auth import sync_passwords_from_env
@@ -48,6 +51,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.sessionmaker = Session
     app.state.limiter = LoginLimiter()
+
+    @app.exception_handler(RequestValidationError)
+    async def _invalid(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        """FastAPI's own handler echoes each bad input back, and one that can't be written as UTF-8 (a lone
+        surrogate, from a raw \\ud800 in the JSON) would turn the 422 into a 500. The message says enough."""
+        errors = [{k: v for k, v in error.items() if k != "input"} for error in exc.errors()]
+        return JSONResponse(status_code=422, content={"detail": jsonable_encoder(errors)})
 
     app.include_router(public.router, prefix="/api")
     app.include_router(session.router, prefix="/api/auth")

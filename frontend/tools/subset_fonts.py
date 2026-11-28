@@ -7,22 +7,24 @@ type fits in about 180 KB and the page can load all of it up front:
     (the Vietnamese text). Weight axis kept from 400 to 500 only.
   * Playfair Display SC: Latin, Latin Extended-A and Vietnamese, because guests' names
     are printed in it and can contain any of those letters.
-  * Beau Rivage: only "Ivan Sam & Ana Nguyen".
+  * Pinyon Script: only "Ivan Sam & Ana Nguyen", plus the ễ of Nguyễn (the Vietnamese card).
+  * Tangerine: only "&", for the save the date's ampersand.
   * Noto Serif TC: only the Chinese characters that appear in index.html.
   * Noto Serif SC: only 囍.
 
 Re-run after changing any Chinese or Vietnamese text on the card (make fonts),
 otherwise new characters fall back to the system's font.
 
+It then stamps each font's URL in index.html with a hash of the font (/fonts/playfair.woff2?v=1a2b3c4d),
+so browsers and Cloudflare, which keep fonts for a year, fetch a rebuilt one straight away.
+
 Needs: pip install fonttools brotli
 """
+import hashlib
 import io
 import pathlib
+import re
 import urllib.request
-
-from fontTools import subset
-from fontTools.ttLib import TTFont
-from fontTools.varLib import instancer
 
 HERE = pathlib.Path(__file__).resolve().parent
 PUBLIC = HERE.parent / 'public'
@@ -48,7 +50,8 @@ FONTS = {
     'playfair':              ('playfairdisplay/PlayfairDisplay[wght].ttf',     BASIC + PAGE_LATIN,             {'wght': (400, 500)}),
     'playfair-italic':       ('playfairdisplay/PlayfairDisplay-Italic[wght].ttf', BASIC + PAGE_LATIN,          {'wght': (400, 500)}),
     'playfair-sc':           ('playfairdisplaysc/PlayfairDisplaySC-Regular.ttf', NAMES,                        None),
-    'beau-rivage':           ('beaurivage/BeauRivage-Regular.ttf',             [ord(c) for c in 'Ivan Sam&Ana Nguyen'], None),
+    'pinyon-script':         ('pinyonscript/PinyonScript-Regular.ttf',         [ord(c) for c in 'Ivan Sam&Ana Nguyen Nguyễn'], None),
+    'tangerine':             ('tangerine/Tangerine-Regular.ttf',               [ord('&')],                     None),
     'noto-serif-tc':         ('notoseriftc/NotoSerifTC[wght].ttf',             CJK + CJK_PUNCT + [0x20],       {'wght': 400}),
     'noto-serif-sc-xi':      ('notoserifsc/NotoSerifSC[wght].ttf',             [ord('囍')],                    {'wght': 600}),
 }
@@ -65,6 +68,10 @@ def source(path):
 
 
 def build(name, path, chars, axes):
+    from fontTools import subset            # here, so stamp() runs without fontTools
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib import instancer
+
     font = TTFont(source(path))
     if axes:
         font = instancer.instantiateVariableFont(font, axes, updateFontNames=False)
@@ -88,6 +95,24 @@ def build(name, path, chars, axes):
     return out.stat().st_size
 
 
+def stamp():
+    """Points every /fonts/<name>.woff2 in index.html (the preloads and the @font-face rules) at
+    ?v=<hash of that file>, so each one changes only when its own font does."""
+    html = PUBLIC / 'index.html'
+    text = html.read_bytes().decode('utf-8')               # bytes: line endings stay as they are
+
+    def versioned(m):
+        font = OUT / f'{m[1]}.woff2'
+        if not font.exists():
+            raise SystemExit(f'index.html uses /fonts/{m[1]}.woff2, which was not built')
+        return f'/fonts/{m[1]}.woff2?v={hashlib.sha256(font.read_bytes()).hexdigest()[:8]}'
+
+    stamped = re.sub(r'/fonts/([a-z0-9-]+)\.woff2(?:\?v=[0-9a-f]*)?', versioned, text)
+    if stamped != text:
+        html.write_bytes(stamped.encode('utf-8'))
+        print('index.html now asks for the new fonts')
+
+
 if __name__ == '__main__':
     OUT.mkdir(exist_ok=True)
     total = 0
@@ -96,3 +121,4 @@ if __name__ == '__main__':
         total += size
         print(f'{name:22} {size / 1024:6.1f} KB')
     print(f'{"total":22} {total / 1024:6.1f} KB')
+    stamp()
